@@ -1,10 +1,11 @@
 \documentclass{template}
 \usepackage{graphicx,parskip,appendix,float}
 \usepackage[ruled] {algorithm2e}
-\usepackage{url,amsmath,amssymb,fancybox,listings,pdfpages,caption,multicol,datetime,rotating, booktabs}
+\usepackage{url,amsmath,amssymb,fancybox,listings,pdfpages,caption,multicol,datetime,rotating,booktabs,dsfont,mathtools,textcomp}
 %\usepackage[usenames,dvipsnames]{color}
 \usepackage[pagebackref=false,pdffitwindow=true]{hyperref}
 \usepackage{csquotes}
+\usepackage{physics}
 \usepackage[style=authoryear,backend=biber]{biblatex}
 \addbibresource{thesis.bib}
 
@@ -82,26 +83,32 @@
 \rpttype{BTech}    % Replace MSc with BSc for Honours Degree Year projects.
 \principaladviser{Dr. Jyothi Vedurada}
 
-%\include{intro/abstract}
-\listofalgorithms   %NOTE: Will generate a list of Algorithms in the Table of Contents Section
-\lstlistoflistings  %NOTE: Will generate a list of Program Listings in the Table of Contents Section
+\include{Intro/abstract}
+% \listofalgorithms   %NOTE: Will generate a list of Algorithms in the Table of Contents Section
+% \lstlistoflistings  %NOTE: Will generate a list of Program Listings in the Table of Contents Section
 
 %NOTE: Include the relative reference for each chapter to be included
 % dividing the thesis file structure into a number of directories aids development
 % format: directoryName/filename (the .tex extension is not required for the filename)
 
-\include{intro/introduction}
-\include{background/background}
-\include{design/design}
-\include{impl/implementation}
-\include{eval/evaluation}
-\include{conclude/conclude}
-\include{usingLatex/usingLatex} % We recommend commenting this section out (that is, adding a % symbol before the \include) as this section only contains the instructions and a sample on how to use this template
+\include{Intro/introduction}
+\include{Background/background}
+\include{Structure/struct}
+\include{Lexemes/lexemes}
+% \include{Ops_Exp/ops}
+% \include{Declarations/dec}
+\include{Statements/stmt}
+%\include{design/design}
+%\include{impl/implementation}
+%\include{eval/evaluation}
+%\include{conclude/conclude}
+%\include{usingLatex/usingLatex} % We recommend commenting this section out (that is, adding a % symbol before the \include) as this section only contains the instructions and a sample on how to use this template
+\include{Optimize/optimize}
 
 \footnotesize  %NOTE: reduced the size of the text for the bibliography
 %NOTE: set the style for the bibliography and display the references used within the document
-\printbibliography
+% \printbibliography
 \normalsize
 \appendix
-\include{appendix/appendix}
+% \include{appendix/appendix}
 \end{document} %NOTE: END of document, nothing after this point

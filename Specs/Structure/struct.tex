@@ -1,0 +1,44 @@
+\chapter{Structure}\label{ch:struct}
+
+
+\section{\texttt{init} Section}
+This section contains three necessary statements that provide the compiler with necessary information about qbits
+\begin{lstlisting}
+        #registers quantum = 3
+        #registers classical = 2
+        #iters = 1000
+\end{lstlisting}
+to set number of quantum registers, set number of classical registers and set number of iterations, respectively. \\
+
+Optional statements include initializing states of quantum registers:
+\begin{lstlisting}
+    #set quantum states -> (2,3), (0,1), (5,5)
+    #set classical states -> 0, 1
+\end{lstlisting}
+This sets the state of first quantum register as $2+3i$, second one as $i$ and third one as $5+5i$ and sets the state of first classical register as 0 and second one as 1.\\
+
+This section will also have user defined code block definitions (refer to block definitions section)
+\begin{lstlisting}                                                                                                                                                                             
+    block (i,j,k) -> (p,q,r) {                                                                                                                                                                 
+        $                                                                                                                                                                                      
+            statement calls                                                                                                                                                                    
+        $                                                                                                                                                                                      
+    }                                                                                                                                                                                          
+\end{lstlisting}                                                                                                                                                                               
+                                                                                                                                                                                                   
+\section{\texttt{main} Section}                                                                                                                                                              
+    \textbackslash begin marks the beginning of the main section and \textbackslash end marks the end of the main section. This section includes                                               
+    \begin{itemize}                                                                                                                                                                            
+        \item calls to pre-defined or user-defined  \emph{blocks} (refer to block definitions section)                                                                                         
+        \item \textbackslash barrier: It's a directive to the compiler to not combine blocks before and after \textbackslash barrier                                                           
+        \item  \emph{measure} calls block that reads the value of a register and stores it in another register (both registers provided by the programmer)                                     
+        \item condition-otherwise for conditional statements                                                                                                                                   
+        \item  \emph{for},  \emph{for\_lex} and \emph{for\_zip} loops for repetitive calls to blocks.                                                                                          
+    \end{itemize}     
+        
+\section{\texttt{output} Section}
+    This section contains the features of any general programming language to help interpret the results of the quantum experiment further and better understand the results from 
+    repeated runs of the circuit. \\
+    This section mostly contains C-like features but syntactic sugar for certain operations and loops. We also support more datatypes for vector and array manipulation.
+                                                                                                                                                                                                   
+                                                                                                                                                                                                   

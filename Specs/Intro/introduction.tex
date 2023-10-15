@@ -1,0 +1,129 @@
+\chapter{Basic Quantum Computing}
+\pagenumbering{arabic} \setcounter{page}{1}
+
+\section{Background}
+
+As computer science takes root in all aspects of our lives over the last few decades, computer scientist all over the world have begun to explore new paradigms.
+One of these promising paradigms includes Quantum-Computing; using the postulates of Quantum-Mechanics to possibly achieve machines that are more powerful than conventional Turing-Complete machines.
+Our DSL aims to provide a gateway to understand simple Quantum-Circuits and consequences of these circuits on a set of input quantum-bits, better known as qubits.
+
+\section{Qubits \& Quantum-Gates}
+
+In the classical computing paradigm, we use classical bits that deterministically take 0 or 1 as its value. Qubits on the other hand, considers a \emph{superposition} of 0 and 1.
+This can be represented as follows:
+\begin{align}
+    \ket{\psi} &= \alpha\ket{0} + \beta\ket{1} \\
+        &= \begin{pmatrix}\alpha\\\beta\end{pmatrix}
+\end{align}
+
+Classical-Gates like \textbf{AND}, \textbf{OR}, \textbf{NOT}, \textbf{XOR} perform operations on a certain set of classical bits. Similarly, Quantum-Gates 
+perform certain transformations on the vector representing a qubit. As a result, all Quantum-Gates can be represented through unitary matrices statisfying the 
+following property:
+\begin{align}
+    UU^{\dag} = U^{\dag}U = \mathds{1}
+\end{align}
+Unlike Classical-Gates, Quantum-Gates always have equal number of input-qubits and output-qubits, i.e., $fanin = fanout$.
+
+\section{Single Qubit Gates}
+
+Similar to a \textbf{NOT} gate in the classical computing paradigm, we have the \textbf{X} gate which serves as the quantum analgoue. We represent the \textbf{X} gate 
+through the following $2\times2$ matrix as follows:
+\begin{align}
+    \mathbf{X} = \begin{bmatrix}
+        0 & 1\\
+        1 & 0
+        \end{bmatrix}
+\end{align}
+When \textbf{X} acts on a state-vector $\ket{\psi} = \alpha\ket{0} + \beta\ket{1}$, it switches the coordinates of the vector as follows.
+\begin{align}
+    \mathbf{X}\ket{\psi} = \begin{bmatrix}
+        0 & 1\\
+        1 & 0
+        \end{bmatrix}
+        \begin{bmatrix}
+            \alpha\\
+            \beta
+        \end{bmatrix} = \begin{bmatrix}
+            \beta \\
+            \alpha
+        \end{bmatrix}
+\end{align}
+Similarly, you have the \textbf{Y}, \textbf{Z} and other associated rotation gates along different axes. One other single qubit gate that is commonly used is 
+the \textbf{Hadamard} gate, represented as follows:
+\begin{align}
+    \mathbf{H} = \begin{bmatrix}
+        \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}}\\
+        \frac{1}{\sqrt{2}} & \frac{-1}{\sqrt{2}}
+        \end{bmatrix}
+\end{align}
+
+\section{Multiple Qubit Gates}
+
+Consider a \textbf{CNOT}/\textbf{CX} quantum-gate. This gate takes two qubits as input: control-qubit and target-qubit. This gate acts on the target qubit 
+only when the control qubit is in state $\ket{1}$. Its matrix representation is as follows:
+\begin{align}
+    \mathbf{CX} = \begin{bmatrix}
+        1 & 0 & 0 & 0\\
+        0 & 1 & 0 & 0\\
+        0 & 0 & 0 & 1\\
+        0 & 0 & 1 & 0
+        \end{bmatrix}
+\end{align}
+
+Similarly one can define any \textbf{CA} quantum-gate which performs the \textbf{A} quantum-gate on the target-qubit based on the control-qubit. Similarly, 
+we have doubly-controlled \textbf{NOT} gate also known as the \textbf{Toffoli} gate, represented as follows:
+\begin{align}
+    \mathbf{CCX} = \begin{bmatrix}
+        1 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0\\
+        0 & 0 & 1 & 0 & 0 & 0 & 0 & 0\\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0\\
+        0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
+        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0\\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0\\
+        \end{bmatrix}
+\end{align}
+
+\section{Measurement}
+
+Upon measurement of any qubit $\ket{\psi} = \alpha\ket{0} + \beta\ket{1}$, we obtain a classical bit $0$ with probability $|\alpha|^2$ and $1$ with probabililty 
+$|\beta|^2$. As always, we can measure a certain qubit out of a vector of qubits. For instance consider a 2-qubit state as follows:
+\begin{align}
+    \ket{\psi} = \alpha\ket{00} + \beta\ket{01} + \gamma\ket{10} + \delta\ket{11}
+\end{align}
+The probability of getting $0$ while measuring the first qubit would be $|\alpha|^2 + |\beta|^2$; whereas the probability of getting $0$ while measuring the second qubit 
+would be $|\alpha|^2 + |\gamma|^2$. After measurement the qubit is lost and only the normalized version of the remaining qubits remain. Say we measure the second qubit and get 
+$1$ as our measurement, our collapsed state is as follows:
+\begin{align}
+    \ket{\psi} \xrightarrow[\text{Obtain $1$}]{\text{Measure $2^{nd}$ Qubit}} \left(\frac{\beta\ket{0} + \delta\ket{1}}{\sqrt{|\beta|^2 + |\delta|^2}}\right)
+\end{align}
+% \section{About this Thesis}
+% This is the thesis of \emph{Insert Full Name Here}, submitted as part of the requirements for the degree of MSc Computing: Software Technology at the School of Computing, Robert Gordon University, Scotland.
+
+% A number of paragraphs detailing the main expectations of this body of work.
+
+
+% \section{Chapter List}
+% Provide a list of all the chapters within the  thesis and a brief summary of the content.
+
+% \textbf{Chapter \ref{ch:Background}} Background Research. This chapter
+% deals with $\ldots$.
+
+% \textbf{Chapter \ref{ch:Design}} Design. This chapter
+% deals with $\ldots$.
+
+% \textbf{Chapter \ref{ch:Implementation}} Implementation. This chapter
+% deals with $\ldots$.
+
+% \textbf{Chapter \ref{ch:Evaluation}} Evaluation \& Testing. This chapter
+% deals with $\ldots$.
+
+% \textbf{Chapter \ref{ch:Conclusion}} Conclusion. The conclusions of the thesis are presented.
+
+% \textbf{Chapter \ref{ch:usingLatex}} Using \LaTeX. This chapter
+% deals with how to use the \LaTeX \space system. \textcolor{red}{ERASE THIS LINE ONCE YOU ARE DONE!}
+
+
+% \section{Conclusion}
+% A short conclusion summarising the chapter.

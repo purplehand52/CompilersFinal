@@ -64,19 +64,21 @@
         \end{center}\vskip.5in\newpage}
 
 \def\declpage{%
-\prefacesection{Declaration}
-        \begin{center}
-        \begin{minipage}{4.5in}
-                \parindent=0pt
-                I confirm that the work contained in this \@rpttype \space project report has been composed solely by myself and has not been accepted in any previous application for a degree. All sources of information have been specifically acknowledged and all verbatim extracts are distinguished by quotation marks.
-                \par
-                \vskip 2in
-                 Signed ............................................ \hspace{0.5 in} Date ......................\\
-                 \hspace*{0.4 in} \@author 
-                 \par
-        \end{minipage}%
-        \end{center}%
-        \vfill}
+% \prefacesection{Declaration}
+%         \begin{center}
+%         \begin{minipage}{4.5in}
+%                 \parindent=0pt
+%                 I confirm that the work contained in this \@rpttype \space project report has been composed solely by myself and has not been accepted in any previous application for a degree. All sources of information have been specifically acknowledged and all verbatim extracts are distinguished by quotation marks.
+%                 \par
+%                 \vskip 2in
+%                  Signed ............................................ \hspace{0.5 in} Date ......................\\
+%                  %\hspace*{0.4 in} 
+%                  \@author 
+%                  \par
+%         \end{minipage}%
+%         \end{center}%
+%         \vfill
+}
 
 \def\beforeabstract{
         \pagenumbering{roman}
@@ -91,17 +93,17 @@
 
 \tableofcontents
         \newpage
-        \iftablespage
-                \addvspace{10pt}
-                \listoftables
-                \newpage
-        \fi
-        \iffigurespage
-                \addvspace{10pt}
-                \listoffigures
-                \newpage
-        \fi
-    \ifalgorithmspage
+        % \iftablespage
+        %         \addvspace{10pt}
+        %         \listoftables
+        %         \newpage
+        % \fi
+        % \iffigurespage
+        %         \addvspace{10pt}
+        %         \listoffigures
+        %         \newpage
+        % \fi
+        \ifalgorithmspage
                 \addvspace{10pt}
                 \listofalgorithms
                 \newpage

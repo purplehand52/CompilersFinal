@@ -1,0 +1,18 @@
+\chapter{Possible Optimizations}\label{ch:Optimizations}
+
+\section{Motivations}
+\begin{itemize}
+    \item Certain Quantum-Gates are self-invertible matrices or are commutable with other gates. Hence, rearranging such gates can yield easy optimizations.
+    \item Moreover, certain combinations gates can reduce easily to other Quantum-Gates. This can lead to further optimizations through hard-coded sequences.
+    \item A system of n-qubits would be represented through a $2^n$ state-vector and the corresponding matrix equivalent of the circuit through a $2^n \times 2^n$ 
+    matrix of complex entries. This represents a space explosion whose effect can be reduced by introduction of parallelization in matrix and tensor products.
+\end{itemize}
+
+\section{Optimization Levels}
+The proposed optimization levels for the language are prescribed below:
+\begin{itemize}
+    \item \emph{Level 0:} No Optimization
+    \item \emph{Level 1:} Quantum-Gate Simplification \& Elimination
+    \item \emph{Level 2:} Parallelization of Matrix and Tensor Products
+    \item \emph{Level 3:} Levels 1 + 2
+\end{itemize}

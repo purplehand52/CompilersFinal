@@ -1,0 +1,147 @@
+\chapter{Statements}\label{ch:stmt}
+
+\subsection{Save Command}
+\begin{lstlisting}
+     \save filename.csv
+\end{lstlisting}
+This command saves the output from main section of the code into an output csv file which can be used for further data manipulation
+
+\subsection{Echo Command}
+\begin{lstlisting}
+     \echo
+\end{lstlisting}
+This prints the output from the main section of the code to the terminal
+
+\section{Output Statements}
+This section mainly involves mainpulating the data received from the main section. These are basic arithmetic operations and also allows graphical interpretation of the data received.\\
+It allows basic programming constructs any other programming language can offer:
+
+\begin{itemize}
+    \item Declaration statements
+    \begin{itemize}
+        \item It follows C style syntax for variable declaration.
+    \end{itemize}
+        
+    \item Expression statements
+    \begin{itemize}
+        \item This may involve using variables, carrying out arithmetic operations on them and assigning to other variables. 
+    \end{itemize}
+    \item Conditional statements
+    \begin{itemize}
+        \item It follows C-style conditional statements but with a different flavour:
+        \begin{lstlisting}
+            condition(x > 3){
+                ...    
+            }
+            otherwise{
+                ...
+            }
+        \end{lstlisting}
+    \end{itemize}
+    \item Loop statements
+    \begin{itemize}
+        \item Three kinds of for loops are provided:
+        \begin{itemize}
+            \item for: it initializes an integer (i in this case). The integer loops through values from start to end (exclusive). The step in values can be provided optionally. These parameters are provided as a tuple. This is followed by the body of statements enclosed by curly braces.
+            \begin{lstlisting}
+            for i in (start:end) 
+            {
+                X: i 
+            }
+            
+            for i in (start:end:step) {
+                Y: i 
+            }
+            \end{lstlisting}
+                
+            \item for\_lex: loops through all permutations of multiple integers in lexicographical order, in their respective ranges
+            \begin{lstlisting}
+            for_lex (i,j,k) in (0:5,5:10,10:15) {
+                X: i -> j
+                Y: j -> k
+            }
+            \end{lstlisting}
+            
+            \item for\_zip: loops through multiple variables simultaneously. 
+            \begin{lstlisting}
+            for_zip (i,j) in (0:3,9:4:-2) {
+                X: i -> j
+            }
+            \end{lstlisting}
+            Here (i,j) take values (0,9), (1,7), (2,5)
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+Some additional features for data-manipulation are provided: \textbf{(more to be added on the go)}
+\begin{itemize}
+    \item Difference or Sum of arrays
+    \begin{lstlisting}
+        x = diff(A,B)
+        y = sum(A,B)
+    \end{lstlisting}
+
+    \item Standard deviation of a list of numbers
+    \begin{lstlisting}
+        a = std_dev(A)    
+    \end{lstlisting}
+    
+    \item Variance of a list of numbers
+    \begin{lstlisting}
+        a = var(A)    
+    \end{lstlisting}
+    
+\end{itemize}
+
+\section{Operators}
+\begin{enumerate}
+    \item \textbf{X}:2 - Swap operation\\
+    Here 2 is the target register and X is the operand
+    \item \textbf{X}: 2 $->$ 3\\  Here 2 is the control register, 3 is target register and X is the operand.
+    \item All other common operands in general programming languages are also included with similar operator precedence.
+\end{enumerate}
+
+
+\section{Binary If}
+This statement consists of a classical register and a quantum operator with a ? in between. The quantum operation only takes place if the classical register contains a 1. 
+\begin{lstlisting}
+    2 ? X : 4->5 
+\end{lstlisting}
+
+\section{Measure}
+This reads from a quantum register (left) and stores the observation to a classical register (right). An arrow is used as punctuation. The qubit ceases to exist after this operation.
+\begin{lstlisting}
+    measure: 4->1
+\end{lstlisting}
+
+
+\section{Block}
+A collection of statements can be abstracted and reused like an operation. A block is analogous to a user defined function. 
+
+\begin{itemize}
+    \item \emph{Definition}: \\
+    This consists of a call signature followed by a body of statements enclosed in square braces. The block-name consists of alphanumeric characters and underscore. It must start with an uppercase letter.
+
+    \begin{lstlisting}
+    block MyBlock: (a,b,c) [
+        $ statements $
+    ]
+    \end{lstlisting}
+    A user may also define a function with an arrow operator to make the control and target registers more explicit. 
+    Note that a block may contain statements other than quantum operations, such as for.
+    \begin{lstlisting}
+    block MyBlock_2: (i,j,k) -> (p,q) [
+        for t in (i..j)
+        {
+            Y: t->p
+            k? X: q
+        }
+    ]
+    \end{lstlisting}
+
+  \item \emph{Call}:
+    A block operator is fed arguments similar to operands in a quantum operation.
+    \begin{lstlisting}
+    MyBlock_2: (2,9,0) -> (0,1)
+    \end{lstlisting}
+\end{itemize}

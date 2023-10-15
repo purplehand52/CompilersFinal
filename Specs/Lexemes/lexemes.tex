@@ -1,0 +1,48 @@
+\chapter{Lexemes}\label{ch:Lexemes}
+
+                                                                                                                                                                                  
+\section{Comments}                                                                                                                                                                  
+\begin{itemize}                                                                                                                                                                                
+    \item \$ \texttt{this is a valid comment} \$                                                                                                                                                        
+    \item \$\\  \texttt{                                                                                                                                                                               
+    this is a valid \\                                                                                                                                                                         
+    multiline comment\\    }                                                                                                                                                                    
+    \$                                                                                                                                                                                         
+\end{itemize}                                                                                                                                                                                  
+
+\section{Whitespaces}                                                                                                                                                                
+We ignore all whitespaces in the \texttt{\textbackslash output} section; although we consider newlines in the \texttt{\textbackslash init} and \texttt{\textbackslash main} sections. 
+
+\section{Reserved Keywords}
+Some of the keywords used in the language are listed down below:
+\begin{itemize}
+    \item \texttt{registers}
+    \item \texttt{quantum}
+    \item \texttt{classical}
+    \item \texttt{iters}
+    \item \texttt{set}
+    \item \texttt{states} 
+    \item \texttt{block}
+    \item \texttt{for}
+    \item \texttt{for\_lex}
+    \item \texttt{for\_zip}
+    \item \texttt{condition}
+    \item \texttt{otherwise}
+    \item \texttt{begin}
+    \item \texttt{end}
+    \item \texttt{output}
+    \item \texttt{barrier}
+    \item \texttt{X}, \texttt{Y}, \texttt{Z}, \texttt{H} (gate names)
+\end{itemize}
+
+Apart from the above keywords, we also include reserved keywords for datatypes like \texttt{int}, \texttt{list}, \texttt{float}, \texttt{complex}, \texttt{matrix} etc.
+
+\section{Punctuations}
+Some of the punctuations in our language include $\left[,\right]\,\{,\},(\,)\,;,\rightarrow$.
+
+\section{Identifiers}
+We again standard conventions for identifiers; they can start with \_ or a character from the alphabet, followed by an alphanumeric sequence.
+
+\section{Operands}
+All standard operands in most common \& general programming languages are available. Apart from these operands, we also use $\rightarrow$ indicating control from one qubit to another.
+Similarly, we have ternaries to indicate a Classical-Register's control over a qubit. This is illustrated in the following section.

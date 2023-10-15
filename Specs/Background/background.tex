@@ -1,0 +1,92 @@
+\chapter{Aim \& Program Flow}\label{ch:Program}
+
+\section{DSL Objectives}
+This program helps interested users define a Quantum-circuit, composed of:
+\begin{itemize}
+    \item Quantum-Registers
+    \item Classical-Registers
+    \item Quantum-Gates
+    \item Measurement Boxes
+\end{itemize}
+
+Users can construct circuits of their choice using predefined gates and also define blocks of gates for further usage. Users can also simulate 
+measurements and accordingly store them in necessary Classical-Registers. Users can also use Classical-Registers to condition the use of gates and 
+control flow of the circuit. \\
+
+Users have the option to manipulate their data collected in the Clasical-Registers over multiple iterations over the circuit with specified input 
+qubits. Users can compare these values with their assumed distributions and describe error, variance and other parameters. Users can also do basic 
+arithmetic operations on these output-vectors. \\
+
+\section{Program}
+
+The basic program consists of three sections:
+\begin{itemize}
+    \item \texttt{init}
+    \item \texttt{main} denoted by \texttt{\textbackslash begin} and \texttt{\textbackslash end}
+    \item \texttt{output}
+\end{itemize}
+
+Please find below a sample program that illustrates quantum teleportation.
+\begin{lstlisting}[caption=Quantum Teleportation, label=code:SampleCode]
+    \begin_init
+        #registers quantum = 3
+        #registers classical = 3
+        #iters = 1000
+
+        #set quantum states -> (1,0), (1,0), (1,0)
+        #set classical states -> 0, 0, 0
+
+        block BellGen(i, j) -> (j) [
+            $ Start with Hadamard $
+            H: i
+            $ Apply C-X $
+            X: i -> j
+        ]
+    \end_init
+
+    \begin
+        $ Generate Bell State $
+        BellGen : (2, 3) -> (3)
+        
+        \barrier
+        
+        $ Init Transformations $
+        X: 1 -> 2
+        H: 1
+
+        $ Measurements $
+        measure: 1 -> 1
+        measure: 2 -> 2
+
+        $ Classical Controlled Ops $
+        2 ? X : I
+        1 ? Z : I
+
+        $ Final Measurement $
+        measure: 3 -> 3
+    \end
+
+    \begin_output
+        $ Copy Output $
+        int sat_alpha = 0;
+        int sat_beta = 0;
+        for i in (0:7)
+        {
+            condition(i%2 == 0)
+            {
+                sat_alpha = sat_alpha + c_output[i];
+            }
+            otherwise
+            {
+                sat_beta = sat_beta + c_output[i];
+            }
+        }
+        
+        $ Comparision $
+        list final = [sat_alpha, sat_beta];
+        list dist = [1000, 0];
+        list c = diff(final, dist);
+        echo(c); 
+
+    \end_output
+\end{lstlisting}
