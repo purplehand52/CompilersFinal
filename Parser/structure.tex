@@ -1,0 +1,194 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{physics}
+
+%New colors defined below
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+%Code listing style named "mystyle"
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},   commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+%"mystyle" code listing set
+\lstset{style=mystyle}
+
+\title{Structure}
+%\author{You}
+
+\begin{document}
+\maketitle
+
+%\begin{abstract}
+%Your abstract.
+%\end{abstract}
+
+\section{Introduction}
+This document specifies the overall structure of a program in \texttt{KetPsi}. Later, we also describe the lexical conventions of the language (based on the Kernighan \& Ritchie C Programming - Reference Manual).
+
+\section{Structure}
+
+\subsection{\texttt{init}}
+This section is demarcated by \texttt{\textbackslash begin\_init} and \texttt{\textbackslash end\_init}. We now describe the possible statements \& definitions that can come under this section.
+\begin{enumerate}
+	\item \textbf{\#registers\_quantum = \textlangle uint\textrangle}: \\
+		This mandatory directive assigns the number of quantum registers in our program. The right hand side of this expression must be an unsigned integer.
+	\item \textbf{\#registers\_classical = \textlangle uint\textrangle}: \\
+		This mandatory directive assigns the number of classical registers in our program. The right hand side of this expression must be an unsigned integer.
+	\item \textbf{\#iters = \textlangle uint\textrangle}: \\
+		This mandatory directive assigns the number of iterations of quantum observations in a program.
+	\item \textbf{\#set quantum states $\rightarrow$ ($a_1$, $b_1$), ($a_2$, $b_2$), ..., ($a_n$, $b_n$)}: \\
+		This directive initializes the values in the quantum registers to the values on the right hand side. The values on the right hand side must be a complex-number or a 2-tuple of float-type numbers.
+	\item \textbf{\#set classical states $\rightarrow$ $c_1$, $c_2$, ..., $c_n$}: \\
+		This directive initializes the values in the classical registers to the values on the right hand side. The values on the right hand side must be a boolean (\texttt{True} \& \texttt{False}) or a integer $0$ or $1$.
+	\item \textbf{Block Definitions}: \\
+		This functionality allows us to reuse sections of the quantum-circuits by abstracting quantum registers to identifiers. We describe the block-calls later in the \texttt{main} section. Our block definitions occur as follows:
+		\begin{lstlisting}[caption=Block Definitions]
+			block <identifier>(q1, q2, ..., qn)->(o1, o2, ..., om)
+			[
+				$ circuit statement calls $
+			]
+		\end{lstlisting}
+		Our definition always starts with \texttt{block} followed by the identifier given to the block. We now define the identifiers for the quantum registers that will be used in the block. This is optionally followed by an arrow and the specific quantum registers which are targeted. The main set of circuit statements would be placed within square brackets. These circuit statements are the same type of statements used in the \texttt{main} section (without barriers).
+	\item \textbf{Gate Definitions}: \\
+		This functionality defines a single-qubit gate customized by the user through two ways - matrix representation or state mapping. This gate can be used in a controlled fashion at any later stage in the \texttt{main} section. Our gate definitions occur as follows:
+		\begin{lstlisting}[caption=Gate Definitions through Matrix Representation]
+			gate <identifier1> = [[c1, c2], [c3, c4]]
+			gate <identifier2> = [[(a1, b1), (a2, b2)], [(a3, b3), (a4, b4)]]
+			gate <identifier3> = {(c1, c2), (c3, c4)}
+			gate <identifier4> = {((a1, b1), (a2, b2)), ((a3, b3), (a4, b4))}
+		\end{lstlisting}
+		The first two definitions define the row-major ordering of the matrix-representation of the single-qubit gate - one through complex constants and the other through 2-tuple of float constants. The next two definitions define the mappings from $\ket{0}$ and $\ket{1}$ to their respective mappings - again through complex constants or float constants.
+\end{enumerate}
+
+\subsection{\texttt{main}}
+This section is demarcated by \texttt{\textbackslash begin\_main} and \texttt{\textbackslash end\_main}. We now describe the possible statements \& definitions that can come under this section.
+\begin{enumerate}
+	\item \textbf{Pre-defined Gate Calls}: \\
+		We define 4 major single-qubit gates \textbf{X}, \textbf{Y}, \textbf{Z} and \textbf{H} representing Pauli-X, Pauli-Y, Pauli-Z and Hadamard gates. One can call these single-qubit gates in their simplest form or as multi-qubit controlled gates. These forms are illustrated below:
+		\begin{lstlisting}[caption=Predefined Gate Calls]
+			X -> 3
+			Y : 1 -> 2
+			Z : (1, 2, 3) -> 5
+		\end{lstlisting}
+		The first call applies the Pauli-X gate on the $3^{rd}$ quantum register. The second call applies the Pauli-Y gate on the $2^{nd}$ quantum register only when the $1^{st}$ quantum register are in the state $\ket{1}$. The third call applies the Pauli-Z gate on the $5^{th}$ quantum register only when $1^{st}$, $2^{nd}$, $3^{rd}$ quantum registers are in the state $\ket{1}$.
+	\item \textbf{User-defined Gate Calls}: \\
+		We can again call user-defined gates via the same syntax above by replacing pre-defined gate names wiith user-defined gate names.
+	\item \textbf{Block Calls}: \\
+		We call blocks by specifying quantum registers to be used in the block, with an optional check for output quantum registers.
+		\begin{lstlisting}[caption=Block Calls]
+			BellGen : (3, 5)
+			BellGen : (3, 5) -> (5)
+		\end{lstlisting}
+		The first call specifies that the call \texttt{BellGen} is called on the quantum registers $3$ and $5$. The second call does the same except it specifies the output quantum register for sake of clarity.
+	\item \textbf{Classical-Controlled Gate Calls}: \\
+		We use ternary operators to control a particular action based on a classical register. This is achieved as follows:
+		\begin{lstlisting}[caption=Classical-Controlled Gate Calls]
+			3 ? X -> 5
+			!2 ? Y : 0 -> 1
+		\end{lstlisting}
+		The first call only works when the classical-register $3$ is set to $1$. Similarly, the second call only works when the classical-register $2$ is set to $0$. (Should we have multiply-controlled classical registers??)
+	\item \textbf{Barrier}: \\
+		We can specify a barrier to block optimizations joining the circuit before and after the location of the barrier. This is done by calling \texttt{\textbackslash barrier}.
+	\item \textbf{Measure}: \\
+		We specify measurement calls through \texttt{measure} calls specifying the classical register where we store the result of the measurement. An example call is illustrated below.
+		\begin{lstlisting}[caption=Measurement]
+			measure : 3 -> 0
+		\end{lstlisting}
+		This call measures the $3^{rd}$ quantum register and stores the result in the $0^{th}$ classical register.
+
+\end{enumerate}
+
+\subsection{\texttt{output}}
+This section is demarcated by \texttt{\textbackslash begin\_output} and \texttt{\textbackslash end\_output}. We now describe the possible statements \& definitions under this section.
+
+\subsubsection{Directives \& Reserves}
+\begin{enumerate}
+	\item \textbf{c\_output}:
+		This stores the frequencies of occurences of all classical registers in a \texttt{list<int>} of unsigned integers. Consider a program with $1000$ iterations and 2 classical registers. Then a possible \texttt{c\_output} would be $[235, 276, 245, 244]$. This represents the following distribution:
+		\begin{center}
+			\begin{tabular}{||c c c||} 
+			\hline
+			C1 & C2 & Output \\ [0.5ex] 
+			\hline\hline
+			0 & 0 & 235 \\ 
+			\hline
+			0 & 1 & 276 \\
+			\hline
+			1 & 0 & 245 \\
+			\hline
+			1 & 1 & 244 \\ [1ex] 
+			\hline
+			\end{tabular}
+		\end{center}	
+		We can access the values in \texttt{c\_output} through standard indexing, for instance, \texttt{c\_output[2]}.
+	\item \textbf{q\_output}:
+		This stores the final \texttt{state}s in a list of final quantum states in each quantum register. Note that we "zero" out quantum registers where we completed our measurement. This output comes up from only a single iteration. (Could we print all state-iterations out to a file??) We can access the \texttt{state} of the $i^{th}$ quantum register via indexing, i.e., \texttt{q\_output[i]}.
+	\item \textbf{Save}:
+		This directive writes output to a given \texttt{csv} file. The syntax for the directive is as follows: \texttt{\textbackslash save <filename>.csv}.
+	\item \textbf{Echo}:
+		This directive writes output to \texttt{stdout}. The syntax for the directive is as follows: \texttt{\textbackslash echo}.
+\end{enumerate}
+
+\subsubsection{Data Types}
+\begin{enumerate}
+	\item \textbf{int}
+	\item \textbf{float}
+	\item \textbf{string}
+	\item \textbf{complex}
+	\item \textbf{matrix}
+	\item \textbf{state}
+	\item \textbf{list\textlangle type\textrangle}
+\end{enumerate}
+
+\subsubsection{Control Statements}
+\begin{enumerate}
+	\item \textbf{condition(...)\{ ... \}otherwise\{ ... \}}
+	\item \textbf{for i in (range) \{ ... \}}: Range could be of the form \texttt{start:end} or \texttt{start:end:step}
+	\item \textbf{for\_lex (i,j,k,...) in (range\_i, range\_j, range\_k, ...)}
+	\item \textbf{for\_zip (i,j,...) in (range\_i,range\_j)}
+\end{enumerate}
+
+\subsubsection{Data Mainpulation for \texttt{list}}
+The following operations only work for applicable types in \texttt{list}.
+\begin{enumerate}
+	\item \textbf{Add/Sub}: Adds/Subtracts two lists component-wise.
+	\item \textbf{Dot}: Computes dot product of lists.
+	\item \textbf{StdDev}: Computes standard-deviation of a single list.
+	\item \textbf{Avg}: Computes average of a single list.
+	\item \textbf{Condense}: Condenses frequencies by ignoring certain bits. The syntax is \texttt{condense(A, (0,1))}. \\
+		Assume A = [1, 1, 1, 1, 1, 1, 1, 1]. We assume positions written in binary as $000$, $001$, $010$ and so on. Then condensing the first two bits adds up all even and positions to yield [4, 4].
+\end{enumerate}
+
+\end{document}
