@@ -1,0 +1,56 @@
+\begin_init
+    #registers quantum = 3
+    #registers classical = 3
+    #iters = 1000
+
+    #set quantum states -> (1,0), (1,0), (1,0)
+    #set classical states -> 0, 0, 0
+
+    block try(i,j) -> (j) [
+        $ start with Hadamard 
+        lode
+        $
+        H: i
+        $ Apply C-X $
+        X: i -> j
+    ]
+\end_init
+
+\begin
+
+    $ Generate Bell State $
+    BellGen : (2, 3) -> (3)
+    \barrier
+    $ Init Transformations $
+    X: 1 -> 2
+    H: 1
+    $ Measurements $
+    measure: 1 -> 1
+    measure: 2 -> 2
+    $ Classical Controlled Ops $
+    2 ? X : I
+    1 ? Z : I
+    $ Final Measurement $
+    measure: 3 -> 3
+\end
+
+\begin_output
+    $ Copy Output $
+    int sat_alpha = 0;
+    int sat_beta = 0;
+    for i in (0:7)
+    {
+        condition(i%2 == 0)
+        {
+            sat_alpha = sat_alpha + c_output[i];
+        }
+        otherwise
+        {
+            sat_beta = sat_beta + c_output[i];
+        }
+    }
+    $ Comparision $
+    list final = [sat_alpha, sat_beta];
+    list dist = [1000, 0];
+    list c = diff(final, dist);
+\end_output
