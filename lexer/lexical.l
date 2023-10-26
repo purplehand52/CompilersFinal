@@ -56,7 +56,7 @@ datatypes               (int|float|list|complex|matrix)
 
 "diff"                  {printReserved();}
 "sum"                   {printReserved();}
-"std_dev"               {printReserved();}  
+"std_dev"               {printReserved();}
 "var"                   {printReserved();}
 "in"                    {printReserved();}
 "save"                  {printReserved();}

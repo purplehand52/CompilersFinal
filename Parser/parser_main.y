@@ -5,7 +5,65 @@
 
 %%
 
-main_stmt_list: 
+// sequence has been enforced for the initializations and definitions in the init section
+init_section            :   INIT_BEGIN  mandatory_init set_states block_defn_list gate_defn_list INIT_END
+                        ;
+
+mandatory_init          :   '#' REGISTERS_QUANTUM '=' NUMBER '#' REGISTERS_CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
+                        ;
+
+// can only one type of states be set?
+set_states              :   set_quantum_states set_classical_states
+                        |   set_quantum_states
+                        |   set_classical_states
+                        ;
+
+set_quantum_states      :   '#' SET QUANTUM STATES '=' quantum_state_list
+                        ;
+
+set_classical_states    :   '#' SET CLASSICAL STATES '=' classical_state_list
+                        ;
+
+quantum_state_list      :   quantum_state_list ',' quantum_state
+                        |   quantum_state
+                        ;
+
+classical_state_list    :   classical_state_list ',' classical_state
+                        |   classical_state
+                        ;
+
+quantum_state           :   '(' NUMBER ',' NUMBER ')'
+                        ;
+
+classical_state         :   NUMBER
+                        ;
+
+block_defns_list        :   block_defn_list block_defn
+                        |   block_defn
+                        ;
+
+gate_defn_list          :   gate_defn_list gate_defn
+                        |   gate_defn
+                        ;
+
+block_defn              :   BLOCK ID '(' register_id_list ')' ARROW '(' register_id_list ')' '[' block_body ']'
+                        ;
+
+register_id_list        :   register_id_list ',' ID
+                        |   ID
+                        ;
+
+// $ circuit statement calls $
+block_body              :   
+
+gate_defn               :   GATE ID '=' rhs
+                        ;
+
+// need more clarity on what the rhs could be and what each possibility means
+rhs                     :   
+
+
+main_stmt_list:
     main_stmt_list main_stmt
     | main_stmt
     ;
