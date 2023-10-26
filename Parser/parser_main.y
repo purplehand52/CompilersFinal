@@ -16,6 +16,7 @@ mandatory_init          :   '#' REGISTERS_QUANTUM '=' NUMBER '#' REGISTERS_CLASS
 set_states              :   set_quantum_states set_classical_states
                         |   set_quantum_states
                         |   set_classical_states
+                        |
                         ;
 
 set_quantum_states      :   '#' SET QUANTUM STATES '=' quantum_state_list
@@ -40,10 +41,12 @@ classical_state         :   NUMBER
 
 block_defns_list        :   block_defn_list block_defn
                         |   block_defn
+                        |
                         ;
 
 gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
+                        |
                         ;
 
 block_defn              :   BLOCK ID '(' register_id_list ')' ARROW '(' register_id_list ')' '[' block_body ']'
