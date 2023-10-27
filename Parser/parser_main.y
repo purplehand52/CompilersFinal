@@ -1,5 +1,5 @@
 %token NUMBER
-%token GATE, BLOCK_ID, ID
+%token GATE, ID
 %token MEASURE, CONDITION, OTHERWISE, BARRIER
 %token FOR, FOR_LEX, FOR_ZIP
 
@@ -49,7 +49,16 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |
                         ;
 
-block_defn              :   BLOCK ID '(' register_id_list ')' ARROW '(' register_id_list ')' '[' block_body ']'
+block_defn              :   BLOCK block_id control_param_list param_list '[' block_body ']'
+                        ;
+
+control_param_list      : /* epsilon */
+                        | ID ARROW
+                        | '(' register_id_list ')' ARROW
+                        ;
+
+param_list              : ID
+                        | '(' register_id_list ')'
                         ;
 
 register_id_list        :   register_id_list ',' ID
@@ -57,7 +66,8 @@ register_id_list        :   register_id_list ',' ID
                         ;
 
 // $ circuit statement calls $
-block_body              :   
+block_body              :   main_stmt_list
+                        ;
 
 gate_defn               :   GATE ID '=' rhs
                         ;
@@ -66,90 +76,77 @@ gate_defn               :   GATE ID '=' rhs
 rhs                     :   
 
 
-main_stmt_list:
-    main_stmt_list main_stmt
-    | main_stmt
-    ;
+block_id                : ID      /* check first letter capital here */
+                        ;
 
-main_stmt:
-    call_stmt
-    | measure_stmt
-    | condition_stmt
-    | for_stmt
-    | for_lex_stmt
-    | for_zip_stmt
-    | barrier_stmt
-    ;
+main_stmt_list          : main_stmt_list main_stmt
+                        | main_stmt
+                        ;
 
-register:
-    NUMBER  /* check non negative*/
-    | ID
-    ;
+main_stmt               : call_stmt
+                        | measure_stmt
+                        | condition_stmt
+                        | for_stmt
+                        | for_lex_stmt
+                        | for_zip_stmt
+                        | barrier_stmt
+                        ;
 
-call_stmt:
-    classic_control GATE ':' quantum_control register
-    | classic_control BLOCK_ID ':' quantum_control register
-    | classic_control BLOCK_ID ':' quantum_control '(' register_list ')'
-    ;
+register                : NUMBER  /* check non negative*/
+                        | ID
+                        ;
 
-register_list:
-    register_list ',' register
-    | register
-    ;
+call_stmt               : classic_control GATE ':' quantum_control register
+                        | classic_control block_id ':' quantum_control register
+                        | classic_control block_id ':' quantum_control '(' register_list ')'
+                        ;
 
-classic_control:
-    /* epsilon */
-    | register '?'
-    | '(' register_list ')' '?'
-    ;
+register_list           : register_list ',' register
+                        | register
+                        ;
 
-quantum_control:
-    /* epsilon */
-    | register ARROW
-    | '(' register_list ')' ARROW
-    ;
+classic_control         : /* epsilon */
+                        | register '?'
+                        | '(' register_list ')' '?'
+                        ;
 
-measure_stmt:
-    MEASURE ':' register ARROW register
+quantum_control         : /* epsilon */
+                        | register ARROW
+                        | '(' register_list ')' ARROW
+                        ;
 
-barrier_stmt:
-    '\\' BARRIER
-    ;
+measure_stmt            : MEASURE ':' register ARROW register
+                        ;
 
-condition_stmt:
-    CONDITION '(' expr ')' '{' main_stmt_list '}'
-    | CONDITION '(' expr ')' '{' main_stmt_list '}' OTHERWISE '{' main_stmt_list '}'
-    ;
+barrier_stmt            : '\\' BARRIER
+                        ;
+
+condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}'
+                        | CONDITION '(' expr ')' '{' main_stmt_list '}' OTHERWISE '{' main_stmt_list '}'
+                        ;
 
 /* negative numbers? */
-value:
-    NUMBER
-    | ID
-    ;
+value                   : NUMBER
+                        | ID
+                        ;
 
-range: 
-    value ':' value
-    | value ':' value ':' value
-    ;
+range                   : value ':' value
+                        | value ':' value ':' value
+                        ;
 
-range_list:
-    range_list ',' range
-    range
-    ;
+range_list              : range_list ',' range
+                        | range
+                        ;
 
-var_list:
-    var_list ',' ID
-    ID
-    ;
+var_list                : var_list ',' ID
+                        | ID
+                        ;
 
-for_stmt:
-    FOR ID IN '(' range ')' '{' main_stmt_list '}'
-    ;
+for_stmt                : FOR ID IN '(' range ')' '{' main_stmt_list '}'
+                        ;
 
-for_lex_stmt:
-    FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
-    ;
+for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+                        ;
 
-for_zip_stmt:
-    FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
-    ;
+for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+                        ;
