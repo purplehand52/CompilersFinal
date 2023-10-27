@@ -1,15 +1,30 @@
-%token NUMBER
-%token GATE, ID
+%token REGISTERS, QUANTUM, CLASSICAL, NUMBER, ITERS,SET, STATES
+%token MAIN_BEGIN, MAIN_END,OUTPUT_BEGIN,OUTPUT_END,INIT_BEGIN, INIT_END
+%token GATE, ID, BLOCK, ARROW, IN, 
 %token MEASURE, CONDITION, OTHERWISE, BARRIER
 %token FOR, FOR_LEX, FOR_ZIP
 
+
 %%
 
-// sequence has been enforced for the initializations and definitions in the init section
-init_section            :   INIT_BEGIN  mandatory_init set_states block_defn_list gate_defn_list INIT_END
+prgm                    : init_section main_section output_section
                         ;
 
-mandatory_init          :   '#' REGISTERS_QUANTUM '=' NUMBER '#' REGISTERS_CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
+// sequence has been enforced for the initializations and definitions in the init section
+init_section            :   INIT_BEGIN  mandatory_init set_states block_defns_list gate_defn_list INIT_END
+                        ;   
+
+main_section            :   MAIN_BEGIN main_stmt_list MAIN_END
+                        ;
+
+output_section          : OUTPUT_BEGIN OUTPUT_END
+
+
+/* ..............
+    INIT SECTION 
+   ..............
+*/
+mandatory_init          :   '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
                         ;
 
 // can only one type of states be set?
@@ -39,29 +54,45 @@ quantum_state           :   '(' NUMBER ',' NUMBER ')'
 classical_state         :   NUMBER
                         ;
 
-block_defns_list        :   block_defn_list block_defn
-                        |   block_defn
-                        |
-                        ;
-
 gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         |
                         ;
 
-block_defn              :   BLOCK block_id control_param_list param_list '[' block_body ']'
+gate_defn               :   GATE ID '=' rhs
                         ;
 
-control_param_list      : /* epsilon */
-                        | ID ARROW
-                        | '(' register_id_list ')' ARROW
+rhs                     :   '[' tuple_list ']'
+                        |   '{' tuple_list2 '}'
+
+tuple_list              : tuple_list ',' '[' id_list ']'
+                        | '[' id_list ']'
+
+tuple_list2              : tuple_list2 ',' '(' id_list ')'
+                        | '(' id_list ')'
+
+id_list                 : id_list ',' variable
+                        | variable
+
+variable                : ID
+                        | '(' ID ',' ID ')'
+
+block_defns_list        :   block_defns_list block_defn
+                        |   block_defn
+                        |
                         ;
 
-param_list              : ID
-                        | '(' register_id_list ')'
+block_defn              :   BLOCK block_id '('control_param_list ')' param_list '[' block_body ']'
                         ;
 
-register_id_list        :   register_id_list ',' ID
+param_list : 
+           | ARROW '(' param_id_list ')'
+
+param_id_list : param_id_list ',' ID
+              | ID
+              ;
+
+control_param_list      :   control_param_list ',' ID
                         |   ID
                         ;
 
@@ -69,15 +100,13 @@ register_id_list        :   register_id_list ',' ID
 block_body              :   main_stmt_list
                         ;
 
-gate_defn               :   GATE ID '=' rhs
-                        ;
-
-// need more clarity on what the rhs could be and what each possibility means
-rhs                     :   
-
-
 block_id                : ID      /* check first letter capital here */
                         ;
+
+/* ................
+     MAIN SECTION 
+   ................ 
+*/
 
 main_stmt_list          : main_stmt_list main_stmt
                         | main_stmt
@@ -96,9 +125,14 @@ register                : NUMBER  /* check non negative*/
                         | ID
                         ;
 
-call_stmt               : classic_control GATE ':' quantum_control register
-                        | classic_control block_id ':' quantum_control register
-                        | classic_control block_id ':' quantum_control '(' register_list ')'
+/* separate rules for gate calls and block calls because same syntax means different things for both */
+call_stmt               : classic_control call_id ARROW quantum_control register
+                        | classic_control block_id ':' '(' register_list ')' 
+                        | classic_control block_id ':' '(' register_list ')' ARROW '(' register_list ')'
+                        ;
+
+call_id                 : GATE 
+                        | ID
                         ;
 
 register_list           : register_list ',' register
@@ -111,8 +145,8 @@ classic_control         : /* epsilon */
                         ;
 
 quantum_control         : /* epsilon */
-                        | register ARROW
-                        | '(' register_list ')' ARROW
+                        | ':' register
+                        | ':' '(' register_list ')'
                         ;
 
 measure_stmt            : MEASURE ':' register ARROW register
@@ -124,7 +158,7 @@ barrier_stmt            : '\\' BARRIER
 condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}'
                         | CONDITION '(' expr ')' '{' main_stmt_list '}' OTHERWISE '{' main_stmt_list '}'
                         ;
-
+expr :
 /* negative numbers? */
 value                   : NUMBER
                         | ID
@@ -150,3 +184,9 @@ for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' ma
 
 for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
                         ;
+
+
+/* ................ 
+    OUTPUT SECTION 
+   ................
+*/

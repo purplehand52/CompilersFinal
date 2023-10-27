@@ -49,43 +49,42 @@ datatypes               (int|float|list|complex|matrix)
 
 ($[^$]*$)             {}
 
-"?"                     {printSpecial();}
-"#"                     {printSpecial();}
-"."                     {printSpecial();}
-{Arrow}                 {printSpecial();}
+"?"                     {printSpecial();return yytext[0];}
+"#"                     {printSpecial();return yytext[0];}
+"."                     {printSpecial();return yytext[0];}
+{Arrow}                 {printSpecial();return ARROW;}
 
+"gate"                  {printReserved();return GATE;}
 "diff"                  {printReserved();}
 "sum"                   {printReserved();}
 "std_dev"               {printReserved();}
 "var"                   {printReserved();}
-"in"                    {printReserved();}
+"in"                    {printReserved();return IN;}
 "save"                  {printReserved();}
 "echo"                  {printReserved();}
 "return"                {printReserved();}
 "init"                  {printReserved();}
-"condition"             {printReserved();}
-"otherwise"             {printReserved();}
-"main"                  {printReserved();}
-"measure"               {printReserved();}
-"registers"             {printReserved();}
-"quantum"               {printReserved();}
-"classical"             {printReserved();}
-"iters"                 {printReserved();}
-"set"                   {printReserved();}
-"states"                {printReserved();}
-"block"                 {printReserved();}
-"for"                   {printReserved();}
-"for_lex"               {printReserved();}
-"for_zip"               {printReserved();}
-"begin"                 {printReserved();}
-"end"                   {printReserved();}
-"begin_output"          {printReserved();}
-"end_output"            {printReserved();}
-"begin_init"            {printReserved();}
-"end_init"              {printReserved();}
-"output"                {printReserved();}
-"barrier"               {printReserved();}
-[XYZH]                  {printReserved();}
+"condition"             {printReserved();return CONDITION;}
+"otherwise"             {printReserved();return OTHERWISE;}
+"measure"               {printReserved();return MEASURE;}
+"registers"             {printReserved();return REGISTERS;}
+"quantum"               {printReserved();return QUANTUM;}
+"classical"             {printReserved();return CLASSICAL;}
+"iters"                 {printReserved();return ITERS;}
+"set"                   {printReserved();return SET;}
+"states"                {printReserved();return STATES;}
+"block"                 {printReserved();return BLOCK;}
+"for"                   {printReserved();return FOR;}
+"for_lex"               {printReserved();return FOR_LEX;}
+"for_zip"               {printReserved();return FOR_ZIP;}
+"begin_output"          {printReserved();return OUTPUT_BEGIN;}
+"end_output"            {printReserved();return OUTPUT_END;}
+"begin_init"            {printReserved();return INIT_BEGIN;}
+"end_init"              {printReserved();return INIT_END;}
+"begin_main"            {printReserved();return MAIN_BEGIN;}
+"begin_end"             {printReserved();return MAIN_END;}
+"barrier"               {printReserved();return BARRIER;}
+[XYZH]                  {printReserved();return GATE;}
 {datatypes}             {printReserved();}
 
 {Comparators}           {printComparator();}
