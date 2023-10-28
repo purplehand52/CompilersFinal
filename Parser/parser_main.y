@@ -1,9 +1,20 @@
-%token REGISTERS, QUANTUM, CLASSICAL, NUMBER, ITERS,SET, STATES
-%token MAIN_BEGIN, MAIN_END,OUTPUT_BEGIN,OUTPUT_END,INIT_BEGIN, INIT_END
-%token GATE, ID, BLOCK, ARROW, IN, 
-%token MEASURE, CONDITION, OTHERWISE, BARRIER
-%token FOR, FOR_LEX, FOR_ZIP
+%start prgm
+%token REGISTERS QUANTUM CLASSICAL NUMBER ITERS SET STATES
+%token MAIN_BEGIN MAIN_END OUTPUT_BEGIN OUTPUT_END INIT_BEGIN INIT_END
+%token GATE ID BLOCK ARROW IN  
+%token MEASURE CONDITION OTHERWISE BARRIER
+%token FOR FOR_LEX FOR_ZIP
+%token COMP TRUE FALSE EQUALITY AND OR
 
+%left '+' '-'
+%left '*' '/' '%'
+%left COMP
+%left EQUALITY
+%left '&'
+%left '^'
+%left '|'
+%left AND
+%left OR
 
 %%
 
@@ -126,7 +137,7 @@ register                : NUMBER  /* check non negative*/
                         ;
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
-call_stmt               : classic_control call_id ARROW quantum_control register
+call_stmt               : classic_control call_id quantum_control ARROW register
                         | classic_control block_id ':' '(' register_list ')' 
                         | classic_control block_id ':' '(' register_list ')' ARROW '(' register_list ')'
                         ;
@@ -158,7 +169,27 @@ barrier_stmt            : '\\' BARRIER
 condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}'
                         | CONDITION '(' expr ')' '{' main_stmt_list '}' OTHERWISE '{' main_stmt_list '}'
                         ;
-expr :
+
+arithmetic_expr : arithmetic_expr '+' arithmetic_expr
+                | arithmetic_expr '-' arithmetic_expr
+                | arithmetic_expr '*' arithmetic_expr
+                | arithmetic_expr '/' arithmetic_expr
+                | '(' arithmetic_expr ')'
+                | ID
+                ;
+
+expr            : expr COMP expr
+                | expr EQUALITY expr
+                | expr AND expr
+                | expr OR expr   
+                | expr '^' expr
+                | expr '&' expr
+                | expr '|' expr
+                | arithmetic_expr
+                | TRUE
+                | FALSE
+                ;
+
 /* negative numbers? */
 value                   : NUMBER
                         | ID
