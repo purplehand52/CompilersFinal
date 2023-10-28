@@ -155,6 +155,8 @@ register                : NUMBER  /* check non negative*/
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register
                         | classic_control block_id quantum_control ARROW target
+                        | GATE quantum_control ARROW register
+                        | block_id quantum_control ARROW target
                         ;
 
 register_list           : register_list ',' register
