@@ -89,19 +89,24 @@ variable                : ID
                         | '(' ID ',' ID ')'
 
 block_defns_list        :   block_defns_list block_defn
-                        |   block_defn
-                        |
+                        |   /* epsilon */
                         ;
 
-block_defn              :   BLOCK block_id '('control_param_list ')' param_list '[' block_body ']'
+block_defn              : BLOCK block_id control_params ARROW params '[' block_body ']'
                         ;
 
-param_list : 
-           | ARROW '(' param_id_list ')'
+params                  :  ID                                   /* parantheses maybe ignored for single ID */
+                        | '(' param_id_list ')'
+                        ;
 
-param_id_list : param_id_list ',' ID
-              | ID
-              ;
+param_id_list           : param_id_list ',' ID
+                        | ID
+                        ;
+
+control_params          : /* epsilon */                          /* optional */
+                        | ':' ID  
+                        | ':' '(' control_param_list ')'
+                        ;
 
 control_param_list      :   control_param_list ',' ID
                         |   ID
@@ -129,6 +134,7 @@ main_stmt               : call_stmt
                         | for_stmt
                         | for_lex_stmt
                         | for_zip_stmt
+                        | while_stmt
                         | barrier_stmt
                         ;
 
@@ -137,28 +143,38 @@ register                : NUMBER  /* check non negative*/
                         ;
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
-call_stmt               : classic_control call_id quantum_control ARROW register
-                        | classic_control block_id ':' '(' register_list ')' 
-                        | classic_control block_id ':' '(' register_list ')' ARROW '(' register_list ')'
-                        ;
-
-call_id                 : GATE 
-                        | ID
+call_stmt               : classic_control GATE quantum_control ARROW register
+                        | classic_control block_id quantum_control ARROW target             
                         ;
 
 register_list           : register_list ',' register
                         | register
                         ;
 
-classic_control         : /* epsilon */
+classic_control         : /* epsilon */                         /* optional */
                         | register '?'
                         | '(' register_list ')' '?'
                         ;
 
-quantum_control         : /* epsilon */
+quantum_control         : /* epsilon */                         /* optional */
                         | ':' register
                         | ':' '(' register_list ')'
                         ;
+
+target                  : register                              /* blocks allow multiple targets */
+                        | '(' register_list ')' 
+                        ;
+
+/* can use for not, product etc 
+register_expr           : register
+                        | '!' register
+                        ;
+
+register_expr_list      : register_expr_list ',' register_expr
+                        | register_expr
+                        ;
+*/
+
 
 measure_stmt            : MEASURE ':' register ARROW register
                         ;
@@ -166,8 +182,15 @@ measure_stmt            : MEASURE ':' register ARROW register
 barrier_stmt            : '\\' BARRIER
                         ;
 
-condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}'
-                        | CONDITION '(' expr ')' '{' main_stmt_list '}' OTHERWISE '{' main_stmt_list '}'
+condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
+                        ;
+
+otherwise_list          : otherwise_list OTHERWISE '(' expr ')' '{' main_stmt_list '}'
+                        | /* epsilon */
+                        ;
+
+otherwise_final         : OTHERWISE '{' main_stmt_list '}'
+                        | /* epsilon */
                         ;
 
 arithmetic_expr : arithmetic_expr '+' arithmetic_expr
@@ -189,7 +212,7 @@ expr            : expr COMP expr
                 | TRUE
                 | FALSE
                 ;
-
+            
 /* negative numbers? */
 value                   : NUMBER
                         | ID
@@ -216,6 +239,8 @@ for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' ma
 for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
                         ;
 
+while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
+                        ;
 
 /* ................ 
     OUTPUT SECTION 
