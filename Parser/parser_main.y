@@ -6,6 +6,10 @@
 %token FOR FOR_LEX FOR_ZIP
 %token COMP TRUE FALSE EQUALITY AND OR
 %token WHILE
+%token ADD, SUB, DOT, STD_DEV, VAR, AVG, CONDENSE, SUM
+%token COUT, QOUT
+%token INT, UINT, FLOAT, COMPLEX, STRING, MATRIX, STATE, BOOL, IMAG, LIST
+%token NEG, DEC, EXP
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -247,7 +251,124 @@ for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' ma
 while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
                         ;
 
-/* ................ 
-    OUTPUT SECTION 
-   ................
-*/
+// /* ................ 
+//     OUTPUT SECTION 
+//    ................
+// */
+
+/* Datatypes */
+out_id                  : ID | COUT | QOUT ;
+
+prim_type               : INT 
+                        | UINT
+                        | FLOAT
+                        | COMPLEX
+                        | STRING
+                        | MATRIX
+                        | STATE
+                        | BOOL
+                        ;
+
+list_type               : LIST '<' prim_type '>'
+                        ;
+
+data_type               : prim_type
+                        | list_type
+                        ;
+
+bool_const              : TRUE
+                        | FALSE
+                        ;
+
+uint_const              : NUMBER
+                        ;
+
+int_const               : NEG
+                        | NUMBER
+                        ;
+
+float_const             : DEC
+                        | EXP
+                        ;
+
+complex_const           : '(' float_const ',' float_const ')'
+                        | float_const '+' float_const IMAG
+                        | float_const '-' float_const IMAG
+                        ;
+
+string_const            : STRING
+                        ;
+
+matrix_const            : '[' row_list ']'
+                        ;
+
+row_list                : row_list ',' row 
+                        | row
+                        ;
+
+row                     : '[' comps ']'
+                        ;
+
+comps                   : comps ',' complex_const
+                        | complex_const
+                        ;
+
+state_const             : '{' complex_const ',' complex_const '}'
+                        ;
+
+prim_const              : bool_const
+                        | uint_const
+                        | int_const
+                        | float_const
+                        | complex_const
+                        | string_const
+                        | matrix_const
+                        | state_const
+                        ;
+
+vec_const               : '<' vec_list '>'
+                        ;
+
+vec_list                : vec_list ',' prim_const
+                        ;
+
+/* Calls */
+calls                   : ADD '(' ID ',' ID ')'
+                        | SUB '(' ID ',' ID ')'
+                        | DOT '(' ID ',' ID ')'
+                        | STD_DEV '(' ID ')'
+                        | VAR '(' ID ')'
+                        | CONDENSE '(' ID ',' uint_const ')'
+                        | CONDENSE '(' ID ',' '(' uint_list ')' ')'
+                        | SUM '(' ID ')'
+                        | AVG '(' ID ')'
+
+uint_list               : uint_list ',' uint_const
+                        | uint_const
+                        ;
+
+/* Operands */
+arith                   : '*' | '/' | '+' | '-' | '@' ;
+
+bin_arith               : '&' | '^' | '|';
+
+/* Expressions */
+orhs                    : prim_const
+                        | out_id
+                        | out_id '[' uint_const ']'
+                        | out_id '[' uint_const ']' '[' uint_const ']' 
+                        | calls
+                        | '(' orhs ')'
+                        | '!' orhs
+                        | orhs AND orhs
+                        | orhs OR orhs
+                        | orhs COMP orhs
+                        | orhs EQUALITY orhs
+                        | orhs arith orhs
+                        | orhs bin_arith orhs
+                        ;
+
+/* Expressions */
+oexpr                    : out_id '=' orhs;
+
+decl                    : data_type oexpr;

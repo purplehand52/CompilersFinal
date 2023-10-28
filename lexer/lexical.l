@@ -21,6 +21,13 @@ digit                   [0-9]
 letter                  [a-zA-Z]
 id                      ({letter})({letter}|{digit}|_)*
 Number                  {digit}+
+Neg                     -{digit}+
+Dec                     {digit}+.{digit}+
+Exp                     {digit}+.{digit}+E{Pos|Neg}
+Imag                    I
+
+/*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
+/*datatypes               (int|float|list|complex|matrix)*/
 
 Question                (?)
 Colon                   (:)
@@ -29,6 +36,7 @@ Arrow                   ("->")
 
 String                  \"([^\"\\]*(\\.)?)*\"
 Character                \'(.|\\.)\'
+
 
 /* Reserved keywords */
 Logicals                (\|\||&&)
@@ -54,11 +62,33 @@ datatypes               (int|float|list|complex|matrix)
 "."                     {printSpecial();return yytext[0];}
 {Arrow}                 {printSpecial();return ARROW;}
 
+"add"                   {printReserved();return ADD;}
+"sub"                   {printReserved();return SUB;}
+"dot"                   {printReserved();return DOT;}
+"std_dev"               {printReserved();return STD_DEV;}
+"var"                   {printReserved();return VAR;}
+"avg"                   {printReserved();return AVG;}
+"condense"              {printReserved();return CONDENSE;}
+"sum"                   {printReserved();return SUM;}
+
+"c_output"              {printReserved();return COUT;}
+"q_output"              {printReserved();return QOUT;}
+
+"true"                  {printReserved();return TRU;}
+"false"                 {printReserved();return FAL;}
+
+"bool"                  {printReserved();return BOOL;}
+"int"                   {printReserved();return INT;}
+"uint"                  {printReserved();return UINT;}
+"float"                 {printReserved();return FLOAT;}
+"complex"               {printReserved();return COMPLEX;}
+"string"                {printReserved();return STRING;}
+"matrix"                {printReserved();return MATRIX;}
+"state"                 {printReserved();return STATE;}
+"list"                  {printReserved();return LIST;}
+
 "gate"                  {printReserved();return GATE;}
-"diff"                  {printReserved();}
-"sum"                   {printReserved();}
-"std_dev"               {printReserved();}
-"var"                   {printReserved();}
+
 "in"                    {printReserved();return IN;}
 "save"                  {printReserved();}
 "echo"                  {printReserved();}
@@ -87,13 +117,17 @@ datatypes               (int|float|list|complex|matrix)
 [XYZH]                  {printReserved();return GATE;}
 {datatypes}             {printReserved();}
 
-{Comparators}           {printComparator();}
-{Logicals}              {printLogical();}        
+{Comparators}           {printComparator();return COMPARE;}
+{Logicals}              {printLogical();return BIN_LOG;}        
 
 {String}                {fprintf(fp,"%s",yytext);yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);}
 {Character}             {fprintf(fp,"%s",yytext);yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 
-{Number}                {fprintf(fp2,"constant: %s\n",yytext);} 
+{Number}                {fprintf(fp2,"constant: %s\n",yytext); return NUMBER;}
+{Neg}                   {fprintf(fp2,"constant: %s\n",yytext); return NEG;}
+{Dec}                   {fprintf(fp2,"constant: %s\n",yytext); return DEC;}
+{Exp}                   {fprintf(fp2,"constant: %s\n",yytext); return EXP;}
+{Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 {id}                    {fprintf(fp2,"ID: %s\n",yytext);}
 [-+*/=%]                {printOperator();}
 .                       {} /*If code reaches here then there is an error */
