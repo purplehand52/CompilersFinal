@@ -19,17 +19,18 @@
 
 %%
 
-prgm                    : init_section
+prgm                    : init_section main_section output_section
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
 init_section            :   INIT_BEGIN  mandatory_init set_states block_defns_list gate_defn_section INIT_END
                         ;   
 
-// main_section            :   MAIN_BEGIN main_stmt_list MAIN_END
-//                         ;
+main_section            :   MAIN_BEGIN main_stmt_list MAIN_END
+                        |   MAIN_BEGIN MAIN_END
+                        ;
 
-// output_section          : OUTPUT_BEGIN OUTPUT_END
+output_section          : OUTPUT_BEGIN OUTPUT_END
 
 
 /* ..............
@@ -129,125 +130,124 @@ block_id                : ID      /* check first letter capital here */
    ................ 
 */
 
-// main_stmt_list          : main_stmt_list main_stmt
-//                         | main_stmt
-//                         ;
+main_stmt_list          : main_stmt_list main_stmt
+                        | main_stmt
+                        ;
 
-// main_stmt               : call_stmt
-//                         | measure_stmt
-//                         | condition_stmt
-//                         | for_stmt
-//                         | for_lex_stmt
-//                         | for_zip_stmt
-//                         | while_stmt
-//                         | barrier_stmt
-//                         ;
+main_stmt               : call_stmt
+                        | measure_stmt
+                        | condition_stmt
+                        | for_stmt
+                        | for_lex_stmt
+                        | for_zip_stmt
+                        | barrier_stmt
+                        | while_stmt
+                        ;
 
-// register                : NUMBER  /* check non negative*/
-//                         | ID
-//                         ;
+register                : NUMBER  /* check non negative*/
+                        | ID
+                        ;
 
-// /* separate rules for gate calls and block calls because same syntax means different things for both */
-// call_stmt               : classic_control GATE quantum_control ARROW register
-//                         | classic_control block_id quantum_control ARROW target             
-//                         ;
+/* separate rules for gate calls and block calls because same syntax means different things for both */
+call_stmt               : classic_control GATE quantum_control ARROW register
+                        | classic_control block_id quantum_control ARROW target
+                        ;
 
-// register_list           : register_list ',' register
-//                         | register
-//                         ;
+register_list           : register_list ',' register
+                        | register
+                        ;
 
-// classic_control         : /* epsilon */                         /* optional */
-//                         | register '?'
-//                         | '(' register_list ')' '?'
-//                         ;
+classic_control         : register '?'                         /* removing epsilon rule resolved all conflicts */
+                        | '(' register_list ')' '?'
+                        ;
 
-// quantum_control         : /* epsilon */                         /* optional */
-//                         | ':' register
-//                         | ':' '(' register_list ')'
-//                         ;
+quantum_control         : /* epsilon */                         /* optional */
+                        | ':' register
+                        | ':' '(' register_list ')'
+                        ;
 
-// target                  : register                              /* blocks allow multiple targets */
-//                         | '(' register_list ')' 
-//                         ;
+target                  : register                              /* blocks allow multiple targets */
+                        | '(' register_list ')' 
+                        ;
 
-// /* can use for not, product etc 
-// register_expr           : register
-//                         | '!' register
-//                         ;
+/* can use for not, product etc 
+register_expr           : register
+                        | '!' register
+                        ;
 
-// register_expr_list      : register_expr_list ',' register_expr
-//                         | register_expr
-//                         ;
-// */
+register_expr_list      : register_expr_list ',' register_expr
+                        | register_expr
+                        ;
+*/
 
 
-// measure_stmt            : MEASURE ':' register ARROW register
-//                         ;
+measure_stmt            : MEASURE ':' register ARROW register
+                        ;
 
-// barrier_stmt            : '\\' BARRIER
-//                         ;
+barrier_stmt            : '\\' BARRIER
+                        ;
 
-// condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
-//                         ;
+condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
+                        ;
 
-// otherwise_list          : otherwise_list OTHERWISE '(' expr ')' '{' main_stmt_list '}'
-//                         | /* epsilon */
-//                         ;
+otherwise_list          : otherwise_list OTHERWISE '(' expr ')' '{' main_stmt_list '}'
+                        | /* epsilon */
+                        ;
 
-// otherwise_final         : OTHERWISE '{' main_stmt_list '}'
-//                         | /* epsilon */
-//                         ;
+otherwise_final         : OTHERWISE '{' main_stmt_list '}'
+                        | /* epsilon */
+                        ;
 
-// arithmetic_expr : arithmetic_expr '+' arithmetic_expr
-//                 | arithmetic_expr '-' arithmetic_expr
-//                 | arithmetic_expr '*' arithmetic_expr
-//                 | arithmetic_expr '/' arithmetic_expr
-//                 | '(' arithmetic_expr ')'
-//                 | ID
-//                 ;
+arithmetic_expr : arithmetic_expr '+' arithmetic_expr
+                | arithmetic_expr '-' arithmetic_expr
+                | arithmetic_expr '*' arithmetic_expr
+                | arithmetic_expr '/' arithmetic_expr
+                | '(' arithmetic_expr ')'
+                | ID
+                ;
 
-// expr            : expr COMP expr
-//                 | expr EQUALITY expr
-//                 | expr AND expr
-//                 | expr OR expr   
-//                 | expr '^' expr
-//                 | expr '&' expr
-//                 | expr '|' expr
-//                 | arithmetic_expr
-//                 | TRUE
-//                 | FALSE
-//                 ;
-            
-// /* negative numbers? */
-// value                   : NUMBER
-//                         | ID
-//                         ;
+expr            : expr COMP expr
+                | expr EQUALITY expr
+                | expr AND expr
+                | expr OR expr
+                | expr '^' expr
+                | expr '&' expr
+                | expr '|' expr
+                | arithmetic_expr
+                | TRUE
+                | FALSE
+                ;
 
-// range                   : value ':' value
-//                         | value ':' value ':' value
-//                         ;
+/* negative numbers? */
+value                   : NUMBER
+                        | ID
+                        ;
 
-// range_list              : range_list ',' range
-//                         | range
-//                         ;
+range                   : value ':' value
+                        | value ':' value ':' value
+                        ;
 
-// var_list                : var_list ',' ID
-//                         | ID
-//                         ;
+range_list              : range_list ',' range
+                        | range
+                        ;
 
-// for_stmt                : FOR ID IN '(' range ')' '{' main_stmt_list '}'
-//                         ;
+var_list                : var_list ',' ID
+                        | ID
+                        ;
 
-// for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
-//                         ;
+for_stmt                : FOR ID IN '(' range ')' '{' main_stmt_list '}'
+                        ;
 
-// for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
-//                         ;
+for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+                        ;
 
-// while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
-//                         ;
+for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+                        ;
 
-// /* ................ 
-//     OUTPUT SECTION 
-//    ................
-// */
+while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
+                        ;
+
+/* ................ 
+    OUTPUT SECTION 
+   ................
+*/
