@@ -36,7 +36,7 @@ prgm                    : init_section main_section output_section {printf("Done
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
-init_section            :  '\\' INIT_BEGIN '#' REGISTERS QUANTUM '=' NUMBER '\\' INIT_END {printf("init done\n");}
+init_section            :  '\\' INIT_BEGIN mandatory_init set_states block_defns_list gate_defn_section '\\' INIT_END {printf("init done\n");}
                         ;   
 
 main_section            : '\\'  MAIN_BEGIN main_stmt_list '\\' MAIN_END
@@ -50,8 +50,8 @@ output_section          : '\\' OUTPUT_BEGIN '\\' OUTPUT_END
     INIT SECTION 
    ..............
 */
-/* mandatory_init          :  {printf("Mandatory init\n");}
-                        ; */
+mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
+                        ;
 
 // can only one type of states be set?
 set_states              :   set_quantum_states set_states
@@ -59,10 +59,10 @@ set_states              :   set_quantum_states set_states
                         |
                         ;
 
-set_quantum_states      :   '#' SET QUANTUM STATES '=' quantum_state_list
+set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list
                         ;
 
-set_classical_states    :   '#' SET CLASSICAL STATES '=' classical_state_list
+set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list
                         ;
 
 quantum_state_list      :   quantum_state_list ',' quantum_state
@@ -103,14 +103,19 @@ tuple_list2              : tuple_list2 ',' '(' id_list ')'
 id_list                 : id_list ',' variable
                         | variable
 
-variable                : ID
-                        | '(' ID ',' ID ')'
+variable                : var
+                        | '(' var ',' var ')'
+
+var                     : NUMBER
+                        | ID
+                        | NEG
+                        | DEC
 
 block_defns_list        :   block_defns_list block_defn
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id control_params ARROW params '[' block_body ']'
+block_defn              : BLOCK block_id params target_params '[' block_body ']'
                         ;
 
 params                  :  ID                                   /* parantheses maybe ignored for single ID */
@@ -121,17 +126,17 @@ param_id_list           : param_id_list ',' ID
                         | ID
                         ;
 
-control_params          : /* epsilon */                          /* optional */
-                        | ':' ID  
-                        | ':' '(' control_param_list ')'
+target_params           : /* epsilon */                          /* optional */
+                        | ARROW ID  
+                        | ARROW '(' target_param_list ')'
                         ;
 
-control_param_list      :   control_param_list ',' ID
+target_param_list       :   target_param_list ',' ID
                         |   ID
                         ;
 
-// $ circuit statement calls $
-block_body              :
+block_body              : 
+                        | stmts block_body
                         ;
 
 block_id                : ID      /* check first letter capital here */
@@ -146,19 +151,22 @@ main_stmt_list          : main_stmt_list main_stmt
                         | main_stmt
                         ;
 
-main_stmt               : call_stmt
+main_stmt               : stmts
+                        | barrier_stmt
+
+stmts                   : call_stmt
                         | measure_stmt
                         | condition_stmt
                         | for_stmt
                         | for_lex_stmt
                         | for_zip_stmt
-                        | barrier_stmt
                         | while_stmt
                         ;
 
 register                : NUMBER  /* check non negative*/
                         | ID
                         ;
+
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register
@@ -216,8 +224,8 @@ arithmetic_expr : arithmetic_expr '+' arithmetic_expr
                 | arithmetic_expr '-' arithmetic_expr
                 | arithmetic_expr '*' arithmetic_expr
                 | arithmetic_expr '/' arithmetic_expr
-                | '(' arithmetic_expr ')'
                 | ID
+                | NUMBER
                 ;
 
 expr            : expr COMP expr
@@ -227,6 +235,7 @@ expr            : expr COMP expr
                 | expr '^' expr
                 | expr '&' expr
                 | expr '|' expr
+                | '(' expr ')'
                 | arithmetic_expr
                 | TRUE
                 | FALSE

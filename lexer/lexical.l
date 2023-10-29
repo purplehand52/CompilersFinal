@@ -30,7 +30,7 @@ Imag                    [I]
 /*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
 /*datatypes               (int|float|list|complex|matrix)*/
 
-Arrow                   ("->")
+Arrow                   (->)
 String                  \"([^\"\\]*(\\.)?)*\"
 Character                \'(.|\\.)\'
 
@@ -43,11 +43,11 @@ Equality                (==|!=)
 %%
 
 [\t ]                   {}
-[\n]                    {printf("hi");}
+[\n]                    {}
 [;]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 [:]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 [,]                     {printSpecial();return yytext[0];}
-[()\[\]{}]              {printSpecial();return yytext[0];}
+[\)\(\[\]\{\}]          {printSpecial();return yytext[0];}
 "\\"                    {printSpecial();return yytext[0];}
 
 ($[^$]*$)               {}
@@ -124,8 +124,8 @@ Equality                (==|!=)
 {Dec}                   {fprintf(fp2,"constant: %s\n",yytext); return DEC;}
 {Exp}                   {fprintf(fp2,"constant: %s\n",yytext); return EXP;}
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
-{id}                    {fprintf(fp2,"ID: %s\n",yytext);}
-[-+*/=%]                {printOperator();}
+{id}                    {fprintf(fp2,"ID: %s\n",yytext);return ID;}
+[-+*/=%]                {printOperator();return yytext[0];}
 .                       {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 
 %%
