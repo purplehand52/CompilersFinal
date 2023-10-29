@@ -1,8 +1,9 @@
 %{
 #include<stdio.h>
 #include<string.h>
+#include"../Parser/y.tab.h"
 
-FILE * fp, *fp2;
+FILE *fp2;
 extern FILE* yyin;
 int line = 0,flag=0,flag2=0;
 
@@ -16,50 +17,44 @@ void printReserved();
 void error();
 %}
 /* contains frequently used declarations */
-special                 [-@#*+_/:.\\]
+
 digit                   [0-9]
 letter                  [a-zA-Z]
-id                      ({letter})({letter}|{digit}|_)*
+id                      {letter}({letter}|{digit}|_)*
 Number                  {digit}+
-Neg                     -{digit}+
-Dec                     {digit}+.{digit}+
-Exp                     {digit}+.{digit}+E{Pos|Neg}
-Imag                    I
+Neg                     [-]{digit}+
+Dec                     {digit}+\.{digit}+
+Exp                     {digit}+\.{digit}+E(Number|Neg)
+Imag                    [I]
 
 /*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
 /*datatypes               (int|float|list|complex|matrix)*/
 
-Question                (?)
-Colon                   (:)
-SemiColon               (;)
 Arrow                   ("->")
-
 String                  \"([^\"\\]*(\\.)?)*\"
 Character                \'(.|\\.)\'
 
 
-/* Reserved keywords */
-Logicals                (\|\||&&)
-Comparators             (<|>|>=|<=|==|!=)
-datatypes               (int|float|list|complex|matrix)  
+/* Reserved symbols */
+Logicals                (^|&|\|)
+Comparators             (<|>|>=|<=)
+Equality                (==|!=)  
 
 %%
 
-[ \t]                   {}
-[\n]                    {line++;}
-[;]                     {fprintf(fp2,"punctuation: %s\n",yytext);}
-[:]                     {fprintf(fp2,"punctuation: %s\n",yytext);}
-[,]                     {printSpecial();}
-[()\[\]{}]              {printSpecial();}
-[\\]                    {printSpecial();}
-[\_]                    {printSpecial();}
+[\t ]                   {}
+[\n]                    {printf("hi");}
+[;]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
+[:]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
+[,]                     {printSpecial();return yytext[0];}
+[()\[\]{}]              {printSpecial();return yytext[0];}
+"\\"                    {printSpecial();return yytext[0];}
 
-
-($[^$]*$)             {}
+($[^$]*$)               {}
 
 "?"                     {printSpecial();return yytext[0];}
 "#"                     {printSpecial();return yytext[0];}
-"."                     {printSpecial();return yytext[0];}
+"\."                    {printSpecial();return yytext[0];}
 {Arrow}                 {printSpecial();return ARROW;}
 
 "add"                   {printReserved();return ADD;}
@@ -74,8 +69,8 @@ datatypes               (int|float|list|complex|matrix)
 "c_output"              {printReserved();return COUT;}
 "q_output"              {printReserved();return QOUT;}
 
-"true"                  {printReserved();return TRU;}
-"false"                 {printReserved();return FAL;}
+"true"                  {printReserved();return TRUE;}
+"false"                 {printReserved();return FALSE;}
 
 "bool"                  {printReserved();return BOOL;}
 "int"                   {printReserved();return INT;}
@@ -93,7 +88,6 @@ datatypes               (int|float|list|complex|matrix)
 "save"                  {printReserved();}
 "echo"                  {printReserved();}
 "return"                {printReserved();}
-"init"                  {printReserved();}
 "condition"             {printReserved();return CONDITION;}
 "otherwise"             {printReserved();return OTHERWISE;}
 "measure"               {printReserved();return MEASURE;}
@@ -112,16 +106,18 @@ datatypes               (int|float|list|complex|matrix)
 "begin_init"            {printReserved();return INIT_BEGIN;}
 "end_init"              {printReserved();return INIT_END;}
 "begin_main"            {printReserved();return MAIN_BEGIN;}
-"begin_end"             {printReserved();return MAIN_END;}
+"end_main"              {printReserved();return MAIN_END;}
 "barrier"               {printReserved();return BARRIER;}
 [XYZH]                  {printReserved();return GATE;}
-{datatypes}             {printReserved();}
 
-{Comparators}           {printComparator();return COMPARE;}
-{Logicals}              {printLogical();return BIN_LOG;}        
+{Comparators}           {printComparator();return COMP;}
+{Equality}              {printComparator();return EQUALITY;}
+{Logicals}              {printLogical();return yytext[0];}
+"||"                    {printLogical();return OR;}
+"&&"                    {printLogical();return AND;}
 
-{String}                {fprintf(fp,"%s",yytext);yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);}
-{Character}             {fprintf(fp,"%s",yytext);yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
+{String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);}
+{Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 
 {Number}                {fprintf(fp2,"constant: %s\n",yytext); return NUMBER;}
 {Neg}                   {fprintf(fp2,"constant: %s\n",yytext); return NEG;}
@@ -130,7 +126,7 @@ datatypes               (int|float|list|complex|matrix)
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 {id}                    {fprintf(fp2,"ID: %s\n",yytext);}
 [-+*/=%]                {printOperator();}
-.                       {} /*If code reaches here then there is an error */
+.                       {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 
 %%
 
@@ -160,7 +156,7 @@ void error(){
 
 int yywrap(void){}
   
-int main(int argc, char*argv[])
+/* int main(int argc, char*argv[])
 {  
     fp2 = fopen("out_token.txt","w"); // for writing token stream
 
@@ -168,4 +164,4 @@ int main(int argc, char*argv[])
     while(yylex());
   
     return 0;
-}
+} */

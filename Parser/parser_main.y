@@ -1,3 +1,12 @@
+%{
+   #include<stdio.h>
+   #include<stdlib.h>
+   extern FILE* yyin,*fp2;
+
+   int yylex();
+   void yyerror();
+%}
+
 %start prgm
 %token REGISTERS QUANTUM CLASSICAL NUMBER ITERS SET STATES
 %token MAIN_BEGIN MAIN_END OUTPUT_BEGIN OUTPUT_END INIT_BEGIN INIT_END
@@ -6,10 +15,10 @@
 %token FOR FOR_LEX FOR_ZIP
 %token COMP TRUE FALSE EQUALITY AND OR
 %token WHILE
-%token ADD, SUB, DOT, STD_DEV, VAR, AVG, CONDENSE, SUM
-%token COUT, QOUT
-%token INT, UINT, FLOAT, COMPLEX, STRING, MATRIX, STATE, BOOL, IMAG, LIST
-%token NEG, DEC, EXP
+%token ADD SUB DOT STD_DEV VAR AVG CONDENSE SUM
+%token COUT QOUT
+%token INT UINT FLOAT COMPLEX STRING MATRIX STATE BOOL IMAG LIST
+%token NEG DEC EXP
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -23,31 +32,30 @@
 
 %%
 
-prgm                    : init_section main_section output_section
+prgm                    : init_section main_section output_section {printf("Done\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
-init_section            :   INIT_BEGIN  mandatory_init set_states block_defns_list gate_defn_section INIT_END
+init_section            :  '\\' INIT_BEGIN '#' REGISTERS QUANTUM '=' NUMBER '\\' INIT_END {printf("init done\n");}
                         ;   
 
-main_section            :   MAIN_BEGIN main_stmt_list MAIN_END
-                        |   MAIN_BEGIN MAIN_END
+main_section            : '\\'  MAIN_BEGIN main_stmt_list '\\' MAIN_END
+                        | '\\' MAIN_BEGIN '\\' MAIN_END
                         ;
 
-output_section          : OUTPUT_BEGIN OUTPUT_END
+output_section          : '\\' OUTPUT_BEGIN '\\' OUTPUT_END
 
 
 /* ..............
     INIT SECTION 
    ..............
 */
-mandatory_init          :   '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
-                        ;
+/* mandatory_init          :  {printf("Mandatory init\n");}
+                        ; */
 
 // can only one type of states be set?
-set_states              :   set_quantum_states set_classical_states
-                        |   set_quantum_states
-                        |   set_classical_states
+set_states              :   set_quantum_states set_states
+                        |   set_classical_states set_states
                         |
                         ;
 
@@ -374,3 +382,18 @@ orhs                    : prim_const
 oexpr                    : out_id '=' orhs;
 
 decl                    : data_type oexpr;
+
+%%
+
+int main()
+{
+  yyin = fopen("in.txt","r");
+  fp2 = fopen("tokens.txt","w");
+  yyparse();
+
+  return 0;
+}
+
+void yyerror(){
+   printf("Invalid syntax");
+}
