@@ -19,6 +19,7 @@
 %token COUT QOUT
 %token INT UINT FLOAT COMPLEX STRING MATRIX STATE BOOL IMAG LIST
 %token NEG DEC EXP
+%token SAVE ECHO RETURN
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -341,7 +342,7 @@ prim_const              : bool_const
                         | int_const
                         | float_const
                         | complex_const
-                        | string_const
+/*                        | string_const */
                         | matrix_const
                         | state_const
                         ;
@@ -362,6 +363,7 @@ calls                   : ADD '(' ID ',' ID ')'
                         | CONDENSE '(' ID ',' '(' uint_list ')' ')'
                         | SUM '(' ID ')'
                         | AVG '(' ID ')'
+                        ;
 
 uint_list               : uint_list ',' uint_const
                         | uint_const
@@ -373,26 +375,84 @@ arith                   : '*' | '/' | '+' | '-' | '@' ;
 bin_arith               : '&' | '^' | '|';
 
 /* Expressions */
-orhs                    : prim_const
+out_rhs                 : prim_const
                         | out_id
                         | out_id '[' uint_const ']'
                         | out_id '[' uint_const ']' '[' uint_const ']' 
                         | calls
-                        | '(' orhs ')'
-                        | '!' orhs
-                        | orhs AND orhs
-                        | orhs OR orhs
-                        | orhs COMP orhs
-                        | orhs EQUALITY orhs
-                        | orhs arith orhs
-                        | orhs bin_arith orhs
+                        | '(' out_rhs ')'
+                        | '!' out_rhs
+                        | out_rhs AND out_rhs
+                        | out_rhs OR out_rhs
+                        | out_rhs COMP out_rhs
+                        | out_rhs EQUALITY out_rhs
+                        | out_rhs arith out_rhs
+                        | out_rhs bin_arith out_rhs
                         ;
 
 /* Expressions */
-oexpr                    : out_id '=' orhs;
+out_expr                : out_id '=' out_rhs;
 
-decl                    : data_type oexpr;
+decl                    : data_type out_expr;
 
+/* Echo Statement */
+echo_stmt               : ECHO '(' echo_list ')'
+                        ;
+
+echo_list               : echo_list ',' echo_arg
+                        ;
+
+echo_arg                : string_const
+                        | out_rhs
+                        ;
+
+/* Save Statement */
+save_stmt               : '\\' SAVE ID
+                        ;
+
+/* Control Statement */
+out_control             : out_cond_stmt
+                        | out_for_stmt
+                        | out_for_lex_stmt
+                        | out_for_zip_stmt
+                        | out_while_stmt
+                        ;
+
+out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main '}' out_other_list out_other_final
+                        ;
+
+out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' out_main '}'
+                        | /* epsilon */
+                        ;
+
+out_other_final         : OTHERWISE '{' out_main '}'
+                        | /* epsilon */
+                        ;
+
+out_for_stmt            : FOR ID IN '(' range ')' '{' out_main '}'
+                        ;
+
+out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' out_main '}'
+                        ;
+
+out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' out_main '}'
+                        ;
+
+out_while_stmt          : WHILE '(' expr ')' '{' out_main '}'
+                        ;
+
+
+/* Output Statement */
+out_main                : out_main out_stmt
+                        | out_stmt
+                        ;
+
+out_stmt                : out_control
+                        | save_stmt
+                        | echo_stmt
+                        | out_expr
+                        | decl
+                        ;
 %%
 
 int main()

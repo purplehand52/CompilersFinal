@@ -85,9 +85,9 @@ Equality                (==|!=)
 "gate"                  {printReserved();return GATE;}
 
 "in"                    {printReserved();return IN;}
-"save"                  {printReserved();}
-"echo"                  {printReserved();}
-"return"                {printReserved();}
+"save"                  {printReserved();return SAVE;}
+"echo"                  {printReserved();return ECHO;}
+"return"                {printReserved();return RETURN;}
 "condition"             {printReserved();return CONDITION;}
 "otherwise"             {printReserved();return OTHERWISE;}
 "measure"               {printReserved();return MEASURE;}

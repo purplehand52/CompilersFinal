@@ -55,7 +55,6 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
 \end_main
 
 
-
 \begin_output
 
     $ Save Output $
