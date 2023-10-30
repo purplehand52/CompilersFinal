@@ -23,11 +23,13 @@
 
 %left '+' '-'
 %left '*' '/' '%'
+%left '@'
 %left COMP
 %left EQUALITY
 %left '&'
 %left '^'
 %left '|'
+%left '!'
 %left AND
 %left OR
 
@@ -44,7 +46,7 @@ main_section            : '\\'  MAIN_BEGIN main_stmt_list '\\' MAIN_END
                         | '\\' MAIN_BEGIN '\\' MAIN_END
                         ;
 
-output_section          : '\\' OUTPUT_BEGIN '\\' OUTPUT_END
+output_section          : '\\' OUTPUT_BEGIN out_main '\\' OUTPUT_END
 
 
 /* ..............
@@ -293,9 +295,9 @@ prim_type               : INT
 list_type               : LIST '<' prim_type '>'
                         ;
 
-data_type               : prim_type
+/* data_type               : prim_type
                         | list_type
-                        ;
+                        ; */
 
 bool_const              : TRUE
                         | FALSE
@@ -304,8 +306,8 @@ bool_const              : TRUE
 uint_const              : NUMBER
                         ;
 
-int_const               : NEG
-                        | NUMBER
+nint_const               : NEG
+                        /* | NUMBER */
                         ;
 
 float_const             : DEC
@@ -313,8 +315,8 @@ float_const             : DEC
                         ;
 
 complex_const           : '(' float_const ',' float_const ')'
-                        | float_const '+' float_const IMAG
-                        | float_const '-' float_const IMAG
+                        /* | float_const '+' float_const IMAG
+                        | float_const '-' float_const IMAG */
                         ;
 
 string_const            : STRING
@@ -339,10 +341,10 @@ state_const             : '{' complex_const ',' complex_const '}'
 
 prim_const              : bool_const
                         | uint_const
-                        | int_const
+                        | nint_const
                         | float_const
                         | complex_const
-/*                        | string_const */
+                        | string_const
                         | matrix_const
                         | state_const
                         ;
@@ -351,6 +353,7 @@ vec_const               : '<' vec_list '>'
                         ;
 
 vec_list                : vec_list ',' prim_const
+                        | prim_const
                         ;
 
 /* Calls */
@@ -369,11 +372,6 @@ uint_list               : uint_list ',' uint_const
                         | uint_const
                         ;
 
-/* Operands */
-arith                   : '*' | '/' | '+' | '-' | '@' ;
-
-bin_arith               : '&' | '^' | '|';
-
 /* Expressions */
 out_rhs                 : prim_const
                         | out_id
@@ -386,23 +384,28 @@ out_rhs                 : prim_const
                         | out_rhs OR out_rhs
                         | out_rhs COMP out_rhs
                         | out_rhs EQUALITY out_rhs
-                        | out_rhs arith out_rhs
-                        | out_rhs bin_arith out_rhs
+                        | out_rhs '*' out_rhs
+                        | out_rhs '/' out_rhs
+                        | out_rhs '+' out_rhs
+                        | out_rhs '-' out_rhs
+                        | out_rhs '@' out_rhs
+                        | out_rhs '&' out_rhs
+                        | out_rhs '^' out_rhs
+                        | out_rhs '|' out_rhs
                         ;
 
 /* Expressions */
-out_expr                : out_id '=' out_rhs;
+out_expr                : ID '=' out_rhs;
 
-decl                    : data_type out_expr;
+decl                    : prim_type out_expr 
+                        | list_type ID '=' vec_const
+                        ;
 
 /* Echo Statement */
 echo_stmt               : ECHO '(' echo_list ')'
                         ;
 
-echo_list               : echo_list ',' echo_arg
-                        ;
-
-echo_arg                : string_const
+echo_list               : echo_list ',' out_rhs
                         | out_rhs
                         ;
 
