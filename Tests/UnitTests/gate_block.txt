@@ -1,0 +1,43 @@
+$ init related features $
+
+\begin_init 
+#registers quantum = 3            
+#registers classical = 3
+#iters = 1000
+#set quantum states -> (1,0), (1,0), (1,0)
+#set classical states -> 0, 0, 0
+
+block Y3 (p,q,r)
+[
+    Y-> p
+    Y-> q
+    Y-> r
+]
+
+block X_even i -> p
+[
+    condition(i % 2 == 0) {                 $ issue with modulo $
+        X -> p
+    }
+]
+
+
+gate S =[[(1 , 0), (0, 0)],
+         [(0 , 0), (0, 1)]]
+
+\end_init
+
+\begin_main
+    H -> 0                   $ in built gate $
+    S -> 1                   $ user defined gate $
+    Y3 (0,1,2)               $ block call with target $
+    for i in range(0:3){
+        X_even i -> i        $ block call with control->target $
+        measure i -> i
+    }
+\end_main
+
+
+\begin_output
+
+\end_output

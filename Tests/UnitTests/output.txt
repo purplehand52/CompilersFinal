@@ -1,0 +1,17 @@
+\begin_init
+#registers_quantum = 3
+#registers_classical = 3
+#iters = 1000
+\end_init
+
+
+\begin_main
+
+\end_main
+
+
+\begin_output
+
+\save exp_result.csv
+
+\end_output

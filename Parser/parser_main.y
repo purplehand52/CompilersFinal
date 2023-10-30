@@ -224,6 +224,7 @@ arithmetic_expr : arithmetic_expr '+' arithmetic_expr
                 | arithmetic_expr '-' arithmetic_expr
                 | arithmetic_expr '*' arithmetic_expr
                 | arithmetic_expr '/' arithmetic_expr
+                | arithmetic_expr '%' arithmetic_expr
                 | ID
                 | NUMBER
                 ;
