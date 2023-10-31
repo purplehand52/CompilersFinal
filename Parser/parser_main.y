@@ -72,15 +72,13 @@ set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list
                         ;
 
-quantum_state_list      :   quantum_state_list ',' quantum_state
-                        |   quantum_state
+quantum_state_list      :   quantum_state_list ',' state_const
+                        |   state_const
                         ;
 
 classical_state_list    :   classical_state_list ',' classical_state
                         |   classical_state
                         ;
-
-quantum_state           :   '(' NUMBER ',' NUMBER ')'
                         ;
 
 classical_state         :   NUMBER
@@ -177,8 +175,10 @@ register                : NUMBER  /* check non negative*/
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register
-                        | classic_control block_id parameters optional
+                        | classic_control ID quantum_control ARROW register
                         | GATE quantum_control ARROW register
+                        | ID quantum_control ARROW register
+                        | classic_control block_id parameters optional
                         | block_id parameters optional
                         ;
 
@@ -315,23 +315,12 @@ bool_const              : TRUE
                         | FALSE
                         ;
 
-uint_const              : NUMBER
-                        ;
-
-nint_const               : NEG
-                        /* | NUMBER */
-                        ;
-
-float_const             : DEC
+num                     : DEC
+                        | NEG
                         | EXP
-                        ;
-
-complex_const           : '(' float_const ',' float_const ')'
-                        /* | float_const '+' float_const IMAG
-                        | float_const '-' float_const IMAG */
-                        ;
-
-string_const            : STRING
+                        | NUMBER
+                        
+complex_const           : '(' num ',' num ')'
                         ;
 
 matrix_const            : '[' row_list ']'
@@ -352,13 +341,14 @@ state_const             : '{' complex_const ',' complex_const '}'
                         ;
 
 prim_const              : bool_const
-                        | uint_const
-                        | nint_const
-                        | float_const
                         | complex_const
-                        | string_const
                         | matrix_const
                         | state_const
+                        | NUMBER
+                        | NEG
+                        | DEC
+                        | EXP
+                        | STRING
                         ;
 
 vec_const               : '[' vec_list ']'
@@ -374,7 +364,7 @@ calls                   : ADD '(' var2 ',' var2 ')'
                         | DOT '(' var2 ',' var2 ')'
                         | STD_DEV '(' var2 ')'
                         | VAR '(' var2 ')'
-                        | CONDENSE '(' var2 ',' uint_const ')'
+                        | CONDENSE '(' var2 ',' NUMBER ')'
                         | CONDENSE '(' var2 ',' '(' uint_list ')' ')'
                         | SUM '(' var2 ')'
                         | AVG '(' var2 ')'
@@ -385,15 +375,15 @@ var2                    : ID
                         | COUT
                         ;
 
-uint_list               : uint_list ',' uint_const
-                        | uint_const
+uint_list               : uint_list ',' NUMBER
+                        | NUMBER
                         ;
 
 /* Expressions */
 out_rhs                 : prim_const
                         | out_id
-                        | out_id '[' uint_const ']'
-                        | out_id '[' uint_const ']' '[' uint_const ']' 
+                        | out_id '[' NUMBER ']'
+                        | out_id '[' NUMBER ']' '[' NUMBER ']' 
                         | calls
                         | '(' out_rhs ')'
                         | '!' out_rhs
