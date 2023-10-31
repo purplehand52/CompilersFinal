@@ -47,6 +47,8 @@ main_section            : '\\'  MAIN_BEGIN main_stmt_list '\\' MAIN_END
                         ;
 
 output_section          : '\\' OUTPUT_BEGIN out_main '\\' OUTPUT_END
+                        | '\\' OUTPUT_BEGIN '\\' OUTPUT_END
+                        ;
 
 
 /* ..............
@@ -463,7 +465,7 @@ out_while_stmt          : WHILE '(' expr ')' '{' out_main '}'
 
 /* Output Statement */
 out_main                : out_main out_stmt
-                        | 
+                        | out_stmt
                         ;
 
 out_stmt                : out_control

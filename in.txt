@@ -1,67 +1,81 @@
+$ The following program implements Deutsch's algorithm. $
+$ Needs two quantum registers and two classical registers to measure and perform analysis. $
+
+$ Generally, we perform a targeted f(x) as possible Uf: (x, y) -> (x, y + f(x)) where + represents XOR. $
+$ We assume f(0) = 1, f(1) = 0. $
+$ Thus the gate Uf could be represented by an inverted X gate. $
+
 \begin_init
-    #registers quantum = 3
-    #registers classical = 3
+
+    $ Initialization $
+    #registers quantum = 2
+    #registers classical = 2
     #iters = 1000
 
-    #set classical states -> 0,0,0
-    #set quantum states -> (1,0), (1,0), (1,0)
+    #set quantum states -> (1,0), (0,1)
 
-    block BellGen i -> j [
-        $ Start with Hadamard $
-        H -> i
-        $ Apply C-X $
-        X : (i,l) -> j
+    $ Block Definition $
+    block U_f (x, y)
+    [
+        $ Reverse first register $
+        X -> x 
+
+        $ Apply controlled reverse $
+        X : x -> y 
+
+        $ Revert to original $
+        X -> x 
     ]
 
-    block BellGen2 (i,j,k) -> (j,g) [
-        $ Start with Hadamard $
-        H -> i
-        $ Apply C-X $
-        X : i -> j
+    $ Hadamard Transform $
+    block had_transform (x, y)
+    [
+        H -> x 
+        H -> y 
     ]
 
-    gate myGate = [[1,2],[(3,4),(4,7)],[6,7]]
-    gate myGate2 =[[1,2],[(3,1),(4,7)],[6,7]]
 \end_init
 
+
 \begin_main
-    BellGen : 1 -> 4
-    H -> 4
-    3 ? X : (4,5,6) -> 4
 
-    5 ? BellGen2 : (2,3) -> (4,3)
+    $ Part 1 $
+    had_transform (0, 1)
 
-    measure : 5 -> 3
+    $ Part 2 $
+    U_f (0, 1)
 
-    for i in (4:5:3){
-        condition(((x+y >= z) || (u == true)) && (z <= 3)){
-            measure : 5 -> 3
-        }
-        otherwise(y ^ z != z | x){
-            measure : 5 -> 4
-        }
-        otherwise{
-            H -> 4
-        }
-    }
+    $ Part 3 $
+    H -> 0
 
-    for_lex (x,y,z) in (1:2:1,2:3:1,1:1){
-        BellGen2 : (2,3) -> (4,3)
-        X : (1,2,23) -> 1
-    }
+    $ Measure $
+    measure : 0 -> 0
+    measure : 1 -> 1
 
 \end_main
 
+
 \begin_output
-    int difference = c_output[4] - c_output[0]
-    echo("p(000) vs p(100): ")                              
-    condition(difference > 0){
-        echo("More")
+
+    $ Save Output $
+    \save "exp_result.csv"
+
+    $ Classical output to be condensed $
+    list[uint] univ_f = condense(c_output, 1)
+
+    $ Report univ_f $
+    float conf = 0.9
+    condition(univ_f[0] > conf*1000)
+    {
+        echo("The unknown function is a constant function.")
     }
-    otherwise(difference < 0){
-        echo("Less")
+    otherwise(univ_f[1] > conf*1000)
+    {
+        echo("The unknown function is not a constant function.")
     }
-    otherwise {
-        echo("Equal")
+    otherwise
+    {
+        echo("The experiment has not reached conclusive results.")
     }
+
 \end_output
