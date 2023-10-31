@@ -4,64 +4,51 @@
     #iters = 1000
 
     #set classical states -> 0,0,0
-    #set quantum states -> {1,0}, {(1,0), (1,0)}, {1,0}
+    #set quantum states -> {1,0}, {1,0}, {(0, 0), (0, 1)}
 
-    block BellGen i -> j [
-        $ Start with Hadamard $
-        H -> i
-        $ Apply C-X $
-        X : (i,l) -> j
-    ]
-
-    block BellGen2 (i,j,k) -> (j,g) [
+    block BellGen (i, j) -> j [
         $ Start with Hadamard $
         H -> i
         $ Apply C-X $
         X : i -> j
     ]
 
-    gate myGate = [[1,2],[(3,4),(4,7)],[6,7]]
-    gate myGate2 =[[1,2],[(3,1),(4,7)],[6,7]]
 \end_init
 
 \begin_main
-    BellGen : 1 -> 4
-    H -> 4
-    3 ? X : (4,5,6) -> 4
+    $ Generate Bell State $
+    BellGen (1, 2)
 
-    5 ? BellGen2 : (2,3) -> (4,3)
+    \barrier
 
-    measure : 5 -> 3
+    $ Init Transformations $
+    X : 0 -> 1
+    H -> 0
 
-    for i in (4:5:3){
-        condition(((x+y >= z) || (u == true)) && (z <= 3)){
-            measure : 5 -> 3
-        }
-        otherwise(y ^ z != z | x){
-            measure : 5 -> 4
-        }
-        otherwise{
-            H -> 4
-        }
-    }
+    $ Measurements $
+    measure: 0 -> 0
+    measure: 1 -> 1
 
-    for_lex (x,y,z) in (1:2:1,2:3:1,1:1){
-        BellGen2 : (2,3) -> (4,3)
-        X : (1,2,23) -> 1
-    }
+    $ Classical Controlled Ops $
+    1 ? X -> 2
+    0 ? Z -> 2
 
 \end_main
 
 \begin_output
-    int difference = c_output[4] - c_output[0]
-    echo("p(000) vs p(100): ")                              
-    condition(difference > 0){
-        echo("More")
-    }
-    otherwise(difference < 0){
-        echo("Less")
-    }
-    otherwise {
-        echo("Equal")
-    }
+    
+    $ Save Value $
+    \save output.csv
+
+    $ Print the quantum register $
+    echo("Final Transferred State: ", q_output[2])
+
+    $ Print the frequency list of classical registers $
+    echo("Classical Register List: ", c_output)
+
+    $ Compute Fidelity $
+    state original = {(0, 0), (0, 1)}
+    float fidelity = DOT(SUB(original, q_output[2]), SUB(original, q_output[2]))
+    echo("Fidelity Reported: " fidelity)
+
 \end_output
