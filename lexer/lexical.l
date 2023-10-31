@@ -1,7 +1,7 @@
 %{
-#include<stdio.h>
-#include<string.h>
-#include"../Parser/y.tab.h"
+#include <stdio.h>
+#include <string.h>
+#include "y.tab.h"
 
 FILE *fp2;
 extern FILE* yyin;

@@ -1,4 +1,7 @@
+#!bin/bash
 yacc -d ./Parser/parser_main.y
 lex ./lexer/lexical.l
-gcc ./Parser/y.tab.c ./lexer/lex.yy.c -ll
-./a.out $1
+gcc y.tab.c lex.yy.c -ll -w
+str="./Tests/UnitTests/"
+str+=$1
+./a.out $str
