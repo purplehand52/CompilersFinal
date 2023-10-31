@@ -2,6 +2,8 @@
    #include<stdio.h>
    #include<stdlib.h>
    extern FILE* yyin,*fp2;
+   FILE * fp;
+   extern int line;
 
    int yylex();
    void yyerror();
@@ -35,19 +37,17 @@
 
 %%
 
-prgm                    : init_section main_section output_section {printf("Done\n");}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
-init_section            :  '\\' INIT_BEGIN mandatory_init set_states block_defns_list gate_defn_section '\\' INIT_END {printf("init done\n");}
+init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\n");} mandatory_init set_states block_defn_section gate_defn_section '\\' INIT_END {fprintf(fp,"\nInit section ends\n");}
                         ;   
 
-main_section            : '\\'  MAIN_BEGIN main_stmt_list '\\' MAIN_END
-                        | '\\' MAIN_BEGIN '\\' MAIN_END
+main_section            :  '\\'  MAIN_BEGIN {fprintf(fp,"\nMain section begins\n\n");} main_stmt_list '\\' MAIN_END {fprintf(fp,"\nMain section ends\n");}
                         ;
 
-output_section          : '\\' OUTPUT_BEGIN out_main '\\' OUTPUT_END
-                        | '\\' OUTPUT_BEGIN '\\' OUTPUT_END
+output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n");} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n");}
                         ;
 
 
@@ -55,21 +55,21 @@ output_section          : '\\' OUTPUT_BEGIN out_main '\\' OUTPUT_END
     INIT SECTION 
    ..............
 */
-mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER
+mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER {fprintf(fp,"Register and iteration initialization section\n");}
                         ;
 
 // can only one type of states be set?
-set_states              :   set_quantum_states set_classical_states
-                        |   set_classical_states set_quantum_states
-                        |   set_quantum_states
-                        |   set_classical_states
+set_states              :   set_quantum_states set_classical_states 
+                        |   set_classical_states set_quantum_states 
+                        |   set_quantum_states                      
+                        |   set_classical_states                    
                         |
                         ;
 
-set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list
+set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list {fprintf(fp,"Setting initial state of quantum registers\n");}
                         ;
 
-set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list
+set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {fprintf(fp,"Setting initial state of classical registers\n");}
                         ;
 
 quantum_state_list      :   quantum_state_list ',' state_const
@@ -85,7 +85,7 @@ classical_state         :   NUMBER
                         ;
 
 
-gate_defn_section       :   gate_defn_list
+gate_defn_section       :  {fprintf(fp,"Gate definition section begins\n");} gate_defn_list {fprintf(fp,"Gate definition section ends\n");}
                         |
                         ;
 
@@ -93,7 +93,7 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE ID '=' rhs
+gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}
                         ;
 
 rhs                     :   '[' tuple_list ']'
@@ -116,11 +116,14 @@ var                     : NUMBER
                         | NEG
                         | DEC
 
-block_defns_list        :   block_defns_list block_defn
+block_defn_section      :  {fprintf(fp,"Block definition section begins\n");} block_defns_list {fprintf(fp,"Block definition section ends\n");}
+                        ;
+
+block_defns_list        : block_defns_list block_defn 
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params '[' block_body ']'
+block_defn              : BLOCK block_id params target_params '[' block_body ']' {fprintf(fp,"Block definition\n");}
                         ;
 
 params                  :  ID                                   /* parantheses maybe ignored for single ID */
@@ -153,19 +156,19 @@ block_id                : ID      /* check first letter capital here */
 */
 
 main_stmt_list          : main_stmt_list main_stmt
-                        | main_stmt
+                        |
                         ;
 
 main_stmt               : stmts
-                        | barrier_stmt
+                        | barrier_stmt    {fprintf(fp,"barrier statement\n");}
 
-stmts                   : call_stmt
-                        | measure_stmt
-                        | condition_stmt
-                        | for_stmt
-                        | for_lex_stmt
-                        | for_zip_stmt
-                        | while_stmt
+stmts                   : call_stmt       
+                        | measure_stmt    {fprintf(fp,"Measure statement\n");}
+                        | {fprintf(fp,"Conditional statement begin\n");} condition_stmt {fprintf(fp,"Conditional statement end\n");}
+                        | for_stmt        {fprintf(fp,"For statement\n");}
+                        | for_lex_stmt    {fprintf(fp,"For - Lex statement\n");}
+                        | for_zip_stmt    {fprintf(fp,"For - Zip statement\n");}
+                        | while_stmt      {fprintf(fp,"while statement\n");}
                         ;
 
 register                : NUMBER  /* check non negative*/
@@ -174,12 +177,12 @@ register                : NUMBER  /* check non negative*/
 
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
-call_stmt               : classic_control GATE quantum_control ARROW register
-                        | classic_control ID quantum_control ARROW register
-                        | GATE quantum_control ARROW register
-                        | ID quantum_control ARROW register
-                        | classic_control block_id parameters optional
-                        | block_id parameters optional
+call_stmt               : classic_control GATE quantum_control ARROW register {fprintf(fp,"Pre - defined Gate call statement\n");}
+                        | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
+                        | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
+                        | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
+                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");}
+                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");}
                         ;
 
 parameters              : register
@@ -235,27 +238,27 @@ otherwise_final         : OTHERWISE '{' main_stmt_list '}'
                         | /* epsilon */
                         ;
 
-arithmetic_expr : arithmetic_expr '+' arithmetic_expr
-                | arithmetic_expr '-' arithmetic_expr
-                | arithmetic_expr '*' arithmetic_expr
-                | arithmetic_expr '/' arithmetic_expr
-                | arithmetic_expr '%' arithmetic_expr
-                | ID
-                | NUMBER
-                ;
+arithmetic_expr         : arithmetic_expr '+' arithmetic_expr
+                        | arithmetic_expr '-' arithmetic_expr
+                        | arithmetic_expr '*' arithmetic_expr
+                        | arithmetic_expr '/' arithmetic_expr
+                        | arithmetic_expr '%' arithmetic_expr
+                        | ID
+                        | NUMBER
+                        ;
 
-expr            : expr COMP expr
-                | expr EQUALITY expr
-                | expr AND expr
-                | expr OR expr
-                | expr '^' expr
-                | expr '&' expr
-                | expr '|' expr
-                | '(' expr ')'
-                | arithmetic_expr
-                | TRUE
-                | FALSE
-                ;
+expr                    : expr COMP expr
+                        | expr EQUALITY expr
+                        | expr AND expr
+                        | expr OR expr
+                        | expr '^' expr
+                        | expr '&' expr
+                        | expr '|' expr
+                        | '(' expr ')'
+                        | arithmetic_expr
+                        | TRUE
+                        | FALSE
+                        ;
 
 /* negative numbers? */
 value                   : NUMBER
@@ -406,15 +409,16 @@ out_rhs                 : prim_const
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs;
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n");}
+                        ;
 
-decl                    : prim_type out_expr 
-                        | list_type ID '=' vec_const
-                        | list_type ID '=' calls
+decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n");}
+                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n");}
+                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n");}
                         ;
 
 /* Echo Statement */
-echo_stmt               : ECHO '(' echo_list ')'
+echo_stmt               : ECHO '(' echo_list ')'      {fprintf(fp,"Echo statement\n");}
                         ;
 
 echo_list               : echo_list ',' out_rhs
@@ -422,15 +426,15 @@ echo_list               : echo_list ',' out_rhs
                         ;
 
 /* Save Statement */
-save_stmt               : '\\' SAVE STRING
+save_stmt               : '\\' SAVE STRING            {fprintf(fp,"Save statement\n");}
                         ;
 
 /* Control Statement */
-out_control             : out_cond_stmt
-                        | out_for_stmt
-                        | out_for_lex_stmt
-                        | out_for_zip_stmt
-                        | out_while_stmt
+out_control             : {fprintf(fp,"Output section conditional statement begins\n");} out_cond_stmt {fprintf(fp,"Output section conditional statement ends\n");}               
+                        | out_for_stmt                {fprintf(fp,"For statement in output section\n");}
+                        | out_for_lex_stmt            {fprintf(fp,"For - lex statement in output section\n");}
+                        | out_for_zip_stmt            {fprintf(fp,"For - zip statement in output section\n");}
+                        | out_while_stmt              {fprintf(fp,"while statement in output section\n");}
                         ;
 
 out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main '}' out_other_list out_other_final
@@ -459,7 +463,7 @@ out_while_stmt          : WHILE '(' expr ')' '{' out_main '}'
 
 /* Output Statement */
 out_main                : out_main out_stmt
-                        | out_stmt
+                        | 
                         ;
 
 out_stmt                : out_control
@@ -470,15 +474,16 @@ out_stmt                : out_control
                         ;
 %%
 
-int main()
+int main(int argc,char* argv[])
 {
-  yyin = fopen("in.txt","r");
+  yyin = fopen(argv[1],"r");
   fp2 = fopen("tokens.txt","w");
+  fp = fopen("output.parsed","w");
   yyparse();
 
   return 0;
 }
 
 void yyerror(){
-   printf("Invalid syntax");
+   fprintf(fp,"Syntax error at line %d\n",line);
 }

@@ -12,7 +12,7 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     #registers classical = 2
     #iters = 1000
 
-    #set quantum states -> (1,0), (0,1)
+    #set quantum states -> {(1,0),(0,0)},{(0,0),(1,0)}
 
     $ Block Definition $
     block U_f (x, y)

@@ -5,7 +5,7 @@
 
 FILE *fp2;
 extern FILE* yyin;
-int line = 0,flag=0,flag2=0;
+int line = 1,flag=0,flag2=0;
 
 void printComparator();
 void printLogical();
@@ -43,7 +43,7 @@ Equality                (==|!=)
 %%
 
 [\t ]                   {}
-[\n]                    {}
+[\n]                    {line++;}
 [;]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 [:]                     {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 [,]                     {printSpecial();return yytext[0];}
