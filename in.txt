@@ -53,4 +53,15 @@
 \end_main
 
 \begin_output
+    int difference = c_output[4] - c_output[0]
+    echo("p(000) vs p(100): ")                              
+    condition(difference > 0){
+        echo("More")
+    }
+    otherwise(difference < 0){
+        echo("Less")
+    }
+    otherwise {
+        echo("Equal")
+    }
 \end_output

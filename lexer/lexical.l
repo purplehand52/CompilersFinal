@@ -116,7 +116,7 @@ Equality                (==|!=)
 "||"                    {printLogical();return OR;}
 "&&"                    {printLogical();return AND;}
 
-{String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);}
+{String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 {Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 
 {Number}                {fprintf(fp2,"constant: %s\n",yytext); return NUMBER;}

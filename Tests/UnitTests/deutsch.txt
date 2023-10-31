@@ -8,8 +8,8 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
 \begin_init
 
     $ Initialization $
-    #registers_quantum = 2
-    #registers_classical = 2
+    #registers quantum = 2
+    #registers classical = 2
     #iters = 1000
 
     #set quantum states -> (1,0), (0,1)
@@ -49,8 +49,8 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     H -> 0
 
     $ Measure $
-    measure 0 -> 0
-    measure 1 -> 1
+    measure : 0 -> 0
+    measure : 1 -> 1
 
 \end_main
 
@@ -58,10 +58,10 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
 \begin_output
 
     $ Save Output $
-    \save exp_result.csv
+    \save "exp_result.csv"
 
     $ Classical output to be condensed $
-    list<uint> univ_f = condense(c_output, 1)
+    list[uint] univ_f = condense(c_output, 1)
 
     $ Report univ_f $
     float conf = 0.9

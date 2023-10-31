@@ -58,6 +58,7 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
 
 // can only one type of states be set?
 set_states              :   set_quantum_states set_classical_states
+                        |   set_classical_states set_quantum_states
                         |   set_quantum_states
                         |   set_classical_states
                         |
@@ -174,9 +175,17 @@ register                : NUMBER  /* check non negative*/
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register
-                        | classic_control block_id quantum_control ARROW target
+                        | classic_control block_id parameters optional
                         | GATE quantum_control ARROW register
-                        | block_id quantum_control ARROW target
+                        | block_id parameters optional
+                        ;
+
+parameters              : register
+                        | '(' register_list ')'
+                        ;
+
+optional                : 
+                        | ARROW target
                         ;
 
 register_list           : register_list ',' register
@@ -293,7 +302,7 @@ prim_type               : INT
                         | BOOL
                         ;
 
-list_type               : LIST '<' prim_type '>'
+list_type               : LIST '[' prim_type ']'
                         ;
 
 /* data_type               : prim_type
@@ -350,7 +359,7 @@ prim_const              : bool_const
                         | state_const
                         ;
 
-vec_const               : '<' vec_list '>'
+vec_const               : '[' vec_list ']'
                         ;
 
 vec_list                : vec_list ',' prim_const
@@ -358,15 +367,20 @@ vec_list                : vec_list ',' prim_const
                         ;
 
 /* Calls */
-calls                   : ADD '(' ID ',' ID ')'
-                        | SUB '(' ID ',' ID ')'
-                        | DOT '(' ID ',' ID ')'
-                        | STD_DEV '(' ID ')'
-                        | VAR '(' ID ')'
-                        | CONDENSE '(' ID ',' uint_const ')'
-                        | CONDENSE '(' ID ',' '(' uint_list ')' ')'
-                        | SUM '(' ID ')'
-                        | AVG '(' ID ')'
+calls                   : ADD '(' var2 ',' var2 ')'
+                        | SUB '(' var2 ',' var2 ')'
+                        | DOT '(' var2 ',' var2 ')'
+                        | STD_DEV '(' var2 ')'
+                        | VAR '(' var2 ')'
+                        | CONDENSE '(' var2 ',' uint_const ')'
+                        | CONDENSE '(' var2 ',' '(' uint_list ')' ')'
+                        | SUM '(' var2 ')'
+                        | AVG '(' var2 ')'
+                        ;
+
+/* can add more reserved keywords here */ 
+var2                    : ID  
+                        | COUT
                         ;
 
 uint_list               : uint_list ',' uint_const
@@ -400,6 +414,7 @@ out_expr                : ID '=' out_rhs;
 
 decl                    : prim_type out_expr 
                         | list_type ID '=' vec_const
+                        | list_type ID '=' calls
                         ;
 
 /* Echo Statement */
@@ -411,7 +426,7 @@ echo_list               : echo_list ',' out_rhs
                         ;
 
 /* Save Statement */
-save_stmt               : '\\' SAVE ID
+save_stmt               : '\\' SAVE STRING
                         ;
 
 /* Control Statement */
@@ -448,7 +463,7 @@ out_while_stmt          : WHILE '(' expr ')' '{' out_main '}'
 
 /* Output Statement */
 out_main                : out_main out_stmt
-                        | out_stmt
+                        | 
                         ;
 
 out_stmt                : out_control
