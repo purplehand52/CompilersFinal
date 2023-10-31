@@ -4,7 +4,7 @@ $ init related features $
 #registers quantum = 3            
 #registers classical = 3
 #iters = 1000
-#set quantum states -> (1,0), (1,0), (1,0)
+#set quantum states -> {(1,0), (1,0)}, {1,0}, {(1,0), (1,0)}
 #set classical states -> 0, 0, 0
 
 block Y3 (p,q,r)

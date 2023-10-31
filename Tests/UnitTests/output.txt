@@ -1,6 +1,6 @@
 \begin_init
-#registers_ uantum = 3
-#registers_ lassical = 3
+#registers quantum = 3
+#registers classical = 3
 #iters = 1000
 \end_init
 
@@ -12,6 +12,6 @@
 
 \begin_output
 
-\save exp_result.csv
+\save "exp_result.csv"
 
 \end_output

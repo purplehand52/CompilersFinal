@@ -337,7 +337,11 @@ comps                   : comps ',' complex_const
                         | complex_const
                         ;
 
-state_const             : '{' complex_const ',' complex_const '}'
+state_const             : '{' temp ',' temp '}'
+                        ;
+
+temp                    : complex_const
+                        | num
                         ;
 
 prim_const              : bool_const

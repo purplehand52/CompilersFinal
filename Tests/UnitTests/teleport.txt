@@ -4,7 +4,7 @@
     #iters = 1000
 
     #set classical states -> 0,0,0
-    #set quantum states -> (1,0), (1,0), (1,0)
+    #set quantum states -> {1,0}, {(1,0), (1,0)}, {1,0}
 
     block BellGen i -> j [
         $ Start with Hadamard $
