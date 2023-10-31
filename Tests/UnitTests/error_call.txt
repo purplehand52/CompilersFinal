@@ -1,0 +1,27 @@
+\begin_init
+    #registers quantum = 6
+    #registers classical = 2
+    #iters = 1000
+
+block Sn c -> (t1,t2) [
+    for i in (t1:t2) {
+        S: c -> i
+    }
+]
+
+gate S =[[(1 , 0), (0, 0)],
+         [(0 , 0), (0, 1)]]
+\end_init
+
+\begin_main
+    X: 1 -> 2
+    Y -> 2
+    H :(3,4)->5 
+    measure: 5 -> 0
+    Sn 0 -> (3,6)       $ semantic error. qubit 5 has collapsed $
+    S: (2) -> (3)       $ syntax error. target of a gate cannot be in form of a tuple $ 
+\end_main
+
+\begin_output
+    int v@r = 3         $ lexical error $
+\end_output
