@@ -57,8 +57,9 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                         ;
 
 // can only one type of states be set?
-set_states              :   set_quantum_states set_states
-                        |   set_classical_states set_states
+set_states              :   set_quantum_states set_classical_states
+                        |   set_quantum_states
+                        |   set_classical_states
                         |
                         ;
 
