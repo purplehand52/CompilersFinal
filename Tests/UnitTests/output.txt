@@ -1,6 +1,6 @@
 \begin_init
-#registers_quantum = 3
-#registers_classical = 3
+#registers_ uantum = 3
+#registers_ lassical = 3
 #iters = 1000
 \end_init
 
