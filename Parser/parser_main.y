@@ -72,8 +72,8 @@ set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list
                         ;
 
-quantum_state_list      :   quantum_state_list ',' complex_const
-                        |   complex_const
+quantum_state_list      :   quantum_state_list ',' state_const
+                        |   state_const
                         ;
 
 classical_state_list    :   classical_state_list ',' classical_state
