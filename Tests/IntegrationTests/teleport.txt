@@ -38,7 +38,7 @@
 \begin_output
     
     $ Save Value $
-    \save output.csv
+    \save "output.csv"
 
     $ Print the quantum register $
     echo("Final Transferred State: ", q_output[2])
@@ -48,7 +48,7 @@
 
     $ Compute Fidelity $
     state original = {(0, 0), (0, 1)}
-    float fidelity = DOT(SUB(original, q_output[2]), SUB(original, q_output[2]))
-    echo("Fidelity Reported: " fidelity)
+    float fidelity = dot(sub(original, q_output[2]), sub(original, q_output[2]))
+    echo("Fidelity Reported: ",fidelity)
 
 \end_output

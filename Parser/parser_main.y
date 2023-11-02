@@ -366,21 +366,17 @@ vec_list                : vec_list ',' prim_const
                         ;
 
 /* Calls */
-calls                   : ADD '(' var2 ',' var2 ')'
-                        | SUB '(' var2 ',' var2 ')'
-                        | DOT '(' var2 ',' var2 ')'
-                        | STD_DEV '(' var2 ')'
-                        | VAR '(' var2 ')'
-                        | CONDENSE '(' var2 ',' NUMBER ')'
-                        | CONDENSE '(' var2 ',' '(' uint_list ')' ')'
-                        | SUM '(' var2 ')'
-                        | AVG '(' var2 ')'
+calls                   : ADD '(' out_rhs ',' out_rhs ')'
+                        | SUB '(' out_rhs ',' out_rhs ')'
+                        | DOT '(' out_rhs ',' out_rhs ')'
+                        | STD_DEV '(' out_rhs ')'
+                        | VAR '(' out_rhs ')'
+                        | CONDENSE '(' out_rhs ',' NUMBER ')'
+                        | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'
+                        | SUM '(' out_rhs ')'
+                        | AVG '(' out_rhs ')'
                         ;
 
-/* can add more reserved keywords here */ 
-var2                    : ID  
-                        | COUT
-                        ;
 
 uint_list               : uint_list ',' NUMBER
                         | NUMBER
