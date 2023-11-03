@@ -119,12 +119,12 @@ Equality                (==|!=)
 {String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 {Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 
-{Number}                {fprintf(fp2,"constant: %s\n",yytext); return NUMBER;}
-{Neg}                   {fprintf(fp2,"constant: %s\n",yytext); return NEG;}
+{Number}                {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}
+{Neg}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NEG;}
 {Dec}                   {fprintf(fp2,"constant: %s\n",yytext); return DEC;}
 {Exp}                   {fprintf(fp2,"constant: %s\n",yytext); return EXP;}
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
-{id}                    {fprintf(fp2,"ID: %s\n",yytext);return ID;}
+{id}                    {fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];};return ID;}
 [-+*/=%]                {printOperator();return yytext[0];}
 .                       {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 
