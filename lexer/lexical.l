@@ -1,7 +1,11 @@
 %{
+#define YYSTYPE struct st
 #include <stdio.h>
 #include <string.h>
 #include "y.tab.h"
+#include "st.h"
+
+extern struct st yylval;
 
 FILE *fp2;
 extern FILE* yyin;

@@ -1,0 +1,211 @@
+special symbol: \
+reserved keyword : begin_init
+special symbol: #
+reserved keyword : registers
+reserved keyword : quantum
+operator: =
+constant: 3
+special symbol: #
+reserved keyword : registers
+reserved keyword : classical
+operator: =
+constant: 3
+special symbol: #
+reserved keyword : iters
+operator: =
+constant: 1000
+special symbol: #
+reserved keyword : set
+reserved keyword : quantum
+reserved keyword : states
+special symbol: ->
+special symbol: {
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: ,
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: }
+special symbol: ,
+special symbol: {
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: }
+special symbol: ,
+special symbol: {
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: ,
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: }
+special symbol: #
+reserved keyword : set
+reserved keyword : classical
+reserved keyword : states
+special symbol: ->
+constant: 0
+special symbol: ,
+constant: 0
+special symbol: ,
+constant: 0
+reserved keyword : block
+ID: Y3
+special symbol: (
+ID: p
+special symbol: ,
+ID: q
+special symbol: ,
+ID: r
+special symbol: )
+special symbol: [
+reserved keyword : Y
+special symbol: ->
+ID: p
+reserved keyword : Y
+special symbol: ->
+ID: q
+reserved keyword : Y
+special symbol: ->
+ID: r
+special symbol: ]
+reserved keyword : block
+ID: X_even
+ID: i
+special symbol: ->
+ID: p
+special symbol: [
+reserved keyword : condition
+special symbol: (
+ID: i
+operator: %
+constant: 2
+comparator: ==
+constant: 0
+special symbol: )
+special symbol: {
+reserved keyword : X
+special symbol: ->
+ID: p
+special symbol: }
+special symbol: ]
+reserved keyword : gate
+ID: S
+operator: =
+special symbol: [
+special symbol: [
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: ,
+special symbol: (
+constant: 0
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: ,
+constant: 3
+special symbol: ]
+special symbol: ,
+special symbol: [
+special symbol: (
+constant: 0
+special symbol: ,
+constant: 0
+special symbol: )
+special symbol: ,
+special symbol: (
+constant: 0
+special symbol: ,
+constant: 1
+special symbol: )
+special symbol: ,
+constant: 4
+special symbol: ]
+special symbol: ]
+reserved keyword : gate
+ID: Test
+operator: =
+special symbol: [
+special symbol: [
+constant: 1
+special symbol: ,
+constant: 2
+special symbol: ]
+special symbol: ,
+special symbol: [
+constant: 2
+special symbol: ,
+constant: 3
+special symbol: ]
+special symbol: ,
+special symbol: [
+constant: 6
+special symbol: ,
+constant: 5
+special symbol: ]
+special symbol: ,
+special symbol: [
+constant: 3
+special symbol: ,
+constant: 1
+special symbol: ]
+special symbol: ]
+special symbol: \
+reserved keyword : end_init
+special symbol: \
+reserved keyword : begin_main
+reserved keyword : H
+special symbol: ->
+constant: 0
+ID: S
+special symbol: ->
+constant: 1
+ID: Y3
+special symbol: (
+constant: 0
+special symbol: ,
+constant: 1
+special symbol: ,
+constant: 2
+special symbol: )
+reserved keyword : for
+ID: i
+reserved keyword : in
+special symbol: (
+constant: 0
+punctuation: :
+constant: 3
+special symbol: )
+special symbol: {
+ID: X_even
+ID: i
+special symbol: ->
+ID: i
+reserved keyword : measure
+punctuation: :
+ID: i
+special symbol: ->
+ID: i
+special symbol: }
+special symbol: \
+reserved keyword : end_main
+special symbol: \
+reserved keyword : begin_output
+special symbol: \
+reserved keyword : end_output

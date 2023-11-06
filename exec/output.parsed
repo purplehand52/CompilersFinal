@@ -1,0 +1,40 @@
+
+Init section begins
+
+Register and iteration initialization section
+Setting initial state of quantum registers
+Setting initial state of classical registers
+Block definition section begins
+Pre - defined Gate call statement
+Pre - defined Gate call statement
+Pre - defined Gate call statement
+Block definition
+Conditional statement begin
+Pre - defined Gate call statement
+Conditional statement end
+Block definition
+Block definition section ends
+Gate definition section begins
+Gate definition
+Gate definition
+Gate definition section ends
+
+Init section ends
+
+Main section begins
+
+Pre - defined Gate call statement
+User - defined Gate call statement
+Block call statement
+Block call statement
+Measure statement
+For statement
+
+Main section ends
+
+Output section begins
+
+
+Output section ends
+
+Parsing successful!

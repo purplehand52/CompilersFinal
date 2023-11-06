@@ -1,9 +1,12 @@
 %{
+   #define YYSTYPE struct st
    #include<stdio.h>
    #include<stdlib.h>
+   #include "st.h"
+
    extern FILE* yyin,*fp2;
-   FILE * fp;
    extern int line;
+   FILE * fp;
 
    int yylex();
    void yyerror();
@@ -11,42 +14,15 @@
    int classical_registers,quantum_registers,iterations;
    int * classical_states,classical_index=0,quantum_index=0;
    struct Quantum* quantum_states;
+
    struct List* head = NULL,*head2=NULL;
-
-   struct BlockTable{
-      char * id;
-      struct List* params;
-      struct List* target_params;
-      struct BlockTable* next;
-   };
-
    struct BlockTable* BlockSymbolTable = NULL;
+   struct GateTable* GateSymbolTable = NULL;
 %}
 
-
-%union{
-   int num;
-   float real;
-   char *str;
-   struct Complex{
-      float real;
-      float imag;
-   }cpx;
-
-   struct Quantum{
-      struct Complex first;
-      struct Complex second;
-   }q;
-
-   struct List{
-      char * id;
-      struct List* next;
-   }list;
-}
-
 %start prgm
-%token <str> ID
-%token <num> NUMBER ITERS NEG
+%token ID
+%token  NUMBER ITERS NEG
 %token SET STATES REGISTERS QUANTUM CLASSICAL
 %token MAIN_BEGIN MAIN_END OUTPUT_BEGIN OUTPUT_END INIT_BEGIN INIT_END
 %token GATE BLOCK ARROW IN  
@@ -57,7 +33,7 @@
 %token ADD SUB DOT STD_DEV VAR AVG CONDENSE SUM
 %token COUT QOUT
 %token INT UINT FLOAT COMPLEX STRING MATRIX STATE BOOL IMAG LIST
-%token <real> DEC EXP
+%token  DEC EXP
 %token SAVE ECHO RETURN
 
 %left '+' '-'
@@ -72,16 +48,9 @@
 %left AND
 %left OR
 
-%type <num> classical_state
-%type <real> num
-%type <cpx> complex_const temp
-%type <q> state_const
-%type <str> block_id
-%type <list> params
-
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printBlockTable();}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printBlockTable();printGateTable(&GateSymbolTable);}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -99,7 +68,7 @@ output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begin
     INIT SECTION 
    ..............
 */
-mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER {fprintf(fp,"Register and iteration initialization section\n");classical_registers = $10;quantum_registers = $5;iterations = $14;}
+mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER {  fprintf(fp,"Register and iteration initialization section\n");classical_registers = $10.num;quantum_registers = $5.num;iterations = $14.num;}
                         ;
 
 // can only one type of states be set?
@@ -116,15 +85,15 @@ set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list {fpr
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {fprintf(fp,"Setting initial state of classical registers\n");}
                         ;
 
-quantum_state_list      :   quantum_state_list ',' state_const       {if(quantum_index == quantum_registers){yyerror();return;}quantum_states[quantum_index++] = $3;}
-                        |   state_const   {quantum_states = (struct Quantum*)malloc(sizeof(struct Quantum)*quantum_registers);quantum_states[quantum_index++] = $1;}
+quantum_state_list      :   quantum_state_list ',' state_const       {if(quantum_index == quantum_registers){yyerror();return;}quantum_states[quantum_index++] = $3.q;}
+                        |   state_const   {quantum_states = (struct Quantum*)malloc(sizeof(struct Quantum)*quantum_registers);quantum_states[quantum_index++] = $1.q;}
                         ;
 
-classical_state_list    :   classical_state_list ',' classical_state  {if(classical_index == classical_registers){yyerror();return;}classical_states[classical_index++] = $3;}
-                        |   classical_state {classical_states = (int *)malloc(sizeof(int)*classical_registers);classical_states[classical_index++] = $1;}
+classical_state_list    :   classical_state_list ',' classical_state  {if(classical_index == classical_registers){yyerror();return;}classical_states[classical_index++] = $3.num;}
+                        |   classical_state {classical_states = (int *)malloc(sizeof(int)*classical_registers);classical_states[classical_index++] = $1.num;}
                         ;
 
-classical_state         :   NUMBER  {$$ = $1;}
+classical_state         :   NUMBER  {$$.num = $1.num;}
                         ;
 
 
@@ -136,28 +105,21 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}
+gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols);}
                         ;
 
-rhs                     :   '[' tuple_list ']'
+rhs                     :   '[' tuple_list ']'  {$$.rows = $2.rows;$$.cols = $2.cols;}
                         |   '{' tuple_list2 '}'
 
-tuple_list              : tuple_list ',' '[' id_list ']'
-                        | '[' id_list ']'
+tuple_list              : tuple_list ',' '[' id_list ']' {if($1.cols != $4.cols){yyerror();return;}int temp; temp = $1.rows + 1;$$.rows = temp;$$.cols = $1.cols;}
+                        | '[' id_list ']'                {$$.rows = 1;$$.cols = $2.cols;}
 
 tuple_list2              : tuple_list2 ',' '(' id_list ')'
                         | '(' id_list ')'
 
-id_list                 : id_list ',' variable
-                        | variable
+id_list                 : id_list ',' temp   {$$.cols += 1;}
+                        | temp               {$$.cols = 1;}
 
-variable                : var
-                        | '(' var ',' var ')'
-
-var                     : NUMBER
-                        | ID
-                        | NEG
-                        | DEC
 
 block_defn_section      :  {fprintf(fp,"Block definition section begins\n");} block_defns_list {fprintf(fp,"Block definition section ends\n");}
                         ;
@@ -166,24 +128,24 @@ block_defns_list        : block_defn block_defns_list
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params '[' block_body ']' {fprintf(fp,"Block definition\n");insertInBlockTable(&BlockSymbolTable,$2,head,head2);head = NULL;head2=NULL;}
+block_defn              : BLOCK block_id params target_params '[' block_body ']' {fprintf(fp,"Block definition\n");insertInBlockTable(&BlockSymbolTable,$2.str,head,head2);head = NULL;head2=NULL;}
                         ;
 
-params                  :  ID                   {insertInList(&head,$1);}                  /* parantheses maybe ignored for single ID */
+params                  :  ID                   {insertInList(&head,$1.str);}                  /* parantheses maybe ignored for single ID */
                         | '(' param_id_list ')' 
                         ;
 
-param_id_list           : ID ',' param_id_list  {insertInList(&head,$1);}
-                        | ID                    {insertInList(&head,$1);}
+param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);}
+                        | ID                    {insertInList(&head,$1.str);}
                         ;
 
 target_params           : /* epsilon */                          /* optional */
-                        | ARROW ID               {insertInList(&head2,$2);}
+                        | ARROW ID               {insertInList(&head2,$2.str);}
                         | ARROW '(' target_param_list ')'
                         ;
 
-target_param_list       :   ID ',' target_param_list  {insertInList(&head2,$1);}
-                        |   ID                        {insertInList(&head2,$1);}
+target_param_list       :   ID ',' target_param_list  {insertInList(&head2,$1.str);}
+                        |   ID                        {insertInList(&head2,$1.str);}
                         ;
 
 block_body              : 
@@ -361,12 +323,12 @@ bool_const              : TRUE
                         | FALSE
                         ;
 
-num                     : DEC       {$$ = $1;}
-                        | NEG       {$$ = $1;}
-                        | EXP       {$$ = $1;}
-                        | NUMBER    {$$ = $1;}
+num                     : DEC       {$$.real = $1.real;}
+                        | NEG       {$$.real = $1.real;}
+                        | EXP       {$$.real = $1.real;}
+                        | NUMBER    {$$.real = $1.num;}
                         
-complex_const           : '(' num ',' num ')'      {$$.real = $2; $$.imag = $4;}
+complex_const           : '(' num ',' num ')'      {$$.cpx.real = $2.real; $$.cpx.imag = $4.real;}
                         ;
 
 matrix_const            : '[' row_list ']'
@@ -383,11 +345,11 @@ comps                   : comps ',' complex_const
                         | complex_const
                         ;
 
-state_const             : '{' temp ',' temp '}'    {$$.first = $2; $$.second = $4;}
+state_const             : '{' temp ',' temp '}'    {$$.q.first = $2.cpx; $$.q.second = $4.cpx;}
                         ;
 
-temp                    : complex_const   {$$ = $1;}
-                        | num             {$$.real = $1; $$.imag = 0;}
+temp                    : complex_const   {$$.cpx = $1.cpx;}
+                        | num             {$$.cpx.real = $1.real; $$.cpx.imag = 0;}
                         ;
 
 prim_const              : bool_const
@@ -562,6 +524,32 @@ void printBlockTable(){
       printf("%s \n",temp->id);
       printList(&(temp->params));
       printList(&(temp->target_params));
+      temp = temp->next;
+   }
+}
+
+void insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
+   struct GateTable* newNode = (struct GateTable*)malloc(sizeof(struct GateTable));
+   newNode->id = (char *)malloc(sizeof(char)*strlen(data));
+   for(int i=0;i<strlen(data);i++){
+      newNode->id[i] = data[i];
+   }
+   newNode->rows = rows;
+   newNode->cols = cols;
+   if(*Head == NULL){
+      newNode->next = NULL;
+   }
+   else{
+      newNode->next = *Head;
+   }
+   *Head = newNode;
+}
+
+void printGateTable(struct GateTable ** GateSymbolTable){
+   struct GateTable* temp = *GateSymbolTable;
+   while(temp != NULL){
+      printf("%s ",temp->id);
+      printf("%d %d\n",temp->rows,temp->cols);
       temp = temp->next;
    }
 }
