@@ -587,10 +587,14 @@ void printGateTable(struct GateTable ** GateSymbolTable){
 }
 
 /* Output Section */
-void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bool primitive, int dim, int level){
+
+/* insert symtab entry at some scope level */
+void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, int type, bool primitive, int dim){
    /* New Entry */
    struct OutputSymbolEntry* newNode = (struct OutputSymbolEntry*)malloc(sizeof(struct OutputSymbolEntry));
    
+   newNode->level = level;
+
    /* ID */
    newNode->id = (char *)malloc(sizeof(char)*strlen(id));
    for(int i=0;i<strlen(id);i++){
@@ -603,31 +607,58 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bo
    /* Primitive */
    newNode->primitive = primitive;
 
-   /* Dimensions  */
+   /* Dimensions */
    newNode->dim = dim;
 
    /* Scope Level */
    newNode->level = level;
 
    /* Append */
-   if(*Head == NULL){
-      newNode->next = NULL;
-   }
-   else{
-      newNode->next = *Head;
-   }
+   newNode->prev = *Head;  // covers NULL case already
+
    *Head = newNode;
 }
+
+
+/* returns matching entry from outmost scope, NULL if not found */
+OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id){
+    symbolEntry = *Head;
+    while(symbolEntry != NULL){
+        if( strcmp(id, symbolEntry->id) ==0 ){
+            break;  // found entry
+        }
+        symbolEntry = symbolEntry->prev;
+    }
+    // symtabEntry will be none if no entry is found (including when symtab is empty)
+    return (OutputSymbolEntry*) symbolEntry;      
+}
+
+/* removes all entries from given outermost level */
+void exitOutputSymbolScope(OutputSymbolEntry** Head, int level){
+    OutputSymbolEntry* symbolEntry = *Head;
+    if(symbolEntry == NULL) {return;}
+    OutputSymbolEntry* prevEntry;
+
+    while(symbolEntry != NULL && symbolEntry->level == level){
+        prevEntry = symbolEntry->prev;
+        free(symbolEntry);
+        symbolEntry = prevEntry;
+    }
+    *Head = symbolEntry; //update by reference
+    return;
+}
+
 
 void printOutputTable(struct OutputSymbolEntry ** OutputSymbolTable){
    struct OutputSymbolEntry* temp = *OutputSymbolTable;
    while(temp != NULL){
       printf("%s ",temp->id);
-      printf("%d %d %d\n",temp->id, temp->primitive, temp->dim);
+      printf("%d %d %d %d\n",temp->id, temp->level, temp->primitive, temp->dim);
       /* Check for scopes here! */
-      temp = temp->next;
+      temp = temp->prev;
    }
 }
+
 
 int compatibleCheck(int t1, int t2)
 {

@@ -1,4 +1,7 @@
 #include<stdbool.h>
+#include<string.h>
+#include<stdlib.h>
+#include<stdio.h>
 
 struct st
 {
@@ -48,6 +51,7 @@ struct OutputSymbolEntry{
     int type;
     bool primitive;
     int dim;
-    struct OutputSymbolEntry* next;
+    int level;
+    struct OutputSymbolEntry* prev; // symtab will be modified near highest level, so reverse direction preferred
     /* Add pointer for scope expansion */
 };
