@@ -146,7 +146,6 @@ param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);$$.n
                         ;
 
 target_params           : /* epsilon */                          /* optional */
-                        | ARROW ID               
                         | ARROW '(' target_param_list ')'
                         ;
 
@@ -158,7 +157,7 @@ block_body              :
                         | stmts block_body
                         ;
 
-block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror(); return;} $$ = $1;}/* check first letter capital here */
+block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror(); return;} $$.str = $1.str;}/* check first letter capital here */
                         ;
 
 /* ................
@@ -182,7 +181,7 @@ stmts                   : call_stmt
                         | while_stmt      {fprintf(fp,"while statement\n");}
                         ;
 
-register                : NUMBER  /* check non negative*/
+register                : NUMBER  {if($1.num < 0){yyerror(); return;} $$.num = $1.num;}/* check non negative*/
                         | ID      {if(isInBlock){insertInList(&id_list,$1.str);}}
                         ;
 
@@ -232,7 +231,7 @@ register_expr_list      : register_expr_list ',' register_expr
 */
 
 
-measure_stmt            : MEASURE ':' register ARROW register
+measure_stmt            : MEASURE ':' register ARROW register {if(($3.num < 0 || $3.num >= quantum_registers) || ($5.num < 0 || $5.num >= classical_registers)){yyerror(); return;}} /* check if register1 and register2 are in bounds */
                         ;
 
 barrier_stmt            : '\\' BARRIER
@@ -280,21 +279,21 @@ range                   : value ':' value
                         | value ':' value ':' value
                         ;
 
-range_list              : range_list ',' range
-                        | range
+range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
+                        | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID
-                        | ID
+var_list                : var_list ',' ID    {if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
+                        | ID                 {if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
                         ;
 
-for_stmt                : FOR ID IN '(' range ')' '{' main_stmt_list '}'
+for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str)} else {yyerror(); return;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
                         ;
 
-for_lex_stmt            : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+for_lex_stmt            : FOR_LEX '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
                         ;
 
-for_zip_stmt            : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' main_stmt_list '}'
+for_zip_stmt            : FOR_ZIP '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
                         ;
 
 while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
@@ -499,6 +498,29 @@ void insertInList(struct List** Head,char * data){
       newNode->next = *Head;
    }
    *Head = newNode;
+}
+
+void removeTopKFromList(struct List** Head, int k) {
+   if(*Head == NULL) return false;
+
+   struct List* temp = *Head;
+   while(k--) {
+      struct List* toDelete = temp;
+      temp = temp->next;
+      free(toDelete);
+   }
+   *Head = temp;
+}
+
+bool inList(struct List** Head, char* data) {
+   if(*Head == NULL) return false;
+
+   struct List* temp = *Head;
+   while(temp != NULL) {
+      if(strcmp(temp->id, data) == 0) return true;
+      temp = temp->next;
+   }
+   return false;
 }
 
 void printList(struct List** Head){
