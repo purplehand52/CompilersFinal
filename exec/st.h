@@ -35,3 +35,15 @@ struct GateTable{
     int rows,cols;
     struct GateTable* next;
 };
+
+/* Output Symbol Table */
+/* Primitives List */
+enum Primitives{INT, UINT, FLOAT, COMPLEX, STRING, MATRIX, STATE, BOOL};
+
+struct OutputSymbolEntry{
+    char* id;
+    int type;
+    bool primitive;
+    int dim;
+    struct OutputSymbolEntry* next;
+};

@@ -18,6 +18,9 @@
    struct List* head = NULL,*head2=NULL;
    struct BlockTable* BlockSymbolTable = NULL;
    struct GateTable* GateSymbolTable = NULL;
+
+   /* Output Section */
+   struct OutputSymbolEntry* OutputSymbolTable = NULL;
 %}
 
 %start prgm
@@ -352,22 +355,22 @@ temp                    : complex_const   {$$.cpx = $1.cpx;}
                         | num             {$$.cpx.real = $1.real; $$.cpx.imag = 0;}
                         ;
 
-prim_const              : bool_const
-                        | complex_const
-                        | matrix_const
-                        | state_const
-                        | NUMBER
-                        | NEG
-                        | DEC
-                        | EXP
-                        | STRING
+prim_const              : bool_const {$$.type = BOOL}
+                        | complex_const {$$.type = COMPLEX}
+                        | matrix_const {$$.type = MATRIX}
+                        | state_const {$$.type = STATE}
+                        | NUMBER {$$.type = UINT}
+                        | NEG {$$.type = INT}
+                        | DEC {$$.type = FLOAT}
+                        | EXP {$$.type = FLOAT}
+                        | STRING {$$.type = STRING}
                         ;
 
 vec_const               : '[' vec_list ']'
                         ;
 
-vec_list                : vec_list ',' prim_const
-                        | prim_const
+vec_list                : vec_list ',' prim_const {/* Compatibility needs to be checked */}
+                        | prim_const {$$.type = $1.type}
                         ;
 
 /* Calls */
