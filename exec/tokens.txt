@@ -84,7 +84,11 @@ ID: r
 special symbol: ]
 reserved keyword : block
 ID: X_even
+special symbol: (
 ID: i
+special symbol: ,
+ID: p
+special symbol: )
 special symbol: ->
 ID: p
 special symbol: [
@@ -194,18 +198,12 @@ constant: 3
 special symbol: )
 special symbol: {
 ID: X_even
+special symbol: (
 ID: i
+special symbol: ,
+ID: i
+special symbol: ,
+ID: k
+special symbol: )
 special symbol: ->
 ID: i
-reserved keyword : measure
-punctuation: :
-ID: i
-special symbol: ->
-ID: i
-special symbol: }
-special symbol: \
-reserved keyword : end_main
-special symbol: \
-reserved keyword : begin_output
-special symbol: \
-reserved keyword : end_output

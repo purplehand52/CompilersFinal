@@ -14,7 +14,7 @@ block Y3 (p,q,r)
     Y-> r
 ]
 
-block X_even i -> p
+block X_even (i,p) -> p
 [
     condition(i % 2 == 0) {                 $ issue with modulo $
         X -> p

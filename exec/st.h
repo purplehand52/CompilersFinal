@@ -1,6 +1,8 @@
+#include<stdbool.h>
+
 struct st
 {
-    int rows,cols;
+    int rows,cols,type;
     int num;
     float real;
     char *str;
@@ -26,7 +28,7 @@ struct st
 struct BlockTable{
     char * id;
     struct List* params;
-    struct List* target_params;
+    int len;
     struct BlockTable* next;
 };
 
@@ -38,7 +40,7 @@ struct GateTable{
 
 /* Output Symbol Table */
 /* Primitives List */
-enum Primitives{INT, UINT, FLOAT, COMPLEX, STRING, MATRIX, STATE, BOOL};
+enum Primitives{Int, Uint, Float, Complex, String, Matrix, State, Bool};
 
 struct OutputSymbolEntry{
     char* id;

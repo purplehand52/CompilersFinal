@@ -1,6 +1,7 @@
 %{
    #define YYSTYPE struct st
    #include<stdio.h>
+   #include<stdbool.h>
    #include<stdlib.h>
    #include "st.h"
 
@@ -14,8 +15,10 @@
    int classical_registers,quantum_registers,iterations;
    int * classical_states,classical_index=0,quantum_index=0;
    struct Quantum* quantum_states;
+   int isInBlock=0;
 
-   struct List* head = NULL,*head2=NULL;
+   struct List* head = NULL;
+   struct List* id_list = NULL;
    struct BlockTable* BlockSymbolTable = NULL;
    struct GateTable* GateSymbolTable = NULL;
 
@@ -53,7 +56,7 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printBlockTable();printGateTable(&GateSymbolTable);}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printBlockTable();}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -131,24 +134,24 @@ block_defns_list        : block_defn block_defns_list
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params '[' block_body ']' {fprintf(fp,"Block definition\n");insertInBlockTable(&BlockSymbolTable,$2.str,head,head2);head = NULL;head2=NULL;}
+block_defn              : BLOCK block_id params target_params {insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head);head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror();return;}id_list = NULL;isInBlock = 0;}
                         ;
 
-params                  :  ID                   {insertInList(&head,$1.str);}                  /* parantheses maybe ignored for single ID */
-                        | '(' param_id_list ')' 
+params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1;}                  /* parantheses maybe ignored for single ID */
+                        | '(' param_id_list ')' {$$.num = $2.num;}
                         ;
 
-param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);}
-                        | ID                    {insertInList(&head,$1.str);}
+param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);$$.num = 1 + $3.num;}
+                        | ID                    {insertInList(&head,$1.str);$$.num = 1;}
                         ;
 
 target_params           : /* epsilon */                          /* optional */
-                        | ARROW ID               {insertInList(&head2,$2.str);}
+                        | ARROW ID               
                         | ARROW '(' target_param_list ')'
                         ;
 
-target_param_list       :   ID ',' target_param_list  {insertInList(&head2,$1.str);}
-                        |   ID                        {insertInList(&head2,$1.str);}
+target_param_list       :   ID ',' target_param_list  
+                        |   ID                        
                         ;
 
 block_body              : 
@@ -180,7 +183,7 @@ stmts                   : call_stmt
                         ;
 
 register                : NUMBER  /* check non negative*/
-                        | ID
+                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}}
                         ;
 
 
@@ -189,20 +192,20 @@ call_stmt               : classic_control GATE quantum_control ARROW register {f
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
-                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");}
-                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");}
+                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror();return;}}}
+                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror();return;}}}
                         ;
 
-parameters              : register
-                        | '(' register_list ')'
+parameters              : register                 {$$.num = 1;}
+                        | '(' register_list ')'    {$$.num = $2.num;}
                         ;
 
 optional                : 
                         | ARROW target
                         ;
 
-register_list           : register_list ',' register
-                        | register
+register_list           : register_list ',' register  {$$.num = 1 + $1.num;}
+                        | register                    {$$.num = 1;}
                         ;
 
 classic_control         : register '?'                         /* removing epsilon rule resolved all conflicts */
@@ -355,22 +358,22 @@ temp                    : complex_const   {$$.cpx = $1.cpx;}
                         | num             {$$.cpx.real = $1.real; $$.cpx.imag = 0;}
                         ;
 
-prim_const              : bool_const {$$.type = BOOL}
-                        | complex_const {$$.type = COMPLEX}
-                        | matrix_const {$$.type = MATRIX}
-                        | state_const {$$.type = STATE}
-                        | NUMBER {$$.type = UINT}
-                        | NEG {$$.type = INT}
-                        | DEC {$$.type = FLOAT}
-                        | EXP {$$.type = FLOAT}
-                        | STRING {$$.type = STRING}
+prim_const              : bool_const {$$.type = Bool;}
+                        | complex_const {$$.type = Complex;}
+                        | matrix_const {$$.type = Matrix;}
+                        | state_const {$$.type = State;}
+                        | NUMBER {$$.type = Uint;}
+                        | NEG {$$.type = Int;}
+                        | DEC {$$.type = Float;}
+                        | EXP {$$.type = Float;}
+                        | STRING {$$.type = String;}
                         ;
 
 vec_const               : '[' vec_list ']'
                         ;
 
 vec_list                : vec_list ',' prim_const {/* Compatibility needs to be checked */}
-                        | prim_const {$$.type = $1.type}
+                        | prim_const {$$.type = $1.type;}
                         ;
 
 /* Calls */
@@ -493,8 +496,8 @@ void insertInList(struct List** Head,char * data){
    *Head = newNode;
 }
 
-void printList(struct List** head){
-   struct List* temp = *head;
+void printList(struct List** Head){
+   struct List* temp = *Head;
    while(temp!=NULL){
       printf("%s ",temp->id);
       temp = temp->next;
@@ -502,14 +505,14 @@ void printList(struct List** head){
    printf("\n");
 }
 
-void insertInBlockTable(struct BlockTable** Head,char * data,struct List* params,struct List* target_params){
+void insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params){
    struct BlockTable* newNode = (struct BlockTable*)malloc(sizeof(struct BlockTable));
    newNode->id = (char *)malloc(sizeof(char)*strlen(data));
    for(int i=0;i<strlen(data);i++){
       newNode->id[i] = data[i];
    }
    newNode->params = params;
-   newNode->target_params = target_params;
+   newNode->len = len;
    if(*Head == NULL){
       newNode->next = NULL;
    }
@@ -521,12 +524,10 @@ void insertInBlockTable(struct BlockTable** Head,char * data,struct List* params
 
 void printBlockTable(){
    struct BlockTable* temp = BlockSymbolTable;
-   int x=1;
    while(temp != NULL){
-      printf("%d. \n",x++);
       printf("%s \n",temp->id);
       printList(&(temp->params));
-      printList(&(temp->target_params));
+      printf("%d\n\n",temp->len);
       temp = temp->next;
    }
 }
@@ -557,6 +558,46 @@ void printGateTable(struct GateTable ** GateSymbolTable){
    }
 }
 
+int BlockSemanticCheck(char *block_id){
+   struct BlockTable * temp = BlockSymbolTable;
+   while(temp != NULL){
+      if(strcmp(temp->id,block_id) == 0){
+         break;
+      }
+      temp = temp->next;
+   }
+
+   struct List* temp2 = temp->params;
+   struct List* temp4 = id_list;
+
+   while(temp4 != NULL){
+      int x=0;
+      while(temp2 != NULL){
+         if(strcmp(temp4->id,temp2->id) == 0) {
+            x = 1;
+            break;
+         }
+         temp2 = temp2->next;
+      }
+      if(!x) {return 0;}
+      temp2 = temp->params;
+      temp4 = temp4->next;
+   }
+   return 1;
+}
+
+int BlockCallSemanticCheck(char *block_id,int num_params){
+   struct BlockTable* temp = BlockSymbolTable;
+   while(temp != NULL){
+      if(strcmp(temp->id,block_id) == 0){
+         break;
+      }
+      temp = temp->next;
+   }
+   if(temp == NULL || num_params != temp->len) return 0;
+   return 1;
+}
+
 int main(int argc,char* argv[])
 {
   yyin = fopen(argv[1],"r");
@@ -568,5 +609,6 @@ int main(int argc,char* argv[])
 }
 
 void yyerror(){
+   printf("Error\n");
    fprintf(fp,"Syntax error at line %d\n",line);
 }
