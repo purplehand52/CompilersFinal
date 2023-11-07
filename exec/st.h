@@ -40,7 +40,8 @@ struct GateTable{
 
 /* Output Symbol Table */
 /* Primitives List */
-enum Primitives{Int, Uint, Float, Complex, String, Matrix, State, Bool};
+enum Primitives{Int, Uint, Float, Complex, String, Matrix, State, Bool, Scope};
+#define COMPATIBLE 4
 
 struct OutputSymbolEntry{
     char* id;
@@ -48,4 +49,5 @@ struct OutputSymbolEntry{
     bool primitive;
     int dim;
     struct OutputSymbolEntry* next;
+    /* Add pointer for scope expansion */
 };

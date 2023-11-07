@@ -12,7 +12,7 @@
    int yylex();
    void yyerror();
 
-   int classical_registers,quantum_registers,iterations;
+   int classical_registers,quantum_registers,iterations,temp_type;
    int * classical_states,classical_index=0,quantum_index=0;
    struct Quantum* quantum_states;
    int isInBlock=0;
@@ -308,24 +308,24 @@ while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
 /* Datatypes */
 out_id                  : ID | COUT | QOUT ;
 
-prim_type               : INT 
-                        | UINT
-                        | FLOAT
-                        | COMPLEX
-                        | STRING
-                        | MATRIX
-                        | STATE
-                        | BOOL
+prim_type               : INT       {$$.type = INT;}
+                        | UINT      {$$.type = UINT;}
+                        | FLOAT     {$$.type = FLOAT;}
+                        | COMPLEX   {$$.type = COMPLEX;}
+                        | STRING    {$$.type = STRING;}
+                        | MATRIX    {$$.type = MATRIX;}
+                        | STATE     {$$.type = STATE;}
+                        | BOOL      {$$.type = BOOL;}
                         ;
 
-list_type               : LIST '[' prim_type ']'
+list_type               : LIST '[' prim_type ']' {$$.type = $3.type;}
                         ;
 
 /* data_type               : prim_type
                         | list_type
                         ; */
 
-bool_const              : TRUE
+bool_const              : TRUE      
                         | FALSE
                         ;
 
@@ -337,18 +337,18 @@ num                     : DEC       {$$.real = $1.real;}
 complex_const           : '(' num ',' num ')'      {$$.cpx.real = $2.real; $$.cpx.imag = $4.real;}
                         ;
 
-matrix_const            : '[' row_list ']'
+matrix_const            : '[' row_list ']'         {$$.rows = $2.rows; $$.columns = $2.columns;}
                         ;
 
-row_list                : row_list ',' row 
-                        | row
+row_list                : row_list ',' row         {$$.rows = $1.rows + 1; if($1.columns == $3.columns) $$.columns = $1.columns else yyerror();}
+                        | row                      {$$.rows = 1; $$.columns = $1.columns;}
                         ;
 
-row                     : '[' comps ']'
+row                     : '[' comps ']'            {$$.columns = $2.columns;}
                         ;
 
-comps                   : comps ',' complex_const
-                        | complex_const
+comps                   : comps ',' complex_const  {$$.columns = $1.columns + 1;}
+                        | complex_const            {$$.columns = 1;}
                         ;
 
 state_const             : '{' temp ',' temp '}'    {$$.q.first = $2.cpx; $$.q.second = $4.cpx;}
@@ -369,11 +369,11 @@ prim_const              : bool_const {$$.type = Bool;}
                         | STRING {$$.type = String;}
                         ;
 
-vec_const               : '[' vec_list ']'
+vec_const               : '[' vec_list ']'        {$$.dim = $2.dim; $$.type = $2.type;}
                         ;
 
-vec_list                : vec_list ',' prim_const {/* Compatibility needs to be checked */}
-                        | prim_const {$$.type = $1.type;}
+vec_list                : vec_list ',' prim_const {temp_type = compatibleCheck($1.type, $3.type); if(temp_type != -1) $$.type = temp_type else yyerror(); $$.dim = $1.dim + 1;}
+                        | prim_const              {$$.type = $1.type; $$.dim = 1;}
                         ;
 
 /* Calls */
@@ -393,26 +393,27 @@ uint_list               : uint_list ',' NUMBER
                         | NUMBER
                         ;
 
-/* Expressions */
-out_rhs                 : prim_const
-                        | out_id
+/* Expressions : Needs to be modified !!!! (Will do after class)*/
+out_rhs                 : prim_const                                             {$$.type = $1.type;}
+                        | out_id                                                 {$$.type = $1.type;}
                         | out_id '[' NUMBER ']'
-                        | out_id '[' NUMBER ']' '[' NUMBER ']' 
+                        | out_id '[' NUMBER ']' '[' NUMBER ']'
+                        | out_id '[' NUMBER ']' '[' NUMBER ']' '[' NUMBER ']' 
                         | calls
-                        | '(' out_rhs ')'
-                        | '!' out_rhs
+                        | '(' out_rhs ')'                                        {$$.type = $2.type;}
+                        | '!' out_rhs                                             
                         | out_rhs AND out_rhs
                         | out_rhs OR out_rhs
                         | out_rhs COMP out_rhs
                         | out_rhs EQUALITY out_rhs
-                        | out_rhs '*' out_rhs
-                        | out_rhs '/' out_rhs
-                        | out_rhs '+' out_rhs
-                        | out_rhs '-' out_rhs
-                        | out_rhs '@' out_rhs
-                        | out_rhs '&' out_rhs
-                        | out_rhs '^' out_rhs
-                        | out_rhs '|' out_rhs
+                        | out_rhs '*' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '/' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '+' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '-' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '@' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '&' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '^' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
+                        | out_rhs '|' out_rhs                                    {temp_type = compatibleCheck($1.type, $3.type); if((temp_type >= Int) && (temp_type < COMPATIBLE)) $$.type = temp_type else yyerror();}
                         ;
 
 /* Expressions */
@@ -558,44 +559,52 @@ void printGateTable(struct GateTable ** GateSymbolTable){
    }
 }
 
-int BlockSemanticCheck(char *block_id){
-   struct BlockTable * temp = BlockSymbolTable;
-   while(temp != NULL){
-      if(strcmp(temp->id,block_id) == 0){
-         break;
-      }
-      temp = temp->next;
+/* Output Section */
+void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bool primitive, int dim){
+   /* New Entry */
+   struct OutputSymbolEntry* newNode = (struct OutputSymbolEntry*)malloc(sizeof(struct OutputSymbolEntry));
+   
+   /* ID */
+   newNode->id = (char *)malloc(sizeof(char)*strlen(id));
+   for(int i=0;i<strlen(id);i++){
+      newNode->id[i] = data[i];
    }
 
-   struct List* temp2 = temp->params;
-   struct List* temp4 = id_list;
+   /* Type */
+   newNode->type = type;
+   
+   /* Primitive */
+   newNode->primitive = primitive;
 
-   while(temp4 != NULL){
-      int x=0;
-      while(temp2 != NULL){
-         if(strcmp(temp4->id,temp2->id) == 0) {
-            x = 1;
-            break;
-         }
-         temp2 = temp2->next;
-      }
-      if(!x) {return 0;}
-      temp2 = temp->params;
-      temp4 = temp4->next;
+   /* Dimensions  */
+   newNode->dim = dim;
+
+   /* Append */
+   if(*Head == NULL){
+      newNode->next = NULL;
    }
-   return 1;
+   else{
+      newNode->next = *Head;
+   }
+   *Head = newNode;
 }
 
-int BlockCallSemanticCheck(char *block_id,int num_params){
-   struct BlockTable* temp = BlockSymbolTable;
+void printOutputTable(struct OutputSymbolEntry ** OutputSymbolTable){
+   struct OutputSymbolEntry* temp = *OutputSymbolTable;
    while(temp != NULL){
-      if(strcmp(temp->id,block_id) == 0){
-         break;
-      }
+      printf("%s ",temp->id);
+      printf("%d %d %d\n",temp->id, temp->primitive, temp->dim);
+      /* Check for scopes here! */
       temp = temp->next;
    }
-   if(temp == NULL || num_params != temp->len) return 0;
-   return 1;
+}
+
+int compatibleCheck(int t1, int t2)
+{
+   if(t1 == t2) return t1;
+   else if((t1 < COMPATIBLE) && (t1 > t2)) return t1;
+   else if((t2 < COMPATIBLE) && (t2 > t1)) return t2;
+   else -1;
 }
 
 int main(int argc,char* argv[])
