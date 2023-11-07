@@ -66,7 +66,7 @@ init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\
 main_section            :  '\\'  MAIN_BEGIN {fprintf(fp,"\nMain section begins\n\n");} main_stmt_list '\\' MAIN_END {fprintf(fp,"\nMain section ends\n");}
                         ;
 
-output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n");} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n");}
+output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n");} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n"); $1.level = 1}
                         ;
 
 
@@ -416,12 +416,12 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n");}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,$$.level);}
                         ;
 
-decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n");}
-                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n");}
-                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n");}
+decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); $2.type = $1.type;}
+                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
+                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
                         ;
 
 /* Echo Statement */
@@ -437,14 +437,14 @@ save_stmt               : '\\' SAVE STRING            {fprintf(fp,"Save statemen
                         ;
 
 /* Control Statement */
-out_control             : {fprintf(fp,"Output section conditional statement begins\n");} out_cond_stmt {fprintf(fp,"Output section conditional statement ends\n");}               
-                        | out_for_stmt                {fprintf(fp,"For statement in output section\n");}
-                        | out_for_lex_stmt            {fprintf(fp,"For - lex statement in output section\n");}
-                        | out_for_zip_stmt            {fprintf(fp,"For - zip statement in output section\n");}
-                        | out_while_stmt              {fprintf(fp,"while statement in output section\n");}
+out_control             : {fprintf(fp,"Output section conditional statement begins\n");} out_cond_stmt {fprintf(fp,"Output section conditional statement ends\n"); $1.type = $$.type + 1;}
+                        | out_for_stmt                {fprintf(fp,"For statement in output section\n"); $1.type = $$.type;}
+                        | out_for_lex_stmt            {fprintf(fp,"For - lex statement in output section\n"); $1.type = $$.type;}
+                        | out_for_zip_stmt            {fprintf(fp,"For - zip statement in output section\n"); $1.type = $$.type;}
+                        | out_while_stmt              {fprintf(fp,"while statement in output section\n"); $1.type = $$.type;}
                         ;
 
-out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main '}' out_other_list out_other_final
+out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main {$6.type = $$.type + 1;} '}' out_other_list out_other_final
                         ;
 
 out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' out_main '}'
@@ -455,29 +455,30 @@ out_other_final         : OTHERWISE '{' out_main '}'
                         | /* epsilon */
                         ;
 
-out_for_stmt            : FOR ID IN '(' range ')' '{' out_main '}'
+out_for_stmt            : FOR ID IN '(' range ')' '{' out_main {$8.type = $$.type + 1;} '}'
                         ;
 
-out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' out_main '}'
+out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' out_main {$10.type = $$.type + 1;} '}'
                         ;
 
-out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' out_main '}'
+out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' out_main {$10.type = $$.type + 1;}'}'
                         ;
 
-out_while_stmt          : WHILE '(' expr ')' '{' out_main '}'
+out_while_stmt          : WHILE '(' expr ')' '{' out_main {$6.type = $$.type + 1;} '}'
                         ;
 
 
 /* Output Statement */
-out_main                : out_main out_stmt
+out_main                : out_main out_stmt           {$1.level = $$.level; $2.level = $$.level}
                         | 
                         ;
 
-out_stmt                : out_control
+// TODO: structure
+out_stmt                : out_control                 {$1.level = $$.level;}
                         | save_stmt
                         | echo_stmt
-                        | out_expr
-                        | decl
+                        | out_expr                    {$1.level = $$.level;}
+                        | decl                        {$1.level = $$.level;}
                         ;
 %%
 
@@ -586,7 +587,7 @@ void printGateTable(struct GateTable ** GateSymbolTable){
 }
 
 /* Output Section */
-void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bool primitive, int dim){
+void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bool primitive, int dim, int level){
    /* New Entry */
    struct OutputSymbolEntry* newNode = (struct OutputSymbolEntry*)malloc(sizeof(struct OutputSymbolEntry));
    
@@ -604,6 +605,9 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int type, bo
 
    /* Dimensions  */
    newNode->dim = dim;
+
+   /* Scope Level */
+   newNode->level = level;
 
    /* Append */
    if(*Head == NULL){
