@@ -158,7 +158,7 @@ block_body              :
                         | stmts block_body
                         ;
 
-block_id                : ID      {$$ = $1;}/* check first letter capital here */
+block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror(); return;} $$ = $1;}/* check first letter capital here */
                         ;
 
 /* ................
@@ -481,6 +481,10 @@ out_stmt                : out_control
                         | decl
                         ;
 %%
+
+bool firstLetterCapital(char *str) {
+   return (str[0] >= 65 && str[0] <= 90);
+}
 
 void insertInList(struct List** Head,char * data){
    struct List* newNode = (struct List*)malloc(sizeof(struct List));
