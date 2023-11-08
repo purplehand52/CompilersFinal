@@ -43,13 +43,14 @@ struct GateTable{
 
 /* Output Symbol Table */
 /* Primitives List */
-enum Primitives{Int, Uint, Float, Complex, String, Matrix, State, Bool, Scope};
+enum Primitives{Uint, Int, Float, Complex, Matrix, State, Bool, String, Scope};
 #define COMPATIBLE 4
 
 struct OutputSymbolEntry{
     char* id;
     int type;
     bool primitive;
+    /* int matrix[2]; */
     int dim;
     int level;
     struct OutputSymbolEntry* prev; // symtab will be modified near highest level, so reverse direction preferred
