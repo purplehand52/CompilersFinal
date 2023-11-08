@@ -16,6 +16,7 @@
    int * classical_states,classical_index=0,quantum_index=0;
    struct Quantum* quantum_states;
    int isInBlock=0;
+   bool isInOutput = false;
 
    struct List* head = NULL;
    struct List* id_list = NULL;
@@ -66,7 +67,7 @@ init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\
 main_section            :  '\\'  MAIN_BEGIN {fprintf(fp,"\nMain section begins\n\n");} main_stmt_list '\\' MAIN_END {fprintf(fp,"\nMain section ends\n");}
                         ;
 
-output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n");} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n"); $1.level = 1}
+output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n"); isInOutput = true;} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n"); $1.level = 1}
                         ;
 
 
@@ -283,8 +284,8 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
                         | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID    {if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
-                        | ID                 {if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
+var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
+                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$1.type,/* complete these arguments */,$$.level,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
                         ;
 
 for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str)} else {yyerror(); return;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
@@ -417,12 +418,12 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(($$.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$1.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,$$.level);}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(($$.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$1.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,$$.level,false);}
                         ;
 
 decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); $2.type = $1.type;}
-                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
-                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
+                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level,false);}
+                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level,false);}
                         ;
 
 /* Echo Statement */
@@ -438,43 +439,42 @@ save_stmt               : '\\' SAVE STRING            {fprintf(fp,"Save statemen
                         ;
 
 /* Control Statement */
-out_control             : {fprintf(fp,"Output section conditional statement begins\n");} out_cond_stmt {fprintf(fp,"Output section conditional statement ends\n"); $1.type = $$.type + 1;}
-                        | out_for_stmt                {fprintf(fp,"For statement in output section\n"); $1.type = $$.type;}
-                        | out_for_lex_stmt            {fprintf(fp,"For - lex statement in output section\n"); $1.type = $$.type;}
-                        | out_for_zip_stmt            {fprintf(fp,"For - zip statement in output section\n"); $1.type = $$.type;}
-                        | out_while_stmt              {fprintf(fp,"while statement in output section\n"); $1.type = $$.type;}
+out_control             : {fprintf(fp,"Output section conditional statement begins\n");} out_cond_stmt {fprintf(fp,"Output section conditional statement ends\n"); $1.level = $$.level + 1;}
+                        | out_for_stmt                {fprintf(fp,"For statement in output section\n"); $1.level = $$.level;}
+                        | out_for_lex_stmt            {fprintf(fp,"For - lex statement in output section\n"); $1.level = $$.level;}
+                        | out_for_zip_stmt            {fprintf(fp,"For - zip statement in output section\n"); $1.level = $$.level;}
+                        | out_while_stmt              {fprintf(fp,"while statement in output section\n"); $1.level = $$.level;}
                         ;
 
-out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main {$6.type = $$.type + 1;} '}' out_other_list out_other_final
+out_cond_stmt           : CONDITION '(' out_rhs ')' '{' out_main {$6.level = $$.level + 1;} '}' out_other_list {$8.level = $$.level;} out_other_final {$9.level = $$.level;}
                         ;
 
-out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' out_main '}'
+out_other_list          : out_other_list {$1.level = $$.level;} OTHERWISE '(' out_rhs ')' '{' out_main {$7.level = $$.level + 1;} '}'
                         | /* epsilon */
                         ;
 
-out_other_final         : OTHERWISE '{' out_main '}'
+out_other_final         : OTHERWISE '{' out_main {$3.level = $$.level + 1;} '}'
                         | /* epsilon */
                         ;
 
-out_for_stmt            : FOR ID IN '(' range ')' '{' out_main {$8.type = $$.type + 1;} '}'
+out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level + 1) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,Int,/* complete the arguments */,$$.level + 1,true);} IN '(' range ')' '{' out_main {$8.level = $$.level + 1;} '}' {exitOutputSymbolScope(&OutputSymbolTable,$$.level + 1);}
                         ;
 
-out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' '{' out_main {$10.type = $$.type + 1;} '}'
+out_for_lex_stmt        : FOR_LEX '(' var_list {$3.level = $$.level + 1;} ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' out_main {$10.level = $$.level + 1;} '}' {exitOutputSymbolScope(&OutputSymbolTable,$$.level + 1);}
                         ;
 
-out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' '{' out_main {$10.type = $$.type + 1;}'}'
+out_for_zip_stmt        : FOR_ZIP '(' var_list {$3.level = $$.level + 1;} ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' out_main {$10.level = $$.level + 1;} '}' {exitOutputSymbolScope(&OutputSymbolTable,$$.level + 1);}
                         ;
 
-out_while_stmt          : WHILE '(' expr ')' '{' out_main {$6.type = $$.type + 1;} '}'
+out_while_stmt          : WHILE '(' expr ')' '{' out_main {$6.level = $$.level + 1;} '}' {exitOutputSymbolScope(&OutputSymbolTable,$$.level + 1);}
                         ;
 
 
 /* Output Statement */
 out_main                : out_main out_stmt           {$1.level = $$.level; $2.level = $$.level}
-                        | 
+                        |
                         ;
 
-// TODO: structure
 out_stmt                : out_control                 {$1.level = $$.level;}
                         | save_stmt
                         | echo_stmt
@@ -590,11 +590,9 @@ void printGateTable(struct GateTable ** GateSymbolTable){
 /* Output Section */
 
 /* insert symtab entry at some scope level */
-void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, int type, bool primitive, int dim){
+void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, int type, bool primitive, int dim, bool isLoopId){
    /* New Entry */
    struct OutputSymbolEntry* newNode = (struct OutputSymbolEntry*)malloc(sizeof(struct OutputSymbolEntry));
-   
-   newNode->level = level;
 
    /* ID */
    newNode->id = (char *)malloc(sizeof(char)*strlen(id));
@@ -613,6 +611,9 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
 
    /* Scope Level */
    newNode->level = level;
+
+   /* is the identifier a loop identifier? */
+   newNode->isLoopId = isLoopId;
 
    /* Append */
    newNode->prev = *Head;  // covers NULL case already

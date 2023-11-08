@@ -7,6 +7,7 @@ struct st
 {
     int rows,cols,type;
     int num;
+    int level;
     float real;
     char *str;
     struct Complex
@@ -50,6 +51,7 @@ struct OutputSymbolEntry{
     char* id;
     int type;
     bool primitive;
+    bool isLoopId;
     /* int matrix[2]; */
     int dim;
     int level;
