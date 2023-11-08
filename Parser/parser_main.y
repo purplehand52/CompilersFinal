@@ -394,7 +394,7 @@ uint_list               : uint_list ',' NUMBER  {$$.count = $1.count + 1;}
                         ;
 
 /* Expressions :*/
-out_rhs                 : prim_const                                             {$$.prim = false; $$.type = $1.type;}
+out_rhs                 : prim_const                                             {$$.prim = true; $$.type = $1.type;}
                         | out_id                                                 {$$.prim = $1.prim; $$.type = $1.type;}
                         | out_id '[' NUMBER ']'                                  {if($1.prim) {if($1.type==State) {$$.type = Complex;} /*else if($1.type==Complex) {$$.type = Float;} else if($1.type==String) {$$.type = Float;}*/ else yyerror();} else $$.type = $1.type;}
                         | out_id '[' NUMBER ']' '[' NUMBER ']'                   {if($1.prim) {if($1.type==Matrix) {$$.type = Complex;} /*else if($1.type==State) {$$.type = Float;}*/ else yyerror();} else if($1.type==State) {$$.type = Complex;} /*else if($1.type==Complex) {$$.type = Float;} else if($1.type==String) {$$.type = Float;}*/ else yyerror();}
@@ -402,11 +402,11 @@ out_rhs                 : prim_const                                            
                         /* | out_id '[' NUMBER ']' '[' NUMBER ']' '[' NUMBER ']' '[' NUMBER ']' {if(!$1.prim && $1.type==Matrix) $$.type = Float else yyerror(); */
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; $$.dim = $1.dim;}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
-                        | '!' out_rhs              /* Don't know */                                        
-                        | out_rhs AND out_rhs      /* Don't know */
-                        | out_rhs OR out_rhs       /* Don't know */
-                        | out_rhs COMP out_rhs     /* Don't know */
-                        | out_rhs EQUALITY out_rhs /* Don't know */
+                        | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$.prim = true; $$.type = Bool;} else yyerror();  }                         
+                        | out_rhs AND out_rhs                                    {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else yyerror(); }
+                        | out_rhs OR out_rhs    /* works for bools */            {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else yyerror(); }
+                        | out_rhs COMP out_rhs  /* Check compatible */           {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
+                        | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
                         | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type==Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else yyerror();}
                         | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else yyerror();}
                         | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else if ($1.prim && $1.type == String) {$$.prim = true; $$.type = String;} else yyerror();}
@@ -643,6 +643,7 @@ void exitOutputSymbolScope(OutputSymbolEntry** Head, int level){
 
     while(symbolEntry != NULL && symbolEntry->level == level){
         prevEntry = symbolEntry->prev;
+        free(symbolEntry->id);
         free(symbolEntry);
         symbolEntry = prevEntry;
     }

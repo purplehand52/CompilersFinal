@@ -125,8 +125,8 @@ Equality                (==|!=)
 
 {Number}                {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}
 {Neg}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NEG;}
-{Dec}                   {fprintf(fp2,"constant: %s\n",yytext); return DEC;}
-{Exp}                   {fprintf(fp2,"constant: %s\n",yytext); return EXP;}
+{Dec}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
+{Exp}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 {id}                    {fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];};return ID;}
 [-+*/=%]                {printOperator();return yytext[0];}

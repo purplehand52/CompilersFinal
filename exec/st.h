@@ -7,9 +7,12 @@ struct st
 {
     int rows,cols,type;
     int num;
-    int level;
     float real;
     char *str;
+
+    int level;
+    bool prim;
+    int dim;
     struct Complex
     {
         float real;
