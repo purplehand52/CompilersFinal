@@ -68,7 +68,7 @@ init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\
 main_section            :  '\\'  MAIN_BEGIN {fprintf(fp,"\nMain section begins\n\n");} main_stmt_list '\\' MAIN_END {fprintf(fp,"\nMain section ends\n");}
                         ;
 
-output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n"); isInOutput = true; outputLevel = 1; $3.level = 1;} out_main '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n");}
+output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begins\n\n"); isInOutput = true; outputLevel = 1;} out_main {exitOutputSymbolScope(&OutputSymbolTable,outputLevel);} '\\' OUTPUT_END {fprintf(fp,"\nOutput section ends\n");}
                         ;
 
 
