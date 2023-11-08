@@ -417,12 +417,12 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,$$.level);}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(($$.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$1.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,$$.level);}
                         ;
 
 decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); $2.type = $1.type;}
-                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
-                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
+                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
+                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,$$.level) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,$$.level);}
                         ;
 
 /* Echo Statement */
@@ -622,10 +622,10 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
 
 
 /* returns matching entry from outmost scope, NULL if not found */
-OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id){
+OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id, int level){
     symbolEntry = *Head;
     while(symbolEntry != NULL){
-        if( strcmp(id, symbolEntry->id) ==0 ){
+        if(strcmp(id, symbolEntry->id) == 0 && symbolEntry->level >= level) { /* found an exisitng entry that doesn't permit declaration of same identifier */
             break;  // found entry
         }
         symbolEntry = symbolEntry->prev;
