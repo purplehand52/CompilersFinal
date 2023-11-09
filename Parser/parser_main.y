@@ -27,6 +27,10 @@
 
    /* Output Section */
    struct OutputSymbolEntry* OutputSymbolTable = NULL;
+
+   bool firstLetterCapital(char *str);
+   struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry** Head, char* id, int level, int findFlag); // declaration
+   bool inList(struct List** Head, char* data);
 %}
 
 %start prgm
@@ -362,7 +366,7 @@ temp                    : complex_const   {$$.cpx = $1.cpx;}
 
 prim_const              : bool_const      {$$.type = Bool;}
                         | complex_const   {$$.type = Complex;}
-                        | matrix_const    {$$.type = Matrix; $$.rows = $1.rows}
+                        | matrix_const    {$$.type = Matrix; $$.rows = $1.rows;}
                         | state_const     {$$.type = State;}
                         | NUMBER          {$$.type = Uint;}
                         | NEG             {$$.type = Int;}
@@ -412,8 +416,8 @@ out_rhs                 : prim_const                                            
                         | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
                         | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type==Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else yyerror();}
                         | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else yyerror();}
-                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else if (($1.prim==true) && ($1.type == String)) {$$.prim = true; $$.type = String;} else yyerror();}
-                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix) */                       {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else yyerror();}
+                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$$.prim = $1.prim; $$.type = temp_type;} else if (($1.prim==true) && ($1.type == String)) {$$.prim = true; $$.type = String;} else yyerror();}
+                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix) */                       {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$$.prim = $1.prim; $$.type = temp_type;} else yyerror();}
                         | out_rhs '@' out_rhs   /* Works for matrix, list (uint, int, float, complex); list(complex)*list(matrix) */                              {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {if($1.rows == $3.rows) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return;}} else if(temp_type <= Complex) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else yyerror();}
                         | out_rhs '&' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
                         | out_rhs '^' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
@@ -421,7 +425,7 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str;} else {OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror(); return;}}}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str;} else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror(); return;}}}
                         ;
 
 decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); if(($1.type != $2.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$2.type,/* complete these arguments */,outputLevel,false);}
@@ -626,8 +630,8 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
 
 
 /* returns matching entry from outmost scope, NULL if not found */
-struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry* Head, char* id, int level){
-    symbolEntry = *Head;
+struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry** Head, char* id, int level, int findFlag){
+    struct OutputSymbolEntry* symbolEntry = *Head;
     while(symbolEntry != NULL){
         if(strcmp(id, symbolEntry->id) == 0 && (symbolEntry->level == level || findFlag)) { /* found an exisitng entry that doesn't permit declaration of same identifier */
             break;  // found entry
