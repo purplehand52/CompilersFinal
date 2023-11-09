@@ -34,7 +34,7 @@ gate S =[[(1 , 0), (0, 0),3],
     S -> 1                   $ user defined gate $
     Y3 (0,1,2)               $ block call with target $
     for i in (0:3){
-        X_even i -> i        $ block call with control->target $
+        X_even (i,p) -> i        $ block call with control->target $
         measure : i -> i
     }
 \end_main

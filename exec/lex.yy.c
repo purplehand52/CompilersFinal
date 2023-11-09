@@ -1251,12 +1251,12 @@ YY_RULE_SETUP
 case 69:
 YY_RULE_SETUP
 #line 128 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); return DEC;}
+{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
 #line 129 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); return EXP;}
+{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
