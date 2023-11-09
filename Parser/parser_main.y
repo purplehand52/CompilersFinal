@@ -293,8 +293,6 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
 
 var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror(); return;} $$.num = 1 + $1.num;}
                         | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror(); return;} $$.num = 1;}
-var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror(); return;} $$.num = 1 + $1.num;}
-                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror(); return;} $$.num = 1;}
                         ;
 
 for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str);} else {yyerror(); return;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
