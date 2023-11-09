@@ -9,6 +9,8 @@ struct st
     int num;
     float real;
     char *str;
+    int cond_count; /* For number of arguments in condense */
+    int* cond_list; /* For arguments of condense */
 
     int level;
     bool prim;
