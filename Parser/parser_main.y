@@ -8,7 +8,7 @@
    extern FILE* yyin,*fp2;
    extern int line;
    FILE * fp;
-
+// comment
    int yylex();
    void yyerror();
 
