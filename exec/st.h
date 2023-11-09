@@ -57,7 +57,7 @@ struct OutputSymbolEntry{
     int type;
     bool primitive;
     bool isLoopId;
-    /* int matrix[2]; */
+    int matrix_dim; /* Matrix_dim */
     int dim;
     int level;
     struct OutputSymbolEntry* prev; // symtab will be modified near highest level, so reverse direction preferred
