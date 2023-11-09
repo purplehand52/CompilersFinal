@@ -51,15 +51,16 @@ struct GateTable{
 /* Primitives List */
 enum Primitives{Uint, Int, Float, Complex, Matrix, State, Bool, String, Scope};
 #define COMPATIBLE 4
+#define COMPARABLE 3
 
 struct OutputSymbolEntry{
     char* id;
+    int level;
     int type;
     bool primitive;
-    bool isLoopId;
     int matrix_dim; /* Matrix_dim */
     int dim;
-    int level;
+    bool isLoopId;
     struct OutputSymbolEntry* prev; // symtab will be modified near highest level, so reverse direction preferred
     /* Add pointer for scope expansion */
 };
