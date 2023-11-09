@@ -378,15 +378,15 @@ vec_list                : vec_list ',' prim_const {temp_type = compatibleCheck($
                         ;
 
 /* Calls : Must Define Dimensions */
-calls                   : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, string??) */ {temp_type = compatibleCheck($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix /*|| temp_type==String*/)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}
-                        | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix) */           {temp_type = compatibleCheck($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}        
-                        | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex) List(Comp*Mat)*/     {temp_type = compatibleCheck($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type<=COMPATIBLE)) {$$.prim = true; $$.type = temp_type; $$.dim = $3.dim;} else if ((!$3.prim) && (!$5.prim) && ($3.type<=COMPATIBLE) && ($5.type==Matrix)) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else yyerror();}        
+calls                   : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, string??) */ {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix /*|| temp_type==String*/)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}
+                        | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix) */           {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}        
+                        | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex) List(Comp*Mat)*/     {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type<=COMPATIBLE)) {$$.prim = true; $$.type = temp_type; $$.dim = $3.dim;} else if ((!$3.prim) && (!$5.prim) && ($3.type<=COMPATIBLE) && ($5.type==Matrix)) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else yyerror();}        
                         | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                   {if((!$3.prim) && ((temp_type==Uint) || (temp_type==Int))) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}        
                         | VAR '(' out_rhs ')'               /* List (uint, int) */                                   {if((!$3.prim) && ((temp_type==Uint) || (temp_type==Int))) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else yyerror();}
                         | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */             {if((!$3.prim) && ((temp_type==Uint) || (temp_type==Int))) {$$.prim = false; $$.type = temp_type; $$.dim = condenser($3.dim, 1);} else yyerror();}
                         | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */     {if((!$3.prim) && ((temp_type==Uint) || (temp_type==Int))) {$$.prim = false; $$.type = temp_type; $$.dim = condenser($3.dim, $6.count);} else yyerror();}
-                        | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */ {temp_type = compatibleCheck($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix /*|| temp_type==String*/)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else yyerror();}
-                        | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */           {temp_type = compatibleCheck($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else yyerror();}
+                        | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */ {if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix /*|| temp_type==String*/)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else yyerror();}
+                        | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */           {if((!$3.prim) && ((temp_type<=COMPATIBLE) || temp_type==Matrix)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else yyerror();}
                         ;
 
 
@@ -403,19 +403,19 @@ out_rhs                 : prim_const                                            
                         /* | out_id '[' NUMBER ']' '[' NUMBER ']' '[' NUMBER ']' '[' NUMBER ']' {if(!$1.prim && $1.type==Matrix) $$.type = Float else yyerror(); */
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; $$.dim = $1.dim;}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
-                        | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$.prim = true; $$.type = Bool;} else yyerror();  }                         
+                        | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else yyerror();  }                         
                         | out_rhs AND out_rhs                                    {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else yyerror(); }
                         | out_rhs OR out_rhs    /* works for bools */            {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else yyerror(); }
-                        | out_rhs COMP out_rhs  /* Check compatible */           {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
-                        | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
-                        | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type==Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else yyerror();}
-                        | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else yyerror();}
-                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else if ($1.prim && $1.type == String) {$$.prim = true; $$.type = String;} else yyerror();}
-                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix) */                       {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else yyerror();}
-                        | out_rhs '@' out_rhs   /* Works for matrix, list (uint, int, float, complex); list(complex)*list(matrix) */                              {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {$$.prim = true; $$.type = temp_type;} else if(temp_type <= Complex) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else yyerror();}
-                        | out_rhs '&' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
-                        | out_rhs '^' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
-                        | out_rhs '|' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheck($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
+                        | out_rhs COMP out_rhs  /* Check compatible */           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
+                        | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1) {$$.prim = true; $$.type = Bool;} else yyerror();  }
+                        | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type==Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else yyerror();}
+                        | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else yyerror();}
+                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else if ($1.prim && $1.type == String) {$$.prim = true; $$.type = String;} else yyerror();}
+                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix) */                       {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$1.prim ? $$.prim = true : $$.prim = false; $$.type = temp_type;} else yyerror();}
+                        | out_rhs '@' out_rhs   /* Works for matrix, list (uint, int, float, complex); list(complex)*list(matrix) */                              {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {$$.prim = true; $$.type = temp_type;} else if(temp_type <= Complex) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else yyerror();}
+                        | out_rhs '&' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
+                        | out_rhs '^' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
+                        | out_rhs '|' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else yyerror();}
                         ;
 
 /* Expressions */
@@ -467,7 +467,7 @@ out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {if($3
 out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
-out_while_stmt          : WHILE '(' expr ')' '{' {outputlevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_while_stmt          : WHILE '(' expr ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
 
@@ -598,7 +598,7 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
    /* ID */
    newNode->id = (char *)malloc(sizeof(char)*strlen(id));
    for(int i=0;i<strlen(id);i++){
-      newNode->id[i] = data[i];
+      newNode->id[i] = id[i];
    }
 
    /* Type */
@@ -624,7 +624,7 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
 
 
 /* returns matching entry from outmost scope, NULL if not found */
-OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id, int level){
+struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry* Head, char* id, int level){
     symbolEntry = *Head;
     while(symbolEntry != NULL){
         if(strcmp(id, symbolEntry->id) == 0 && symbolEntry->level >= level) { /* found an exisitng entry that doesn't permit declaration of same identifier */
@@ -633,14 +633,14 @@ OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id, int l
         symbolEntry = symbolEntry->prev;
     }
     // symtabEntry will be none if no entry is found (including when symtab is empty)
-    return (OutputSymbolEntry*) symbolEntry;      
+    return (struct OutputSymbolEntry*) symbolEntry;      
 }
 
 /* removes all entries from given outermost level */
-void exitOutputSymbolScope(OutputSymbolEntry** Head, int level){
-    OutputSymbolEntry* symbolEntry = *Head;
+void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level){
+    struct OutputSymbolEntry* symbolEntry = *Head;
     if(symbolEntry == NULL) {return;}
-    OutputSymbolEntry* prevEntry;
+    struct OutputSymbolEntry* prevEntry;
 
     while(symbolEntry != NULL && symbolEntry->level == level){
         prevEntry = symbolEntry->prev;
@@ -672,7 +672,7 @@ int compatibleCheck(int t1, int t2)
    else return -1;
 }
 
-int compatibleCheck(int t1, int t2, int p1, int p2, int d1, int d2)
+int compatibleCheckAdv(int t1, int t2, int p1, int p2, int d1, int d2)
 {
    /* Primitive ? */
    if(p1 == p2)
@@ -691,7 +691,7 @@ int condenser(int size, int lim)
 {
    int upper = 1;
    while(upper < size) upper = upper << 1;
-   retun upper >> lim;
+   return (upper >> lim);
 }
 
 int main(int argc,char* argv[])
