@@ -63,7 +63,7 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printBlockTable();}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -154,6 +154,7 @@ param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);$$.n
 
 target_params           : /* epsilon */                          /* optional */
                         | ARROW '(' target_param_list ')'
+                        | ARROW target_param_list
                         ;
 
 target_param_list       :   ID ',' target_param_list  
@@ -188,8 +189,8 @@ stmts                   : call_stmt
                         | while_stmt      {fprintf(fp,"while statement\n");}
                         ;
 
-register                : NUMBER  {if($1.num < 0){yyerror(); return;} $$.num = $1.num;}/* check non negative*/
-                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}}
+register                : NUMBER  {if($1.num < 0){yyerror(); return;} $$.num = $1.num;$$.flag=0;}/* check non negative*/
+                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}$$.flag = 1;}
                         ;
 
 
@@ -238,7 +239,7 @@ register_expr_list      : register_expr_list ',' register_expr
 */
 
 
-measure_stmt            : MEASURE ':' register ARROW register {if(($3.num < 0 || $3.num >= quantum_registers) || ($5.num < 0 || $5.num >= classical_registers)){yyerror(); return;}} /* check if register1 and register2 are in bounds */
+measure_stmt            : MEASURE ':' register ARROW register {if((!$3.flag && ($3.num < 0 || $3.num >= quantum_registers)) || (!$5.flag && ($5.num < 0 || $5.num >= classical_registers))){yyerror(); return;}} /* check if register1 and register2 are in bounds */
                         ;
 
 barrier_stmt            : '\\' BARRIER
@@ -290,8 +291,8 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
                         | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
-                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
+var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror(); return;} $$.num = 1 + $1.num;}
+                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror(); return;} $$.num = 1;}
                         ;
 
 for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str);} else {yyerror(); return;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
@@ -406,7 +407,7 @@ out_rhs                 : prim_const                                            
                         | out_id                                                 {$$.prim = $1.prim; $$.type = $1.type;}
                         | out_id '[' out_rhs ']'                                 {if($3.type <= Uint){if($1.prim) {if($1.type==State) {$$.type = Complex;} else {yyerror();return;}} else {$$.type = $1.type; $$.prim = true;}}}
                         | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if(($3.type <= Uint) && ($5.type <= Uint)){if($1.prim) {if($1.type==Matrix) {$$.type = Complex;} else {yyerror();return;}} else if($1.type==State) {$$.type = Complex;} else {yyerror(); return;}}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)){if($1.prim) {yerror(); return;} else if($1.type==Matrix) {$$.type = Complex;} else yyerror();}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)){if($1.prim) {yyerror(); return;} else if($1.type==Matrix) {$$.type = Complex;} else yyerror();}}
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; $$.dim = $1.dim;}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
                         | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else yyerror();  }                         
@@ -592,6 +593,46 @@ void printGateTable(struct GateTable ** GateSymbolTable){
       printf("%d %d\n",temp->rows,temp->cols);
       temp = temp->next;
    }
+}
+
+int BlockSemanticCheck(char *block_id){
+   struct BlockTable * temp = BlockSymbolTable;
+   while(temp != NULL){
+      if(strcmp(temp->id,block_id) == 0){
+         break;
+      }
+      temp = temp->next;
+   }
+
+   struct List* temp2 = temp->params;
+   struct List* temp4 = id_list;
+
+   while(temp4 != NULL){
+      int x=0;
+      while(temp2 != NULL){
+         if(strcmp(temp4->id,temp2->id) == 0) {
+            x = 1;
+            break;
+         }
+         temp2 = temp2->next;
+      }
+      if(!x) {return 0;}
+      temp2 = temp->params;
+      temp4 = temp4->next;
+   }
+   return 1;
+}
+
+int BlockCallSemanticCheck(char *block_id,int num_params){
+   struct BlockTable* temp = BlockSymbolTable;
+   while(temp != NULL){
+      if(strcmp(temp->id,block_id) == 0){
+         break;
+      }
+      temp = temp->next;
+   }
+   if(temp == NULL || num_params != temp->len) return 0;
+   return 1;
 }
 
 /* Output Section */

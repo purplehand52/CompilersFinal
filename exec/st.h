@@ -5,6 +5,7 @@
 
 struct st
 {
+    int flag;
     int rows,cols,type;
     int num;
     float real;
