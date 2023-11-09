@@ -18,6 +18,7 @@
    int isInBlock=0;
    int outputLevel = 0;
    bool isInOutput = false;
+   bool isDeclaration = false;
 
    struct List* head = NULL;
    struct List* id_list = NULL;
@@ -285,8 +286,8 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
                         | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel + 1,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
-                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$1.type,/* complete these arguments */,outputLevel + 1,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
+var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel + 1,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str)} else {yyerror(); return;} $$.num = 1 + $1.num;}
+                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$1.type,/* complete these arguments */,outputLevel + 1,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str)} else {yyerror(); return;} $$.num = 1;}
                         ;
 
 for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str)} else {yyerror(); return;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
@@ -419,12 +420,12 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(($$.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$1.str,$$.type,/* complete these arguments */,outputLevel,false);}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str;} else {OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror(); return;}}}
                         ;
 
-decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); $2.type = $1.type;}
-                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel,false);}
-                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel,false);}
+decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); if(($1.type != $2.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$2.type,/* complete these arguments */,outputLevel,false);}
+                        | list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel,false);}
+                        | list_type ID '=' calls      {fprintf(fp,"List datatype declaration statement\n"); if(($1.type != $3.type) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,$1.type,/* complete these arguments */,outputLevel,false);}
                         ;
 
 /* Echo Statement */
@@ -458,7 +459,7 @@ out_other_final         : OTHERWISE '{' out_main '}'
                         | /* epsilon */
                         ;
 
-out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,Int,/* complete the arguments */,outputLevel + 1,true);} IN '(' range ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,0) != NULL){yyerror(); return;} else insertInOutputTable(&OutputSymbolTable,$2.str,Int,/* complete the arguments */,outputLevel + 1,true);} IN '(' range ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
 out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
@@ -479,8 +480,8 @@ out_main                : out_main out_stmt
 out_stmt                : out_control
                         | save_stmt
                         | echo_stmt
-                        | out_expr
-                        | decl
+                        | {isDeclaration = false;} out_expr
+                        | {isDeclaration = true;} decl
                         ;
 %%
 
@@ -624,10 +625,10 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, int level, char* id, i
 
 
 /* returns matching entry from outmost scope, NULL if not found */
-OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id, int level){
+OutputSymbolEntry* getOutputSymbolEntry(OutputSymbolEntry* Head, char* id, int level, int findFlag){
     symbolEntry = *Head;
     while(symbolEntry != NULL){
-        if(strcmp(id, symbolEntry->id) == 0 && symbolEntry->level >= level) { /* found an exisitng entry that doesn't permit declaration of same identifier */
+        if(strcmp(id, symbolEntry->id) == 0 && (symbolEntry->level == level || findFlag)) { /* found an exisitng entry that doesn't permit declaration of same identifier */
             break;  // found entry
         }
         symbolEntry = symbolEntry->prev;
