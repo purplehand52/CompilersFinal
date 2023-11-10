@@ -12,6 +12,7 @@ struct st
     char *str;
     int cond_count; /* For number of arguments in condense */
     int* cond_list; /* For arguments of condense */
+    int out_flag; /* flag for output 0 -> id, 1 -> cout, 2 -> qout */
 
     int level;
     bool prim;

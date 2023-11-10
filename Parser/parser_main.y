@@ -315,9 +315,9 @@ while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
 // */
 
 /* Datatypes */
-out_id                  : ID 
-                        | COUT {$$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;}
-                        | QOUT {$$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}
+out_id                  : ID {$$.out_flag = 0; $$.str = $1.str;}
+                        | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;}
+                        | QOUT {$$.out_flag = 2; $$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}
                         ;
 
 prim_type               : INT       {$$.type = Int; $$.prim = true;}
@@ -414,10 +414,10 @@ uint_list               : uint_list ',' out_rhs  {if($1.type <= Int) {$$.cond_co
 /* Expressions :*/
 out_rhs                 : prim_const                                             {$$.prim = true; $$.type = $1.type;}
                         | vec_const                                              {$$.prim = false; $$.dim = $1.dim; $$.type = $1.type; if($$.type == Matrix) {$$.rows = $1.rows;} else {$$.rows = 0;}}
-                        | out_id                                                 {struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){$$.prim = sample->primitive; $$.type = sample->type; if($$.type == Matrix){$$.rows = sample->matrix_dim;} if(!$$.prim){$$.dim = sample->dim;}} else{yyerror(); return;}}
-                        | out_id '[' out_rhs ']'                                 {if($3.type <= Uint){if($1.prim) {if($1.type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else {$$.type = $1.type; $$.prim = true;}} else {yyerror(); return;}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if(($3.type <= Uint) && ($5.type <= Uint)) {if($1.prim) {if($1.type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else if($1.type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if($1.prim) {yyerror(); return;} else if($1.type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}}
+                        | out_id                                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){$$.prim = sample->primitive; $$.type = sample->type; if($$.type == Matrix){$$.rows = sample->matrix_dim;} if(!$$.prim){$$.dim = sample->dim;}} else{yyerror(); return;}} else if($$.out_flag == 1){$$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;} else{$$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}}
+                        | out_id '[' out_rhs ']'                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){if($3.type <= Uint){if(sample->primitive) {if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else {$$.type = sample->type; $$.prim = true;}} else {yyerror(); return;}} else{yyerror(); return;}} else if($$.out_flag == 1){$$.type = Uint; $$.prim = true;} else{$$.type = State; $$.prim = true;}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint)) {if(sample->type) {if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}} else{yyerror(); return;}} else if($$.out_flag == 1){yyerror(); return;} else{$$.type = Complex; $$.prim = true;}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if(sample->primitive) {yyerror(); return;} else if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}} else{yyerror(); return;}} else{yyerror(); return;}}
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; if($1.type == Matrix){$$.rows = $1.rows;} if(!$$.prim){$$.dim = $1.dim;} printf("%d %d\n", $$.prim, $$.type);}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
                         | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else {yyerror(); return;}  }                         
