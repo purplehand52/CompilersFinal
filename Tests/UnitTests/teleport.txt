@@ -1,0 +1,64 @@
+\begin_init
+    #registers quantum = 3
+    #registers classical = 3
+    #iters = 1000
+
+    #set classical states -> 0,0,0
+    #set quantum states -> {1,0}, {1,0}, {(0, 0), (0, 1)}
+
+    block BellGen (i, j) -> j [
+        $ Start with Hadamard $
+        H -> i
+        $ Apply C-X $
+        X : i -> j
+    ]
+
+\end_init
+
+\begin_main
+    $ Generate Bell State $
+    BellGen (1, 2)
+
+    \barrier
+
+    $ Init Transformations $
+    X : 0 -> 1
+    H -> 0
+
+    $ Measurements $
+    measure: 0 -> 0
+    measure: 1 -> 1
+
+    $ Classical Controlled Ops $
+    1 ? X -> 2
+    0 ? Z -> 2
+
+\end_main
+
+\begin_output
+    
+    $ Save Value $
+    \save "output.csv"
+
+    $ Print the quantum register $
+    echo("Final Transferred State: ", q_output[2])
+
+    $ Print the frequency list of classical registers $
+    echo("Classical Register List: ", c_output)
+
+    $ Compute Fidelity $
+    state original = {(0, 0), (0, 1)} 
+   complex fidelity = dot(original - q_output[2], original - q_output[2]) 
+    echo("Fidelity Reported: ",fidelity) 
+
+    int i = 0
+    int j = 0
+
+    for i in (1:10){
+        int k = 1
+        for j in (2:10){
+            k = k + 1
+        }
+    } 
+
+\end_output

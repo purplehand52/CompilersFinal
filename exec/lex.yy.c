@@ -1,5 +1,5 @@
 
-#line 2 "lex.yy.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -623,12 +623,12 @@ void printOperator();
 void printSpecial();
 void printReserved();
 void error();
-#line 626 "lex.yy.c"
+#line 627 "lex.yy.c"
 /* contains frequently used declarations */
 /*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
 /*datatypes               (int|float|list|complex|matrix)*/
 /* Reserved symbols */
-#line 631 "lex.yy.c"
+#line 632 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -848,7 +848,7 @@ YY_DECL
 #line 47 "./lexer/lexical.l"
 
 
-#line 851 "lex.yy.c"
+#line 852 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1283,7 +1283,7 @@ YY_RULE_SETUP
 #line 135 "./lexer/lexical.l"
 ECHO;
 	YY_BREAK
-#line 1286 "lex.yy.c"
+#line 1287 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

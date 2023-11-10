@@ -33,8 +33,8 @@
    bool firstLetterCapital(char *str);
    struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry** Head, char* id, int level, int findFlag); // declaration
    void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level);
-   void insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols);
-   void insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params);
+   int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols);
+   int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params);
    void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, int type, bool primitive, int matrix_dim, int dim, bool isLoopId);
    int BlockCallSemanticCheck(char *block_id,int num_params);
    int BlockSemanticCheck(char *block_id);
@@ -44,6 +44,7 @@
    int compatibleCheck(int t1, int t2);
    int compatibleCheckAdv(int t1, int t2, int p1, int p2, int d1, int d2);
    int condenser(int size, int lim);
+   int InBlock(struct BlockTable** Head,char * data,int len);
 %}
 
 %start prgm
@@ -131,7 +132,7 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols);}
+gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){yyerror();return;}}
                         ;
 
 rhs                     :   '[' tuple_list ']'  {$$.rows = $2.rows;$$.cols = $2.cols;}
@@ -154,7 +155,7 @@ block_defns_list        : block_defn block_defns_list
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params {insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head);head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror();return 1;}id_list = NULL;isInBlock = 0;}
+block_defn              : BLOCK block_id params target_params {if(!insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head)){yyerror();return;}head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror();return 1;}id_list = NULL;isInBlock = 0;}
                         ;
 
 params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1;}                  /* parantheses maybe ignored for single ID */
@@ -212,8 +213,8 @@ call_stmt               : classic_control GATE quantum_control ARROW register {f
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
-                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror();return 1;}}}
-                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror();return 1;}}}
+                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror();return;}}}
+                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror();return;}}}
                         ;
 
 parameters              : register                 {$$.num = 1;}
@@ -565,7 +566,19 @@ void printList(struct List** Head){
    printf("\n");
 }
 
-void insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params){
+int InBlock(struct BlockTable** Head,char * data,int len){
+   struct BlockTable* temp = *Head;
+   while(temp != NULL){
+      if(strcmp(temp->id,data) == 0 && temp->len == len){
+         return 1;
+      }
+      temp = temp->next;
+   }
+   return 0;
+}
+
+int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params){
+   if(InBlock(Head,data,len)) return 0;
    struct BlockTable* newNode = (struct BlockTable*)malloc(sizeof(struct BlockTable));
    newNode->id = (char *)malloc(sizeof(char)*strlen(data));
    for(int i=0;i<strlen(data);i++){
@@ -580,6 +593,7 @@ void insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List
       newNode->next = *Head;
    }
    *Head = newNode;
+   return 1;
 }
 
 void printBlockTable(){
@@ -592,7 +606,14 @@ void printBlockTable(){
    }
 }
 
-void insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
+int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
+   struct GateTable* temp = *Head;
+   while(temp != NULL){
+      if(strcmp(temp->id,data) == 0){
+         return 0;
+      }
+      temp = temp->next;
+   }
    struct GateTable* newNode = (struct GateTable*)malloc(sizeof(struct GateTable));
    newNode->id = (char *)malloc(sizeof(char)*strlen(data));
    for(int i=0;i<strlen(data);i++){
@@ -607,6 +628,7 @@ void insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
       newNode->next = *Head;
    }
    *Head = newNode;
+   return 1;
 }
 
 void printGateTable(struct GateTable ** GateSymbolTable){
@@ -649,13 +671,12 @@ int BlockSemanticCheck(char *block_id){
 int BlockCallSemanticCheck(char *block_id,int num_params){
    struct BlockTable* temp = BlockSymbolTable;
    while(temp != NULL){
-      if(strcmp(temp->id,block_id) == 0){
-         break;
+      if(strcmp(temp->id,block_id) == 0 && temp->len == num_params){
+         return 1;
       }
       temp = temp->next;
    }
-   if(temp == NULL || num_params != temp->len) return 0;
-   return 1;
+   return 0;
 }
 
 /* Output Section */
