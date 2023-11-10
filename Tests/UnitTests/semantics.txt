@@ -59,6 +59,6 @@
 
     uint t = c_output[0] * c_output[1] * c_output[2]
 
-    state = q_output[1]
+    state f = q_output[1]
     
 \end_output

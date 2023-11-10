@@ -1,4 +1,4 @@
-#! /bin/bash
+#!bin/bash
 yacc -d ./Parser/parser_main.y -o ./exec/y.tab.c
 lex ./lexer/lexical.l
 mv lex.yy.c ./exec/lex.yy.c

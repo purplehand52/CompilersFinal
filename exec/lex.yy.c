@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 2 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -401,7 +401,7 @@ static const YY_CHAR yy_ec[256] =
         1,    2,    4,    5,    6,    7,    8,    9,   10,   11,
        11,    8,    8,   12,   13,   14,    8,   15,   15,   15,
        15,   15,   15,   15,   15,   15,   15,   16,   17,   18,
-       19,   20,   21,    1,   22,   22,   22,   22,   23,   22,
+       19,   20,   21,    8,   22,   22,   22,   22,   23,   22,
        22,   24,   25,   22,   22,   22,   22,   26,   22,   22,
        22,   22,   22,   22,   22,   22,   22,   24,   24,   24,
        11,   27,   11,   28,   29,    1,   30,   31,   32,   33,
@@ -623,12 +623,12 @@ void printOperator();
 void printSpecial();
 void printReserved();
 void error();
-#line 627 "lex.yy.c"
+#line 626 "lex.yy.c"
 /* contains frequently used declarations */
 /*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
 /*datatypes               (int|float|list|complex|matrix)*/
 /* Reserved symbols */
-#line 632 "lex.yy.c"
+#line 631 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -848,7 +848,7 @@ YY_DECL
 #line 47 "./lexer/lexical.l"
 
 
-#line 852 "lex.yy.c"
+#line 851 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1283,7 +1283,7 @@ YY_RULE_SETUP
 #line 135 "./lexer/lexical.l"
 ECHO;
 	YY_BREAK
-#line 1287 "lex.yy.c"
+#line 1286 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

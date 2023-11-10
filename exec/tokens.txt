@@ -4,7 +4,7 @@ special symbol: #
 reserved keyword : registers
 reserved keyword : quantum
 operator: =
-constant: 3
+constant: 6
 special symbol: #
 reserved keyword : registers
 reserved keyword : classical
@@ -13,7 +13,7 @@ constant: 3
 special symbol: #
 reserved keyword : iters
 operator: =
-constant: 1000
+constant: 800
 special symbol: #
 reserved keyword : set
 reserved keyword : quantum
@@ -23,13 +23,13 @@ special symbol: {
 special symbol: (
 constant: 1
 special symbol: ,
-constant: 0
+constant: 2
 special symbol: )
 special symbol: ,
 special symbol: (
-constant: 1
+constant: -3
 special symbol: ,
-constant: 0
+constant: -4
 special symbol: )
 special symbol: }
 special symbol: ,
@@ -40,180 +40,150 @@ constant: 0
 special symbol: }
 special symbol: ,
 special symbol: {
-special symbol: (
 constant: 1
 special symbol: ,
 constant: 0
-special symbol: )
+special symbol: }
 special symbol: ,
-special symbol: (
+special symbol: {
 constant: 1
 special symbol: ,
 constant: 0
-special symbol: )
+special symbol: }
+special symbol: ,
+special symbol: {
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: }
+special symbol: ,
+special symbol: {
+constant: 1
+special symbol: ,
+constant: 0
 special symbol: }
 special symbol: #
 reserved keyword : set
 reserved keyword : classical
 reserved keyword : states
 special symbol: ->
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: ,
-constant: 0
-reserved keyword : block
-ID: Y3
-special symbol: (
-ID: p
-special symbol: ,
-ID: q
-special symbol: ,
-ID: r
-special symbol: )
-special symbol: [
-reserved keyword : Y
-special symbol: ->
-ID: p
-reserved keyword : Y
-special symbol: ->
-ID: q
-reserved keyword : Y
-special symbol: ->
-ID: r
-special symbol: ]
-reserved keyword : block
-ID: X_even
-special symbol: (
-ID: i
-special symbol: ,
-ID: p
-special symbol: )
-special symbol: ->
-ID: p
-special symbol: [
-reserved keyword : condition
-special symbol: (
-ID: i
-operator: %
-constant: 2
-comparator: ==
-constant: 0
-special symbol: )
-special symbol: {
-reserved keyword : X
-special symbol: ->
-ID: p
-special symbol: }
-special symbol: ]
-reserved keyword : gate
-ID: S
-operator: =
-special symbol: [
-special symbol: [
-special symbol: (
 constant: 1
 special symbol: ,
 constant: 0
-special symbol: )
-special symbol: ,
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: )
-special symbol: ,
-constant: 3
-special symbol: ]
-special symbol: ,
-special symbol: [
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: )
-special symbol: ,
-special symbol: (
-constant: 0
 special symbol: ,
 constant: 1
-special symbol: )
-special symbol: ,
-constant: 4
-special symbol: ]
-special symbol: ]
-reserved keyword : gate
-ID: Test
-operator: =
-special symbol: [
-special symbol: [
-constant: 1
-special symbol: ,
-constant: 2
-special symbol: ]
-special symbol: ,
-special symbol: [
-constant: 2
-special symbol: ,
-constant: 3
-special symbol: ]
-special symbol: ,
-special symbol: [
-constant: 6
-special symbol: ,
-constant: 5
-special symbol: ]
-special symbol: ,
-special symbol: [
-constant: 3
-special symbol: ,
-constant: 1
-special symbol: ]
-special symbol: ]
 special symbol: \
 reserved keyword : end_init
 special symbol: \
 reserved keyword : begin_main
-reserved keyword : H
-special symbol: ->
-constant: 0
-ID: S
-special symbol: ->
-constant: 1
-ID: Y3
+reserved keyword : for_lex
 special symbol: (
-constant: 0
-special symbol: ,
-constant: 1
-special symbol: ,
-constant: 2
-special symbol: )
-reserved keyword : for
 ID: i
+special symbol: ,
+ID: j
+special symbol: )
 reserved keyword : in
 special symbol: (
 constant: 0
 punctuation: :
 constant: 3
+special symbol: ,
+constant: 3
+punctuation: :
+constant: 6
 special symbol: )
 special symbol: {
-ID: X_even
+reserved keyword : condition
 special symbol: (
+ID: j
+operator: -
 ID: i
-special symbol: ,
-ID: p
+comparator: !=
+constant: 3
 special symbol: )
-special symbol: ->
-ID: i
-reserved keyword : measure
+special symbol: {
+reserved keyword : Y
 punctuation: :
 ID: i
 special symbol: ->
-ID: i
+ID: j
+special symbol: }
+special symbol: }
+reserved keyword : for_zip
+special symbol: (
+ID: q
+special symbol: ,
+ID: c
+special symbol: )
+reserved keyword : in
+special symbol: (
+constant: 3
+punctuation: :
+constant: 6
+special symbol: ,
+constant: 0
+punctuation: :
+constant: 3
+special symbol: )
+special symbol: {
+reserved keyword : measure
+punctuation: :
+ID: q
+special symbol: ->
+ID: c
 special symbol: }
 special symbol: \
 reserved keyword : end_main
 special symbol: \
 reserved keyword : begin_output
+reserved keyword : int
+ID: difference
+operator: =
+reserved keyword : c_output
+special symbol: [
+constant: 4
+special symbol: ]
+operator: *
+reserved keyword : c_output
+special symbol: [
+constant: 3
+special symbol: ]
+reserved keyword : condition
+special symbol: (
+ID: difference
+comparator: >
+constant: 0
+special symbol: )
+special symbol: {
+reserved keyword : echo
+special symbol: (
+punctuation: "
+constant: More
+punctuation: "
+special symbol: )
+special symbol: }
+reserved keyword : otherwise
+special symbol: (
+ID: difference
+comparator: <
+constant: 0
+special symbol: )
+special symbol: {
+reserved keyword : echo
+special symbol: (
+punctuation: "
+constant: Less
+punctuation: "
+special symbol: )
+special symbol: }
+reserved keyword : otherwise
+special symbol: {
+reserved keyword : echo
+special symbol: (
+punctuation: "
+constant: Equal
+punctuation: "
+special symbol: )
+special symbol: }
 special symbol: \
 reserved keyword : end_output
