@@ -1,0 +1,93 @@
+\begin_init
+    #registers quantum = 3
+    #registers classical = 3
+    #iters = 1000
+
+    #set classical states -> 0,0,0
+    #set quantum states -> {1,0}, {1,0}, {1,0}
+
+    block BellGen (i, j) -> j [
+        $ Start with Hadamard $
+        H -> i
+        $ Apply C-X $
+        X : i -> j
+    ]
+
+    block BellGen2 (i,j,k) -> (j,g) [
+        $ Start with Hadamard $
+        H -> i
+        $ Apply C-X $
+        X : i -> j
+    ]
+
+    gate myGate = [[1,2],[(3,4),(4,7)],[6,7]]
+    gate myGate2 =[[1,2],[(3,1),(4,7)],[6,7]]
+\end_init
+
+\begin_main
+    BellGen : 1 -> 4
+    H -> 4
+    3 ? X : (4,5,6) -> 4
+
+    0 ? BellGen2 (2,3,4) -> (4,3)
+
+    measure : 0 -> 1
+
+    for i in (4:5:3){
+        condition(((x+y >= z) || (u == true)) && (z <= 3)){
+            measure : 1 -> 2
+        }
+        otherwise(y ^ z != z | x){
+            measure : 2 -> 0
+        }
+        otherwise{
+            H -> 4
+        }
+    }
+
+    for_lex (x,y,z) in (1:2:1,2:3:1,1:1){
+        BellGen2 (2,3,4) -> (4,3)
+        X : (1,2,23) -> 1
+    }
+
+\end_main
+
+\begin_output
+    matrix a = [[1, 2], [3, 4]]
+    matrix b = [[4, 5], [6, (7, 8)]]
+    matrix c = [[1, 2], [3, 4]] @ [[4, 5], [6, (7, 8)]]
+
+    list[float] d = [2, 4, 1, 5]
+    state e = {5, (6, 4)}
+
+    list[matrix] f = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+
+    complex g = [1,2,3] @ [1,2,3]
+
+    list[int] h = [1, 2, 3, 4, 5]
+
+    list[float] p = add([1.2, 2, 3], [4, 5, 6])
+
+    complex q = dot([1.2, 2, 3], [4, 5, 6])
+
+    float r = var([3, 4, 5, 6, 7, 8, 7, 8, 9])
+
+    list[uint] s = [1] + condense([1, 2, 2, 4, 5, 6, 7, 8], (0, 1, 2))
+
+    complex t = avg([(3, 4), (3, -4), (12, 13), 9, 5.10])
+
+    list[matrix] u = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] + [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+
+    list[uint] v = [1, 2, 3] & [5, 4, 6]
+
+    int w = 45 | -90
+
+
+    condition(5 < 6.7)
+    {
+        echo("e")
+    }
+
+    echo("c")
+    
+\end_output
