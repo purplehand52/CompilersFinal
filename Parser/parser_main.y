@@ -5,6 +5,8 @@
    #include<stdlib.h>
    #include "st.h"
 
+   #define HELLO printf("HELLO\n");
+
    extern FILE* yyin,*fp2;
    extern int line;
    FILE * fp;
@@ -313,16 +315,19 @@ while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
 // */
 
 /* Datatypes */
-out_id                  : ID | COUT | QOUT ;
+out_id                  : ID 
+                        | COUT {$$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;}
+                        | QOUT {$$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}
+                        ;
 
-prim_type               : INT       {$$.type = INT;}
-                        | UINT      {$$.type = UINT;}
-                        | FLOAT     {$$.type = FLOAT;}
-                        | COMPLEX   {$$.type = COMPLEX;}
-                        | STRING    {$$.type = STRING;}
-                        | MATRIX    {$$.type = MATRIX;}
-                        | STATE     {$$.type = STATE;}
-                        | BOOL      {$$.type = BOOL;}
+prim_type               : INT       {$$.type = Int;}
+                        | UINT      {$$.type = Uint;}
+                        | FLOAT     {$$.type = Float;}
+                        | COMPLEX   {$$.type = Complex;}
+                        | STRING    {$$.type = String;}
+                        | MATRIX    {$$.type = Matrix;}
+                        | STATE     {$$.type = State;}
+                        | BOOL      {$$.type = Bool;}
                         ;
 
 list_type               : LIST '[' prim_type ']' {$$.type = $3.type;}
@@ -354,8 +359,12 @@ row_list                : row_list ',' row         {$$.rows = $1.rows + 1; if($1
 row                     : '[' comps ']'            {$$.cols = $2.cols;}
                         ;
 
-comps                   : comps ',' complex_const  {$$.cols = $1.cols + 1;}
-                        | complex_const            {$$.cols = 1;}
+comps                   : comps ',' compatible_const  {$$.cols = $1.cols + 1;}
+                        | compatible_const            {$$.cols = 1;}
+                        ;
+
+compatible_const        : complex_const
+                        | num
                         ;
 
 state_const             : '{' temp ',' temp '}'    {$$.q.first = $2.cpx; $$.q.second = $4.cpx;}
@@ -404,10 +413,10 @@ uint_list               : uint_list ',' out_rhs  {if($1.type <= Int) {$$.cond_co
 
 /* Expressions :*/
 out_rhs                 : prim_const                                             {$$.prim = true; $$.type = $1.type;}
-                        | out_id                                                 {$$.prim = $1.prim; $$.type = $1.type; if($1.type == Matrix){$$.rows = $1.rows;} if(!$$.prim){$$.dim = $1.dim;}}
+                        | out_id                                                 {struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,0); if(sample != NULL){$$.prim = sample->primitive; $$.type = sample->type; if($$.type == Matrix){$$.rows = sample->matrix_dim;} if(!$$.prim){$$.dim = sample->dim;}} else{yyerror(); return;}}
                         | out_id '[' out_rhs ']'                                 {if($3.type <= Uint){if($1.prim) {if($1.type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else {$$.type = $1.type; $$.prim = true;}} else {yyerror(); return;}}
                         | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if(($3.type <= Uint) && ($5.type <= Uint)) {if($1.prim) {if($1.type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}} else if($1.type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if($1.prim) {yerror(); return;} else if($1.type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if($1.prim) {yyerror(); return;} else if($1.type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return;}}}
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; if($1.type == Matrix){$$.rows = $1.rows;} if(!$$.prim){$$.dim = $1.dim;}}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
                         | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else {yyerror(); return;}  }                         
@@ -419,7 +428,9 @@ out_rhs                 : prim_const                                            
                         | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Complex) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return;}}
                         | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix), string-concatenate */   {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else if (($1.prim==true) && ($1.type == String)) {$$.prim = true; $$.type = String;} else {yyerror(); return;}}
                         | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, list (uint, int, float, complex, matrix) */                       {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type <= Complex) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else {yyerror(); return;} }
-                        | out_rhs '@' out_rhs   /* Works for matrix, list (uint, int, float, complex); list(complex)*list(matrix) */                              {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {if($1.rows == $3.rows) {$$.prim = true; $$.type = temp_type; $$.rows = $1.rows;} else {yyerror(); return;}} else if(!$1.prim && (temp_type <= Complex)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; /*$$.dim = 0;*/} else {yyerror(); return;}}
+                        | out_rhs '@' out_rhs   /*Works for matrix, list (uint, int, float, complex); list(complex)*list(matrix)*/                              {printf("%d %d\n", $1.type, $3.type); temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); printf("%d\n", temp_type); if($1.prim && temp_type == Matrix) {if($1.rows == $3.rows) {$$.prim = true; $$.type = temp_type; $$.rows = $1.rows;} else {yyerror(); return;}} else if(!$1.prim && (temp_type <= Complex)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else {yyerror(); return;}}
+                        //| matrix_const '@' matrix_const     {if($1.rows == $3.rows){$$.type == Matrix; $$.rows == $1.rows; $$.prim = true;} else{yyerror();return;}}
+                        //| vec_const '@' vec_const           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= COMPATIBLE) {$$.type = temp_type; $$.prim = true;} else if($1.type == Complex && $3.type == Matrix) {$$.type = Matrix; $$.prim = true; $$.rows = $3.rows;}}
                         | out_rhs '&' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return;}}
                         | out_rhs '^' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return;}}
                         | out_rhs '|' out_rhs   /* Works for uint, int */                                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type <= Int) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return;}}

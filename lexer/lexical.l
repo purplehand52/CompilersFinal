@@ -129,7 +129,7 @@ Equality                (==|!=)
 {Exp}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 {id}                    {fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];};return ID;}
-[-+*/=%]                {printOperator();return yytext[0];}
+[-+*/=%@]               {printOperator();return yytext[0];}
 .                       {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 
 %%
