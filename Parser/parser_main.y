@@ -12,7 +12,7 @@
    FILE * fp;
 // comment
    int yylex();
-   void yyerror();
+   void yyerror(char* str);
 
    int classical_registers,quantum_registers,iterations,temp_type;
    int * classical_states,classical_index=0,quantum_index=0;
@@ -112,11 +112,11 @@ set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list {fpr
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {fprintf(fp,"Setting initial state of classical registers\n");}
                         ;
 
-quantum_state_list      :   quantum_state_list ',' state_const       {if(quantum_index == quantum_registers){yyerror();return 1;}quantum_states[quantum_index++] = $3.q;}
+quantum_state_list      :   quantum_state_list ',' state_const       {if(quantum_index == quantum_registers){yyerror("semantic error: quantum registers out of bounds");return 1;}quantum_states[quantum_index++] = $3.q;}
                         |   state_const   {quantum_states = (struct Quantum*)malloc(sizeof(struct Quantum)*quantum_registers);quantum_states[quantum_index++] = $1.q;}
                         ;
 
-classical_state_list    :   classical_state_list ',' classical_state  {if(classical_index == classical_registers){yyerror();return 1;}classical_states[classical_index++] = $3.num;}
+classical_state_list    :   classical_state_list ',' classical_state  {if(classical_index == classical_registers){yyerror("semantic error: classical registers out of bounds");return 1;}classical_states[classical_index++] = $3.num;}
                         |   classical_state {classical_states = (int *)malloc(sizeof(int)*classical_registers);classical_states[classical_index++] = $1.num;}
                         ;
 
@@ -132,13 +132,13 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){yyerror();return;}}
+gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){yyerror("semantic error: gate definition requires square matrix");return;}}
                         ;
 
 rhs                     :   '[' tuple_list ']'  {$$.rows = $2.rows;$$.cols = $2.cols;}
                         |   '{' tuple_list2 '}'
 
-tuple_list              : tuple_list ',' '[' id_list ']' {if($1.cols != $4.cols){yyerror();return 1;}int temp; temp = $1.rows + 1;$$.rows = temp;$$.cols = $1.cols;}
+tuple_list              : tuple_list ',' '[' id_list ']' {if($1.cols != $4.cols){yyerror("semantic error: rows of different length cannot form matrix");return 1;}int temp; temp = $1.rows + 1;$$.rows = temp;$$.cols = $1.cols;}
                         | '[' id_list ']'                {$$.rows = 1;$$.cols = $2.cols;}
 
 tuple_list2              : tuple_list2 ',' '(' id_list ')'
@@ -155,7 +155,7 @@ block_defns_list        : block_defn block_defns_list
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params {if(!insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head)){yyerror();return;}head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror();return 1;}id_list = NULL;isInBlock = 0;}
+block_defn              : BLOCK block_id params target_params {if(!insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head)){yyerror("semantic error: incorrect block definition");return;}head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror("semantic error: incorrect block definition");return 1;}id_list = NULL;isInBlock = 0;}
                         ;
 
 params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1;}                  /* parantheses maybe ignored for single ID */
@@ -179,7 +179,7 @@ block_body              :
                         | stmts block_body
                         ;
 
-block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror(); return 1;} $$.str = $1.str;}/* check first letter capital here */
+block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror("lexical error: block identifiers start with uppercase letter"); return 1;} $$.str = $1.str;}/* check first letter capital here */
                         ;
 
 /* ................
@@ -203,7 +203,7 @@ stmts                   : call_stmt
                         | while_stmt      {fprintf(fp,"while statement\n");}
                         ;
 
-register                : NUMBER  {if($1.num < 0){yyerror(); return 1;} $$.num = $1.num;$$.flag=0;}/* check non negative*/
+register                : NUMBER  {if($1.num < 0){yyerror("semantic error: register numbers are non-negative"); return 1;} $$.num = $1.num;$$.flag=0;}/* check non negative*/
                         | ID      {if(isInBlock){insertInList(&id_list,$1.str);}$$.flag = 1;}
                         ;
 
@@ -213,8 +213,8 @@ call_stmt               : classic_control GATE quantum_control ARROW register {f
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
-                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror();return;}}}
-                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror();return;}}}
+                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror("semantic error: block not defined");return;}}}
+                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror("semantic error: block not defined");return;}}}
                         ;
 
 parameters              : register                 {$$.num = 1;}
@@ -253,7 +253,7 @@ register_expr_list      : register_expr_list ',' register_expr
 */
 
 
-measure_stmt            : MEASURE ':' register ARROW register {if((!$3.flag && ($3.num < 0 || $3.num >= quantum_registers)) || (!$5.flag && ($5.num < 0 || $5.num >= classical_registers))){yyerror(); return 1;}} /* check if register1 and register2 are in bounds */
+measure_stmt            : MEASURE ':' register ARROW register {if((!$3.flag && ($3.num < 0 || $3.num >= quantum_registers)) || (!$5.flag && ($5.num < 0 || $5.num >= classical_registers))){yyerror("semantic error: register number out of bounds"); return 1;}} /* check if register1 and register2 are in bounds */
                         ;
 
 barrier_stmt            : '\\' BARRIER
@@ -305,17 +305,17 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
                         | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror(); return 1;} $$.num = 1 + $1.num;}
-                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror(); return 1;} $$.num = 1;}
+var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1 + $1.num;}
+                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1;}
                         ;
 
-for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str);} else {yyerror(); return 1;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
+for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
                         ;
 
-for_lex_stmt            : FOR_LEX '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return 1;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
+for_lex_stmt            : FOR_LEX '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
                         ;
 
-for_zip_stmt            : FOR_ZIP '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return 1;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
+for_zip_stmt            : FOR_ZIP '(' var_list ')' IN '(' range_list ')' {if($3.num != $7.num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}} '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
                         ;
 
 while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
@@ -361,10 +361,10 @@ num                     : DEC       {$$.real = $1.real;}
 complex_const           : '(' num ',' num ')'      {$$.cpx.real = $2.real; $$.cpx.imag = $4.real;}
                         ;
 
-matrix_const            : '[' row_list ']'         {if($2.rows == $2.cols) {$$.rows = $2.rows;} else {yyerror(); return 1;}}
+matrix_const            : '[' row_list ']'         {if($2.rows == $2.cols) {$$.rows = $2.rows;} else {yyerror("semantic error: only square matrices permitted"); return 1;}}
                         ;
 
-row_list                : row_list ',' row         {$$.rows = $1.rows + 1; if($1.cols == $3.cols) {$$.cols = $1.cols;} else {yyerror(); return 1;}}
+row_list                : row_list ',' row         {$$.rows = $1.rows + 1; if($1.cols == $3.cols) {$$.cols = $1.cols;} else {yyerror("semantic error: rows of different length cannot form matrix"); return 1;}}
                         | row                      {$$.rows = 1; $$.cols = $1.cols;}
                         ;
 
@@ -400,62 +400,62 @@ prim_const              : bool_const      {$$.type = Bool;}
 vec_const               : '[' vec_list ']'        {$$.dim = $2.dim; $$.type = $2.type; if($$.type == Matrix) {$$.rows = $2.rows;} else {$$.rows = 0;} }
                         ;
 
-vec_list                : vec_list ',' prim_const {temp_type = compatibleCheck($1.type, $3.type); if(temp_type != -1) {$$.type = temp_type;} else {yyerror(); return 1;} $$.dim = $1.dim + 1; if($$.type == Matrix){ if($1.rows != $3.rows){yyerror();return 1;}else{$$.rows = $1.rows;} }}
+vec_list                : vec_list ',' prim_const {temp_type = compatibleCheck($1.type, $3.type); if(temp_type != -1) {$$.type = temp_type;} else {yyerror("semantic error: incompatible types in list"); return 1;} $$.dim = $1.dim + 1; if($$.type == Matrix){ if($1.rows != $3.rows){yyerror("semantic error: incompatible matrix dimensions in list");return 1;}else{$$.rows = $1.rows;} }}
                         | prim_const              {$$.type = $1.type; $$.dim = 1; if($$.type == Matrix) {$$.rows = $1.rows;}}
                         ;
 
 /* Calls : Must Define Dimensions */
-calls                   : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state, string??) */   {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); printf("%d\n", temp_type); if((!$3.prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State/*|| temp_type==String*/)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else {yyerror(); return 1;}}
-                        | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state) */             {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else {yyerror(); return 1;}}      
-                        | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex), List(Comp*Mat), State*State*/{temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type>= 0) && (temp_type<=COMPATIBLE)) {$$.prim = true; $$.type = temp_type; $$.dim = $3.dim;} else if ((!$3.prim) && (!$5.prim) && ($3.type<=COMPATIBLE) && ($5.type==Matrix)) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else if($3.prim && (temp_type==State)) {$$.prim = true; $$.type = Complex;} else {yyerror(); return 1;}}        
-                        | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                            {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int) || ($3.type==Float))) {$$.prim = true; $$.type = $3.type; $$.dim = $3.dim;} else {yyerror(); return 1;}}   
-                        | VAR '(' out_rhs ')'               /* List (uint, int) */                                            {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int) || ($3.type==Float))) {$$.prim = true; $$.type = $3.type; $$.dim = $3.dim;} else {yyerror(); return 1;}}
-                        | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */                      {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))) {$$.prim = false; $$.type = $3.type; $$.dim = condenser($3.dim, 1);} else {yyerror(); return 1;}}
-                        | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */              {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))) {$$.prim = false; $$.type = $3.type; $$.dim = condenser($3.dim, $6.cond_count);} else {yyerror(); return 1;}}
-                        | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */          {if((!$3.prim) && (($3.type<=COMPATIBLE) || $3.type==Matrix /*|| temp_type==String*/)) {$$.prim = true; $$.type = $3.type; $$.dim = 0;} else {yyerror(); return 1;}}
-                        | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */                    {if((!$3.prim) && (($3.type<=COMPATIBLE) || $3.type==Matrix)) {$$.prim = true; $$.type = $3.type; $$.dim = 0;} else {yyerror(); return 1;}}
+calls                   : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state, string??) */   {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); printf("%d\n", temp_type); if((!$3.prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State/*|| temp_type==String*/)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state) */             {temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State)) {$$.prim = false; $$.type = temp_type; $$.dim = $3.dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}      
+                        | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex), List(Comp*Mat), State*State*/{temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); if((!$3.prim) && (temp_type>= 0) && (temp_type<=COMPATIBLE)) {$$.prim = true; $$.type = temp_type; $$.dim = $3.dim;} else if ((!$3.prim) && (!$5.prim) && ($3.type<=COMPATIBLE) && ($5.type==Matrix)) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else if($3.prim && (temp_type==State)) {$$.prim = true; $$.type = Complex;} else {yyerror("semantic error: incompatible operands"); return 1;}}        
+                        | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                            {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int) || ($3.type==Float))) {$$.prim = true; $$.type = $3.type; $$.dim = $3.dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}   
+                        | VAR '(' out_rhs ')'               /* List (uint, int) */                                            {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int) || ($3.type==Float))) {$$.prim = true; $$.type = $3.type; $$.dim = $3.dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */                      {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))) {$$.prim = false; $$.type = $3.type; $$.dim = condenser($3.dim, 1);} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */              {if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))) {$$.prim = false; $$.type = $3.type; $$.dim = condenser($3.dim, $6.cond_count);} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */          {if((!$3.prim) && (($3.type<=COMPATIBLE) || $3.type==Matrix /*|| temp_type==String*/)) {$$.prim = true; $$.type = $3.type; $$.dim = 0;} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */                    {if((!$3.prim) && (($3.type<=COMPATIBLE) || $3.type==Matrix)) {$$.prim = true; $$.type = $3.type; $$.dim = 0;} else {yyerror("semantic error: incompatible operands"); return 1;}}
                         /*| REAL */
                         /*| IMAG */
                         ;
 
 
-uint_list               : uint_list ',' out_rhs  {if($1.type <= Int) {$$.cond_count = $1.cond_count + 1;} else {yyerror(); return 1;}}
-                        | out_rhs                {if($1.type <= Int) {$$.cond_count = 1;} else {yyerror(); return 1;}}
+uint_list               : uint_list ',' out_rhs  {if($1.type <= Int) {$$.cond_count = $1.cond_count + 1;} else {yyerror("semantic error: only integer elements permitted"); return 1;}}
+                        | out_rhs                {if($1.type <= Int) {$$.cond_count = 1;} else {yyerror("semantic error: only integer elements permitted"); return 1;}}
                         ;
 
 /* Expressions :*/
 out_rhs                 : prim_const                                             {$$.prim = true; $$.type = $1.type;}
                         | vec_const                                              {$$.prim = false; $$.dim = $1.dim; $$.type = $1.type; if($$.type == Matrix) {$$.rows = $1.rows;} else {$$.rows = 0;}}
-                        | out_id                                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){$$.prim = sample->primitive; $$.type = sample->type; if($$.type == Matrix){$$.rows = sample->matrix_dim;} if(!$$.prim){$$.dim = sample->dim;}} else{yyerror(); return 1;}} else if($$.out_flag == 1){$$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;} else{$$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}}
-                        | out_id '[' out_rhs ']'                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if($3.type <= Uint){if(sample->primitive) {if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return 1;}} else {$$.type = sample->type; $$.prim = true;}} else {yyerror(); return 1;}} else{yyerror(); return 1;}} else if($$.out_flag == 1){$$.type = Uint; $$.prim = true;} else{$$.type = State; $$.prim = true;}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint)) {if(sample->type) {if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return 1;}} else if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror(); return 1;}}} else{yyerror(); return 1;}} else if($$.out_flag == 1){yyerror(); return 1;} else{$$.type = Complex; $$.prim = true;}}
-                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if(sample->primitive) {yyerror(); return 1;} else if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror(); return 1;}}} else{yyerror(); return 1;}} else{yyerror(); return 1;}}
+                        | out_id                                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){$$.prim = sample->primitive; $$.type = sample->type; if($$.type == Matrix){$$.rows = sample->matrix_dim;} if(!$$.prim){$$.dim = sample->dim;}} else{yyerror("semantic error: variable not declared"); return 1;}} else if($$.out_flag == 1){$$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;} else{$$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}}
+                        | out_id '[' out_rhs ']'                                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if($3.type <= Uint){if(sample->primitive) {if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror("semantic error"); return 1;}} else {$$.type = sample->type; $$.prim = true;}} else {yyerror("semantic error"); return 1;}} else{yyerror("semantic error: variable not declared"); return 1;}} else if($$.out_flag == 1){$$.type = Uint; $$.prim = true;} else{$$.type = State; $$.prim = true;}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']'                 {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint)) {if(sample->type) {if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror("semantic error: variable not declared"); return 1;}} else if(sample->type==State) {$$.type = Complex; $$.prim = true;} else {yyerror("semantic error"); return 1;}}} else{yyerror("semantic error"); return 1;}} else if($$.out_flag == 1){yyerror("semantic error"); return 1;} else{$$.type = Complex; $$.prim = true;}}
+                        | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' {if($$.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(sample != NULL){if(($3.type <= Uint) && ($5.type <= Uint) && ($7.type <= Uint)) {if(sample->primitive) {yyerror("semantic error: variable not declared"); return 1;} else if(sample->type==Matrix) {$$.type = Complex; $$.prim = true;} else {yyerror("semantic error"); return 1;}}} else{yyerror("semantic error"); return 1;}} else{yyerror("semantic error"); return 1;}}
                         | calls                                                  {$$.prim = $1.prim; $$.type = $1.type; if($1.type == Matrix){$$.rows = $1.rows;} if(!$$.prim){$$.dim = $1.dim;} printf("%d %d\n", $$.prim, $$.type);}
                         | '(' out_rhs ')'                                        {$$.type = $2.type;}
-                        | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else {yyerror(); return 1;}  }                         
-                        | out_rhs AND out_rhs                                    {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else {yyerror(); return 1;} }
-                        | out_rhs OR out_rhs    /* works for bools */            {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else {yyerror(); return 1;} }
-                        | out_rhs COMP out_rhs  /* Check compatible */           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1 && temp_type < COMPARABLE) {$$.prim = true; $$.type = Bool;} else {yyerror(); return 1;}  }
-                        | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1 && temp_type < COMPARABLE) {$$.prim = true; $$.type = Bool;} else {yyerror(); return 1;}  }
-                        | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && (temp_type <= Complex && temp_type >= 0)) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type<=Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else {yyerror(); return 1;}}
-                        | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && (temp_type <= Complex && temp_type >= 0)) {$$.prim = true; $$.type = temp_type;} else {yyerror(); return 1;}}
-                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*), string-concatenate */      {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else if (($1.prim==true) && ($1.type == String)) {$$.prim = true; $$.type = String;} else {yyerror(); return 1;}}
-                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*) */                          {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else {yyerror(); return 1;} }
-                        | out_rhs '@' out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                                           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {if($1.rows == $3.rows) {$$.prim = true; $$.type = temp_type; $$.rows = $1.rows;} else {yyerror(); return 1;}} else if($1.prim && temp_type == State) {$$.prim = true; $$.type = Complex;} else if(!$1.prim && (temp_type <= COMPATIBLE) && (temp_type >= 0)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else {yyerror(); return 1;}}
-                        //| matrix_const '@' matrix_const     {if($1.rows == $3.rows){$$.type == Matrix; $$.rows == $1.rows; $$.prim = true;} else{yyerror();return 1;}}
+                        | '!' out_rhs                                            {if($2.type==Bool && $2.prim) {$$.prim = true; $$.type = Bool;} else {yyerror("semantic error"); return 1;}  }                         
+                        | out_rhs AND out_rhs                                    {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else {yyerror("semantic error"); return 1;} }
+                        | out_rhs OR out_rhs    /* works for bools */            {if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim)  {$$.prim = true; $$.type = Bool;} else {yyerror("semantic error"); return 1;} }
+                        | out_rhs COMP out_rhs  /* Check compatible */           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1 && temp_type < COMPARABLE) {$$.prim = true; $$.type = Bool;} else {yyerror("semantic error"); return 1;}  }
+                        | out_rhs EQUALITY out_rhs                               {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type != -1 && temp_type < COMPARABLE) {$$.prim = true; $$.type = Bool;} else {yyerror("semantic error"); return 1;}  }
+                        | out_rhs '*' out_rhs   /* Works for uint, int, float, complex, string-multiplication, complex*Matrix */                                  {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && (temp_type <= Complex && temp_type >= 0)) {$$.prim = true; $$.type = temp_type;} else if($1.prim && $3.prim && $1.type<=Complex && $3.type==Matrix) {$$.prim = true; $$.type = Matrix;} else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {$$.prim = true; $$.type = String;} else {yyerror("semantic error"); return 1;}}
+                        | out_rhs '/' out_rhs   /* Works for uint, int, float, complex */                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && (temp_type <= Complex && temp_type >= 0)) {$$.prim = true; $$.type = temp_type;} else {yyerror("semantic error"); return 1;}}
+                        | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*), string-concatenate */      {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else if (($1.prim==true) && ($1.type == String)) {$$.prim = true; $$.type = String;} else {yyerror("semantic error"); return 1;}}
+                        | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*) */                          {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {$$.prim = $1.prim; $$.type = temp_type; if(temp_type == Matrix) {$$.rows=$1.rows;} $$.dim=$1.dim;} else {yyerror("semantic error"); return 1;} }
+                        | out_rhs '@' out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                                           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if($1.prim && temp_type == Matrix) {if($1.rows == $3.rows) {$$.prim = true; $$.type = temp_type; $$.rows = $1.rows;} else {yyerror("semantic error"); return 1;}} else if($1.prim && temp_type == State) {$$.prim = true; $$.type = Complex;} else if(!$1.prim && (temp_type <= COMPATIBLE) && (temp_type >= 0)) {$$.prim = true; $$.type = temp_type; $$.dim = 0;} else if ($1.type<=COMPATIBLE && $3.type==Matrix) {$$.prim = true; $$.type = Matrix; $$.dim = 0;} else {yyerror("semantic error"); return 1;}}
+                        //| matrix_const '@' matrix_const     {if($1.rows == $3.rows){$$.type == Matrix; $$.rows == $1.rows; $$.prim = true;} else{yyerror("semantic error");return 1;}}
                         //| vec_const '@' vec_const           {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= COMPATIBLE) {$$.type = temp_type; $$.prim = true;} else if($1.type == Complex && $3.type == Matrix) {$$.type = Matrix; $$.prim = true; $$.rows = $3.rows;}}
-                        | out_rhs '&' out_rhs   /* Works for uint, int, list(uint, int)*/                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror(); return 1;}}
-                        | out_rhs '^' out_rhs   /* Works for uint, int, list(uint, int)*/                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror(); return 1;}}
-                        | out_rhs '|' out_rhs   /* Works for uint, int, list(uint, int) */                                                                        {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror(); return 1;}}
+                        | out_rhs '&' out_rhs   /* Works for uint, int, list(uint, int)*/                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | out_rhs '^' out_rhs   /* Works for uint, int, list(uint, int)*/                                                                         {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
+                        | out_rhs '|' out_rhs   /* Works for uint, int, list(uint, int) */                                                                        {temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); if(temp_type <= Int) {$$.prim = $1.prim; $$.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str; $$.prim = $3.prim; if(!$3.prim){$$.dim = $3.dim;} if($3.type == Matrix){$$.rows = $3.rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror(); return 1;}}}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str; $$.prim = $3.prim; if(!$3.prim){$$.dim = $3.dim;} if($3.type == Matrix){$$.rows = $3.rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror("semantic error"); return 1;}}}
                         ;
 
-decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); if( ($2.prim==false) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type)) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return 1;} else {if($2.type == Matrix) {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,$2.rows,0,false);} else {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,0,0,false);}}}
-                        //| list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if((($1.type < COMPATIBLE) && ($1.type < $4.type)) || (($1.type >= COMPATIBLE) && ($1.type != $4.type)) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,$4.rows,$4.dim,false);}
-                        | list_type out_expr          {fprintf(fp,"List datatype declaration statement\n"); if( ($2.prim==true) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type)) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror(); return 1;} else {if($2.type == Matrix) {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,$2.rows,$2.dim,false);} else {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,0,$2.dim,false);}}}
+decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); if (getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL) {yyerror("semantic error: variable redeclaration"); return 1;} else if( ($2.prim==false) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type)) ){yyerror("semantic error: incompatible types"); return 1;} else {if($2.type == Matrix) {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,$2.rows,0,false);} else {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,0,0,false);}}}
+                        //| list_type ID '=' vec_const  {fprintf(fp,"List datatype declaration statement\n"); if((($1.type < COMPATIBLE) && ($1.type < $4.type)) || (($1.type >= COMPATIBLE) && ($1.type != $4.type)) || getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL){yyerror("semantic error"); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,$4.rows,$4.dim,false);}
+                        | list_type out_expr          {fprintf(fp,"List datatype declaration statement\n"); if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL) {yyerror("semantic error: variable redeclaration"); return 1;} else if( ($2.prim==true) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type)) ){yyerror("semantic error: incompatible types"); return 1;} else {if($2.type == Matrix) {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,$2.rows,$2.dim,false);} else {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,0,$2.dim,false);}}}
                         ;
 
 /* Echo Statement */
@@ -489,13 +489,13 @@ out_other_final         : OTHERWISE '{' out_main '}'
                         | /* epsilon */
                         ;
 
-out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1,Int,true,0,0,true);} IN '(' range ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1,Int,true,0,0,true);} IN '(' range ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
-out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return 1;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
-out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror(); return 1;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
 out_while_stmt          : WHILE '(' expr ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
@@ -607,6 +607,7 @@ void printBlockTable(){
 }
 
 int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
+   if(rows!=cols){return 0;}
    struct GateTable* temp = *Head;
    while(temp != NULL){
       if(strcmp(temp->id,data) == 0){
@@ -819,7 +820,7 @@ int main(int argc,char* argv[])
   return 0;
 }
 
-void yyerror(){
-   printf("Error\n");
-   fprintf(fp,"Syntax error at line %d\n",line);
+void yyerror(char* err){
+   printf("At line %d: %s\n", line, err);
+   fprintf(fp,"At line %d: %s\n",line, err);
 }

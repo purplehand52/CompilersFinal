@@ -3,7 +3,7 @@
     #registers classical = 2
     #iters = 1000
 
-block Sn c -> (t1,t2) [
+block Sn (c,t1,t2) -> (t1,t2) [
     for i in (t1:t2) {
         S: c -> i
     }
@@ -17,8 +17,8 @@ gate S =[[(1 , 0), (0, 0)],
     X: 1 -> 2
     Y -> 2
     H :(3,4)->5 
-    measure: 5 -> 0
-    Sn 0 -> (3,6)       $ semantic error. qubit 5 has collapsed $
+    measure: 5 -> 0     $ semantic error. qubit 5 has collapsed $
+    Sn (0,3,6)       
     S: (2) -> (3)       $ syntax error. target of a gate cannot be in form of a tuple $ 
 \end_main
 

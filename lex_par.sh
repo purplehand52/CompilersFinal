@@ -4,6 +4,14 @@ lex ./lexer/lexical.l
 mv lex.yy.c ./exec/lex.yy.c
 gcc ./exec/y.tab.c ./exec/lex.yy.c -ll -w -o ./exec/a.out
 cd ./exec
-str="../Tests/UnitTests/"
-str+=$1
-./a.out $str
+
+testpath1="../Tests/UnitTests/"
+testpath2="../Tests/IntegrationTests/"
+testpath1+=$1
+testpath2+=$1
+if [ -f $testpath1 ]; then
+    ./a.out $testpath1
+else
+    ./a.out $testpath2
+fi
+
