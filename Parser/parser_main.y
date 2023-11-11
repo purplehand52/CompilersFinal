@@ -45,6 +45,8 @@
    int compatibleCheckAdv(int t1, int t2, int p1, int p2, int d1, int d2);
    int condenser(int size, int lim);
    int InBlock(struct BlockTable** Head,char * data,int len);
+   void assignString(char* str1, char* str2);
+   void printOutputTable(struct OutputSymbolEntry ** OutputSymbolTable);
 %}
 
 %start prgm
@@ -77,7 +79,7 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printOutputTable();}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printOutputTable(&OutputSymbolTable);}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -132,7 +134,7 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){yyerror("semantic error: gate definition requires square matrix");return;}}
+gate_defn               :   GATE ID '=' rhs {fprintf(fp,"Gate definition\n");}   {if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){yyerror("semantic error: gate definition requires square matrix");return 1;}}
                         ;
 
 rhs                     :   '[' tuple_list ']'  {$$.rows = $2.rows;$$.cols = $2.cols;}
@@ -155,7 +157,7 @@ block_defns_list        : block_defn block_defns_list
                         |   /* epsilon */
                         ;
 
-block_defn              : BLOCK block_id params target_params {if(!insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head)){yyerror("semantic error: incorrect block definition");return;}head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror("semantic error: incorrect block definition");return 1;}id_list = NULL;isInBlock = 0;}
+block_defn              : BLOCK block_id params target_params {if(!insertInBlockTable(&BlockSymbolTable,$2.str,$3.num,head)){yyerror("semantic error: incorrect block definition");return 1;}head = NULL;isInBlock = 1;}'[' block_body ']' {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck($2.str)){yyerror("semantic error: incorrect block definition");return 1;}id_list = NULL;isInBlock = 0;}
                         ;
 
 params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1;}                  /* parantheses maybe ignored for single ID */
@@ -213,8 +215,8 @@ call_stmt               : classic_control GATE quantum_control ARROW register {f
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
-                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror("semantic error: block not defined");return;}}}
-                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror("semantic error: block not defined");return;}}}
+                        | classic_control block_id parameters optional        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($2.str,$3.num)){yyerror("semantic error: block not defined");return 1;}}}
+                        | block_id parameters optional                        {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck($1.str,$2.num)){yyerror("semantic error: block not defined");return 1;}}}
                         ;
 
 parameters              : register                 {$$.num = 1;}

@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 2 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -623,6 +623,7 @@ void printOperator();
 void printSpecial();
 void printReserved();
 void error();
+void handleNewLines();
 #line 627 "lex.yy.c"
 /* contains frequently used declarations */
 /*Calls                   (add|sub|dot|std_dev|var|avg|condense|sum)*/
@@ -845,7 +846,7 @@ YY_DECL
 		}
 
 	{
-#line 47 "./lexer/lexical.l"
+#line 48 "./lexer/lexical.l"
 
 
 #line 852 "lex.yy.c"
@@ -907,380 +908,380 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 49 "./lexer/lexical.l"
+#line 50 "./lexer/lexical.l"
 {}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 50 "./lexer/lexical.l"
+#line 51 "./lexer/lexical.l"
 {line++;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 51 "./lexer/lexical.l"
+#line 52 "./lexer/lexical.l"
 {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 52 "./lexer/lexical.l"
+#line 53 "./lexer/lexical.l"
 {fprintf(fp2,"punctuation: %s\n",yytext);return yytext[0];}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 53 "./lexer/lexical.l"
+#line 54 "./lexer/lexical.l"
 {printSpecial();return yytext[0];}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 54 "./lexer/lexical.l"
+#line 55 "./lexer/lexical.l"
 {printSpecial();return yytext[0];}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 55 "./lexer/lexical.l"
+#line 56 "./lexer/lexical.l"
 {printSpecial();return yytext[0];}
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 57 "./lexer/lexical.l"
-{}
+#line 58 "./lexer/lexical.l"
+{handleNewLines();}
 	YY_BREAK
 case 9:
-YY_RULE_SETUP
-#line 59 "./lexer/lexical.l"
-{printSpecial();return yytext[0];}
-	YY_BREAK
-case 10:
 YY_RULE_SETUP
 #line 60 "./lexer/lexical.l"
 {printSpecial();return yytext[0];}
 	YY_BREAK
-case 11:
+case 10:
 YY_RULE_SETUP
 #line 61 "./lexer/lexical.l"
 {printSpecial();return yytext[0];}
 	YY_BREAK
-case 12:
+case 11:
 YY_RULE_SETUP
 #line 62 "./lexer/lexical.l"
+{printSpecial();return yytext[0];}
+	YY_BREAK
+case 12:
+YY_RULE_SETUP
+#line 63 "./lexer/lexical.l"
 {printSpecial();return ARROW;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 64 "./lexer/lexical.l"
+#line 65 "./lexer/lexical.l"
 {printReserved();return ADD;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 65 "./lexer/lexical.l"
+#line 66 "./lexer/lexical.l"
 {printReserved();return SUB;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 66 "./lexer/lexical.l"
+#line 67 "./lexer/lexical.l"
 {printReserved();return DOT;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 67 "./lexer/lexical.l"
+#line 68 "./lexer/lexical.l"
 {printReserved();return STD_DEV;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 68 "./lexer/lexical.l"
+#line 69 "./lexer/lexical.l"
 {printReserved();return VAR;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 69 "./lexer/lexical.l"
+#line 70 "./lexer/lexical.l"
 {printReserved();return AVG;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 70 "./lexer/lexical.l"
+#line 71 "./lexer/lexical.l"
 {printReserved();return CONDENSE;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 71 "./lexer/lexical.l"
+#line 72 "./lexer/lexical.l"
 {printReserved();return SUM;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 73 "./lexer/lexical.l"
+#line 74 "./lexer/lexical.l"
 {printReserved();return COUT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 74 "./lexer/lexical.l"
+#line 75 "./lexer/lexical.l"
 {printReserved();return QOUT;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 76 "./lexer/lexical.l"
+#line 77 "./lexer/lexical.l"
 {printReserved();return TRUE;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 77 "./lexer/lexical.l"
+#line 78 "./lexer/lexical.l"
 {printReserved();return FALSE;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 79 "./lexer/lexical.l"
+#line 80 "./lexer/lexical.l"
 {printReserved();return BOOL;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 80 "./lexer/lexical.l"
+#line 81 "./lexer/lexical.l"
 {printReserved();return INT;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 81 "./lexer/lexical.l"
+#line 82 "./lexer/lexical.l"
 {printReserved();return UINT;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 82 "./lexer/lexical.l"
+#line 83 "./lexer/lexical.l"
 {printReserved();return FLOAT;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 83 "./lexer/lexical.l"
+#line 84 "./lexer/lexical.l"
 {printReserved();return COMPLEX;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 84 "./lexer/lexical.l"
+#line 85 "./lexer/lexical.l"
 {printReserved();return STRING;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 85 "./lexer/lexical.l"
+#line 86 "./lexer/lexical.l"
 {printReserved();return MATRIX;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 86 "./lexer/lexical.l"
+#line 87 "./lexer/lexical.l"
 {printReserved();return STATE;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 87 "./lexer/lexical.l"
+#line 88 "./lexer/lexical.l"
 {printReserved();return LIST;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 89 "./lexer/lexical.l"
+#line 90 "./lexer/lexical.l"
 {printReserved();return GATE;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 91 "./lexer/lexical.l"
+#line 92 "./lexer/lexical.l"
 {printReserved();return IN;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 92 "./lexer/lexical.l"
+#line 93 "./lexer/lexical.l"
 {printReserved();return SAVE;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 93 "./lexer/lexical.l"
+#line 94 "./lexer/lexical.l"
 {printReserved();return ECHO;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 94 "./lexer/lexical.l"
+#line 95 "./lexer/lexical.l"
 {printReserved();return RETURN;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 95 "./lexer/lexical.l"
+#line 96 "./lexer/lexical.l"
 {printReserved();return CONDITION;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 96 "./lexer/lexical.l"
+#line 97 "./lexer/lexical.l"
 {printReserved();return OTHERWISE;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 97 "./lexer/lexical.l"
+#line 98 "./lexer/lexical.l"
 {printReserved();return MEASURE;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 98 "./lexer/lexical.l"
+#line 99 "./lexer/lexical.l"
 {printReserved();return REGISTERS;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 99 "./lexer/lexical.l"
+#line 100 "./lexer/lexical.l"
 {printReserved();return QUANTUM;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 100 "./lexer/lexical.l"
+#line 101 "./lexer/lexical.l"
 {printReserved();return CLASSICAL;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 101 "./lexer/lexical.l"
+#line 102 "./lexer/lexical.l"
 {printReserved();return ITERS;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 102 "./lexer/lexical.l"
+#line 103 "./lexer/lexical.l"
 {printReserved();return SET;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 103 "./lexer/lexical.l"
+#line 104 "./lexer/lexical.l"
 {printReserved();return STATES;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 104 "./lexer/lexical.l"
+#line 105 "./lexer/lexical.l"
 {printReserved();return BLOCK;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 105 "./lexer/lexical.l"
+#line 106 "./lexer/lexical.l"
 {printReserved();return FOR;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 106 "./lexer/lexical.l"
+#line 107 "./lexer/lexical.l"
 {printReserved();return FOR_LEX;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 107 "./lexer/lexical.l"
+#line 108 "./lexer/lexical.l"
 {printReserved();return FOR_ZIP;}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 108 "./lexer/lexical.l"
+#line 109 "./lexer/lexical.l"
 {printReserved();return OUTPUT_BEGIN;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 109 "./lexer/lexical.l"
+#line 110 "./lexer/lexical.l"
 {printReserved();return OUTPUT_END;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 110 "./lexer/lexical.l"
+#line 111 "./lexer/lexical.l"
 {printReserved();return INIT_BEGIN;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 111 "./lexer/lexical.l"
+#line 112 "./lexer/lexical.l"
 {printReserved();return INIT_END;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 112 "./lexer/lexical.l"
+#line 113 "./lexer/lexical.l"
 {printReserved();return MAIN_BEGIN;}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 113 "./lexer/lexical.l"
+#line 114 "./lexer/lexical.l"
 {printReserved();return MAIN_END;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 114 "./lexer/lexical.l"
+#line 115 "./lexer/lexical.l"
 {printReserved();return BARRIER;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 115 "./lexer/lexical.l"
+#line 116 "./lexer/lexical.l"
 {printReserved();return GATE;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 117 "./lexer/lexical.l"
+#line 118 "./lexer/lexical.l"
 {printComparator();return COMP;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 118 "./lexer/lexical.l"
+#line 119 "./lexer/lexical.l"
 {printComparator();return EQUALITY;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 119 "./lexer/lexical.l"
+#line 120 "./lexer/lexical.l"
 {printLogical();return yytext[0];}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 120 "./lexer/lexical.l"
+#line 121 "./lexer/lexical.l"
 {printLogical();return OR;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 121 "./lexer/lexical.l"
+#line 122 "./lexer/lexical.l"
 {printLogical();return AND;}
 	YY_BREAK
 case 65:
 /* rule 65 can match eol */
 YY_RULE_SETUP
-#line 123 "./lexer/lexical.l"
+#line 124 "./lexer/lexical.l"
 {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 124 "./lexer/lexical.l"
+#line 125 "./lexer/lexical.l"
 {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 126 "./lexer/lexical.l"
+#line 127 "./lexer/lexical.l"
 {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 127 "./lexer/lexical.l"
+#line 128 "./lexer/lexical.l"
 {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NEG;}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 128 "./lexer/lexical.l"
+#line 129 "./lexer/lexical.l"
 {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 129 "./lexer/lexical.l"
+#line 130 "./lexer/lexical.l"
 {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 130 "./lexer/lexical.l"
+#line 131 "./lexer/lexical.l"
 {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 131 "./lexer/lexical.l"
+#line 132 "./lexer/lexical.l"
 {fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];}yylval.str[strlen(yytext)] = '\0';return ID;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 132 "./lexer/lexical.l"
+#line 133 "./lexer/lexical.l"
 {printOperator();return yytext[0];}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 133 "./lexer/lexical.l"
+#line 134 "./lexer/lexical.l"
 {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 135 "./lexer/lexical.l"
+#line 136 "./lexer/lexical.l"
 ECHO;
 	YY_BREAK
 #line 1287 "lex.yy.c"
@@ -2288,7 +2289,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 135 "./lexer/lexical.l"
+#line 136 "./lexer/lexical.l"
 
 
 void printReserved(){
@@ -2313,6 +2314,16 @@ void printOperator(){
 
 void error(){
     fprintf(fp2,"\nerror at line %d\n",line);
+}
+
+void handleNewLines() {
+    int i = 0;
+    while(yytext[i]!='\0'){
+        if(yytext[i]=='\n'){
+            line++;
+        }
+        i++;
+    }
 }
 
 int yywrap(void){}

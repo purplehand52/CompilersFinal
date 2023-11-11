@@ -4,7 +4,7 @@ special symbol: #
 reserved keyword : registers
 reserved keyword : quantum
 operator: =
-constant: 3
+constant: 6
 special symbol: #
 reserved keyword : registers
 reserved keyword : classical
@@ -13,23 +13,33 @@ constant: 3
 special symbol: #
 reserved keyword : iters
 operator: =
-constant: 1000
-special symbol: #
-reserved keyword : set
-reserved keyword : classical
-reserved keyword : states
-special symbol: ->
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: ,
-constant: 0
+constant: 800
 special symbol: #
 reserved keyword : set
 reserved keyword : quantum
 reserved keyword : states
 special symbol: ->
 special symbol: {
+special symbol: (
+constant: 1
+special symbol: ,
+constant: 2
+special symbol: )
+special symbol: ,
+special symbol: (
+constant: -3
+special symbol: ,
+constant: -4
+special symbol: )
+special symbol: }
+special symbol: ,
+special symbol: {
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: }
+special symbol: ,
+special symbol: {
 constant: 1
 special symbol: ,
 constant: 0
@@ -42,173 +52,86 @@ constant: 0
 special symbol: }
 special symbol: ,
 special symbol: {
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: )
-special symbol: ,
-special symbol: (
-constant: 0
-special symbol: ,
 constant: 1
-special symbol: )
-special symbol: }
-reserved keyword : block
-ID: BellGen
-special symbol: (
-ID: i
 special symbol: ,
-ID: j
-special symbol: )
-special symbol: ->
-ID: j
-special symbol: [
-reserved keyword : H
-special symbol: ->
-ID: i
-reserved keyword : X
-punctuation: :
-ID: i
-special symbol: ->
-ID: j
-special symbol: ]
+constant: 0
+special symbol: }
+special symbol: ,
+special symbol: {
+constant: 1
+special symbol: ,
+constant: 0
+special symbol: }
 special symbol: \
 reserved keyword : end_init
 special symbol: \
 reserved keyword : begin_main
-ID: BellGen
+reserved keyword : for_lex
 special symbol: (
-constant: 1
-special symbol: ,
-constant: 2
-special symbol: )
-special symbol: \
-reserved keyword : barrier
-reserved keyword : X
-punctuation: :
-constant: 0
-special symbol: ->
-constant: 1
-reserved keyword : H
-special symbol: ->
-constant: 0
-reserved keyword : measure
-punctuation: :
-constant: 0
-special symbol: ->
-constant: 0
-reserved keyword : measure
-punctuation: :
-constant: 1
-special symbol: ->
-constant: 1
-constant: 1
-special symbol: ?
-reserved keyword : X
-special symbol: ->
-constant: 2
-constant: 0
-special symbol: ?
-reserved keyword : Z
-special symbol: ->
-constant: 2
-special symbol: \
-reserved keyword : end_main
-special symbol: \
-reserved keyword : begin_output
-special symbol: \
-reserved keyword : save
-punctuation: "
-constant: output.csv
-punctuation: "
-reserved keyword : echo
-special symbol: (
-punctuation: "
-constant: Final Transferred State: 
-punctuation: "
-special symbol: ,
-reserved keyword : q_output
-special symbol: [
-constant: 2
-special symbol: ]
-special symbol: )
-reserved keyword : echo
-special symbol: (
-punctuation: "
-constant: Classical Register List: 
-punctuation: "
-special symbol: ,
-reserved keyword : c_output
-special symbol: )
-reserved keyword : state
-ID: original
-operator: =
-special symbol: {
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 0
-special symbol: )
-special symbol: ,
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 1
-special symbol: )
-special symbol: }
-reserved keyword : int
-ID: a
-operator: =
-constant: 1
-reserved keyword : int
 ID: i
-operator: =
-constant: 0
-reserved keyword : for
-ID: i
+special symbol: ,
+ID: j
+special symbol: )
 reserved keyword : in
 special symbol: (
-constant: 1
+constant: 0
 punctuation: :
-constant: 2
-special symbol: )
-special symbol: {
-reserved keyword : int
-ID: a
-operator: =
 constant: 3
-reserved keyword : int
-ID: j
-operator: =
-constant: 0
-reserved keyword : for
-ID: j
-reserved keyword : in
-special symbol: (
-constant: 4
+special symbol: ,
+constant: 3
 punctuation: :
 constant: 6
 special symbol: )
 special symbol: {
-reserved keyword : int
-ID: a
-operator: =
-constant: 7
-reserved keyword : int
+reserved keyword : condition
+special symbol: (
 ID: j
-operator: =
-constant: 8
-ID: a
-operator: =
-ID: a
-operator: +
-constant: 1
+operator: -
+ID: i
+comparator: !=
+constant: 3
+special symbol: )
+special symbol: {
+reserved keyword : Y
+punctuation: :
+ID: i
+special symbol: ->
+ID: j
 special symbol: }
-reserved keyword : int
-ID: y
-operator: =
-constant: 9
+special symbol: }
+reserved keyword : for_zip
+special symbol: (
+ID: q
+special symbol: ,
+ID: c
+special symbol: )
+reserved keyword : in
+special symbol: (
+constant: 3
+punctuation: :
+constant: 6
+special symbol: ,
+constant: 0
+punctuation: :
+constant: 3
+special symbol: )
+special symbol: {
+reserved keyword : measure
+punctuation: :
+ID: q
+special symbol: ->
+ID: c
 special symbol: }
 special symbol: \
-reserved keyword : end_output
+reserved keyword : end_main
+special symbol: \
+reserved keyword : begin_output
+reserved keyword : int
+ID: b
+operator: =
+constant: 1
+reserved keyword : int
+ID: b
+operator: =
+constant: 2
+reserved keyword : float

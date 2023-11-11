@@ -19,6 +19,7 @@ void printOperator();
 void printSpecial();
 void printReserved();
 void error();
+void handleNewLines();
 %}
 /* contains frequently used declarations */
 
@@ -54,7 +55,7 @@ Equality                (==|!=)
 [\)\(\[\]\{\}]          {printSpecial();return yytext[0];}
 "\\"                    {printSpecial();return yytext[0];}
 
-($[^$]*$)               {}
+($[^$]*$)               {handleNewLines();}
 
 "?"                     {printSpecial();return yytext[0];}
 "#"                     {printSpecial();return yytext[0];}
@@ -156,6 +157,16 @@ void printOperator(){
 
 void error(){
     fprintf(fp2,"\nerror at line %d\n",line);
+}
+
+void handleNewLines() {
+    int i = 0;
+    while(yytext[i]!='\0'){
+        if(yytext[i]=='\n'){
+            line++;
+        }
+        i++;
+    }
 }
 
 int yywrap(void){}
