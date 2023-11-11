@@ -1266,7 +1266,7 @@ YY_RULE_SETUP
 case 72:
 YY_RULE_SETUP
 #line 131 "./lexer/lexical.l"
-{fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];};return ID;}
+{fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];}yylval.str[strlen(yytext)] = '\0';return ID;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP

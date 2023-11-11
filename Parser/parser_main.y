@@ -77,7 +77,7 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printOutputTable();}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -179,7 +179,7 @@ block_body              :
                         | stmts block_body
                         ;
 
-block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror("lexical error: block identifiers start with uppercase letter"); return 1;} $$.str = $1.str;}/* check first letter capital here */
+block_id                : ID      {if(!firstLetterCapital($1.str)){yyerror("lexical error: block identifiers start with uppercase letter"); return 1;} assignString($$.str,$1.str);}/* check first letter capital here */
                         ;
 
 /* ................
@@ -305,8 +305,8 @@ range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
                         | range                    {$$.num = 1;}
                         ;
 
-var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1 + $1.num;}
-                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$1.str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1;}
+var_list                : var_list ',' ID    {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable used without declaration"); return 1;}} else if(!inList(&head,$3.str)){insertInList(&head,$3.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1 + $1.num;}
+                        | ID                 {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable redeclaration"); return 1;}} else if(!inList(&head,$1.str)){insertInList(&head,$1.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} $$.num = 1;}
                         ;
 
 for_stmt                : FOR ID {if(!inList(&head,$2.str)){insertInList(&head,$2.str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;}} IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
@@ -327,7 +327,7 @@ while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
 // */
 
 /* Datatypes */
-out_id                  : ID {$$.out_flag = 0; $$.str = $1.str;}
+out_id                  : ID {$$.out_flag = 0; assignString($$.str,$1.str);}
                         | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;}
                         | QOUT {$$.out_flag = 2; $$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}
                         ;
@@ -450,7 +450,7 @@ out_rhs                 : prim_const                                            
                         ;
 
 /* Expressions */
-out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; $$.str = $1.str; $$.prim = $3.prim; if(!$3.prim){$$.dim = $3.dim;} if($3.type == Matrix){$$.rows = $3.rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror("semantic error"); return 1;}}}
+out_expr                : ID '=' out_rhs              {fprintf(fp,"expression statement\n"); if(isDeclaration){$$.type = $3.type; assignString($$.str,$1.str); $$.prim = $3.prim; if(!$3.prim){$$.dim = $3.dim;} if($3.type == Matrix){$$.rows = $3.rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){yyerror("semantic error"); return 1;}}}
                         ;
 
 decl                    : prim_type out_expr          {fprintf(fp,"Primitive datatype declaration statement\n"); if (getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel,0) != NULL) {yyerror("semantic error: variable redeclaration"); return 1;} else if( ($2.prim==false) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type)) ){yyerror("semantic error: incompatible types"); return 1;} else {if($2.type == Matrix) {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,$2.rows,0,false);} else {insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,0,0,false);}}}
@@ -489,7 +489,7 @@ out_other_final         : OTHERWISE '{' out_main '}'
                         | /* epsilon */
                         ;
 
-out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,0) != NULL){yyerror("semantic error: variable redeclaration"); return 1;} else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel + 1,Int,true,0,0,true);} IN '(' range ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_for_stmt            : FOR ID {if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable used without declaration"); return 1;}} IN '(' range ')' '{' {outputLevel++;printf("Entered loop\n");} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel);printf("exited loop\n") ;outputLevel--;}
                         ;
 
 out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {if($3.num != $7.num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}} '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
@@ -514,6 +514,13 @@ out_stmt                : out_control
                         | {isDeclaration = true;} decl
                         ;
 %%
+
+void assignString(char* str1, char* str2){
+   str1 = (char*)malloc(sizeof(char)*strlen(str2));
+   for(int i=0;i<strlen(str2);i++){
+      str1[i] = str2[i];
+   }
+}
 
 bool firstLetterCapital(char *str) {
    return (str[0] >= 65 && str[0] <= 90);
@@ -715,6 +722,7 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, i
    newNode->prev = *Head;  // covers NULL case already
 
    *Head = newNode;
+   printf("Insertion : %s %d %d %d %d\n", newNode->id, newNode->level, newNode->primitive, newNode->dim, newNode->matrix_dim);
 }
 
 
@@ -738,6 +746,7 @@ void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level){
     struct OutputSymbolEntry* prevEntry;
 
     while(symbolEntry != NULL && symbolEntry->level == level){
+        printf("Deletion : %s %d %d %d %d\n", symbolEntry->id, symbolEntry->level, symbolEntry->primitive, symbolEntry->dim, symbolEntry->matrix_dim);
         prevEntry = symbolEntry->prev;
         free(symbolEntry->id);
         free(symbolEntry);

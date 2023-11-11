@@ -157,39 +157,12 @@ special symbol: ,
 constant: 1
 special symbol: )
 special symbol: }
-reserved keyword : complex
-ID: fidelity
+reserved keyword : int
+ID: a
 operator: =
-reserved keyword : dot
-special symbol: (
-ID: original
-operator: -
-reserved keyword : q_output
-special symbol: [
-constant: 2
-special symbol: ]
-special symbol: ,
-ID: original
-operator: -
-reserved keyword : q_output
-special symbol: [
-constant: 2
-special symbol: ]
-special symbol: )
-reserved keyword : echo
-special symbol: (
-punctuation: "
-constant: Fidelity Reported: 
-punctuation: "
-special symbol: ,
-ID: fidelity
-special symbol: )
+constant: 1
 reserved keyword : int
 ID: i
-operator: =
-constant: 0
-reserved keyword : int
-ID: j
 operator: =
 constant: 0
 reserved keyword : for
@@ -198,28 +171,44 @@ reserved keyword : in
 special symbol: (
 constant: 1
 punctuation: :
-constant: 10
+constant: 2
 special symbol: )
 special symbol: {
 reserved keyword : int
-ID: k
+ID: a
 operator: =
-constant: 1
+constant: 3
+reserved keyword : int
+ID: j
+operator: =
+constant: 0
 reserved keyword : for
 ID: j
 reserved keyword : in
 special symbol: (
-constant: 2
+constant: 4
 punctuation: :
-constant: 10
+constant: 6
 special symbol: )
 special symbol: {
-ID: k
+reserved keyword : int
+ID: a
 operator: =
-ID: k
+constant: 7
+reserved keyword : int
+ID: j
+operator: =
+constant: 8
+ID: a
+operator: =
+ID: a
 operator: +
 constant: 1
 special symbol: }
+reserved keyword : int
+ID: y
+operator: =
+constant: 9
 special symbol: }
 special symbol: \
 reserved keyword : end_output

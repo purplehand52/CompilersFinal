@@ -82,7 +82,7 @@
    FILE * fp;
 // comment
    int yylex();
-   void yyerror();
+   void yyerror(char* str);
 
    int classical_registers,quantum_registers,iterations,temp_type;
    int * classical_states,classical_index=0,quantum_index=0;
@@ -1798,7 +1798,7 @@ yyreduce:
     {
   case 2: /* prgm: init_section main_section output_section  */
 #line 80 "./Parser/parser_main.y"
-                                                                   {fprintf(fp,"\nParsing successful!\n");}
+                                                                   {fprintf(fp,"\nParsing successful!\n");printOutputTable();}
 #line 1803 "./exec/y.tab.c"
     break;
 
@@ -1858,7 +1858,7 @@ yyreduce:
 
   case 17: /* quantum_state_list: quantum_state_list ',' state_const  */
 #line 115 "./Parser/parser_main.y"
-                                                                     {if(quantum_index == quantum_registers){yyerror();return 1;}quantum_states[quantum_index++] = yyvsp[0].q;}
+                                                                     {if(quantum_index == quantum_registers){yyerror("semantic error: quantum registers out of bounds");return 1;}quantum_states[quantum_index++] = yyvsp[0].q;}
 #line 1863 "./exec/y.tab.c"
     break;
 
@@ -1870,7 +1870,7 @@ yyreduce:
 
   case 19: /* classical_state_list: classical_state_list ',' classical_state  */
 #line 119 "./Parser/parser_main.y"
-                                                                      {if(classical_index == classical_registers){yyerror();return 1;}classical_states[classical_index++] = yyvsp[0].num;}
+                                                                      {if(classical_index == classical_registers){yyerror("semantic error: classical registers out of bounds");return 1;}classical_states[classical_index++] = yyvsp[0].num;}
 #line 1875 "./exec/y.tab.c"
     break;
 
@@ -1906,7 +1906,7 @@ yyreduce:
 
   case 28: /* gate_defn: GATE ID '=' rhs $@5  */
 #line 135 "./Parser/parser_main.y"
-                                                                                 {if(!insertInGateTable(&GateSymbolTable,yyvsp[-3].str,yyvsp[-1].rows,yyvsp[-1].cols)){yyerror();return;}}
+                                                                                 {if(!insertInGateTable(&GateSymbolTable,yyvsp[-3].str,yyvsp[-1].rows,yyvsp[-1].cols)){yyerror("semantic error: gate definition requires square matrix");return;}}
 #line 1911 "./exec/y.tab.c"
     break;
 
@@ -1918,7 +1918,7 @@ yyreduce:
 
   case 31: /* tuple_list: tuple_list ',' '[' id_list ']'  */
 #line 141 "./Parser/parser_main.y"
-                                                         {if(yyvsp[-4].cols != yyvsp[-1].cols){yyerror();return 1;}int temp; temp = yyvsp[-4].rows + 1;yyval.rows = temp;yyval.cols = yyvsp[-4].cols;}
+                                                         {if(yyvsp[-4].cols != yyvsp[-1].cols){yyerror("semantic error: rows of different length cannot form matrix");return 1;}int temp; temp = yyvsp[-4].rows + 1;yyval.rows = temp;yyval.cols = yyvsp[-4].cols;}
 #line 1923 "./exec/y.tab.c"
     break;
 
@@ -1954,13 +1954,13 @@ yyreduce:
 
   case 41: /* $@7: %empty  */
 #line 158 "./Parser/parser_main.y"
-                                                              {if(!insertInBlockTable(&BlockSymbolTable,yyvsp[-2].str,yyvsp[-1].num,head)){yyerror();return;}head = NULL;isInBlock = 1;}
+                                                              {if(!insertInBlockTable(&BlockSymbolTable,yyvsp[-2].str,yyvsp[-1].num,head)){yyerror("semantic error: incorrect block definition");return;}head = NULL;isInBlock = 1;}
 #line 1959 "./exec/y.tab.c"
     break;
 
   case 42: /* block_defn: BLOCK block_id params target_params $@7 '[' block_body ']'  */
 #line 158 "./Parser/parser_main.y"
-                                                                                                                                                                                             {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck(yyvsp[-6].str)){yyerror();return 1;}id_list = NULL;isInBlock = 0;}
+                                                                                                                                                                                                                                         {fprintf(fp,"Block definition\n");if(!BlockSemanticCheck(yyvsp[-6].str)){yyerror("semantic error: incorrect block definition");return 1;}id_list = NULL;isInBlock = 0;}
 #line 1965 "./exec/y.tab.c"
     break;
 
@@ -1990,7 +1990,7 @@ yyreduce:
 
   case 54: /* block_id: ID  */
 #line 182 "./Parser/parser_main.y"
-                                  {if(!firstLetterCapital(yyvsp[0].str)){yyerror(); return 1;} yyval.str = yyvsp[0].str;}
+                                  {if(!firstLetterCapital(yyvsp[0].str)){yyerror("lexical error: block identifiers start with uppercase letter"); return 1;} assignString(yyval.str,yyvsp[0].str);}
 #line 1995 "./exec/y.tab.c"
     break;
 
@@ -2044,7 +2044,7 @@ yyreduce:
 
   case 67: /* register: NUMBER  */
 #line 206 "./Parser/parser_main.y"
-                                  {if(yyvsp[0].num < 0){yyerror(); return 1;} yyval.num = yyvsp[0].num;yyval.flag=0;}
+                                  {if(yyvsp[0].num < 0){yyerror("semantic error: register numbers are non-negative"); return 1;} yyval.num = yyvsp[0].num;yyval.flag=0;}
 #line 2049 "./exec/y.tab.c"
     break;
 
@@ -2080,13 +2080,13 @@ yyreduce:
 
   case 73: /* call_stmt: classic_control block_id parameters optional  */
 #line 216 "./Parser/parser_main.y"
-                                                                              {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck(yyvsp[-2].str,yyvsp[-1].num)){yyerror();return;}}}
+                                                                              {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck(yyvsp[-2].str,yyvsp[-1].num)){yyerror("semantic error: block not defined");return;}}}
 #line 2085 "./exec/y.tab.c"
     break;
 
   case 74: /* call_stmt: block_id parameters optional  */
 #line 217 "./Parser/parser_main.y"
-                                                                              {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck(yyvsp[-2].str,yyvsp[-1].num)){yyerror();return;}}}
+                                                                              {fprintf(fp,"Block call statement\n");if(!isInBlock){if(!BlockCallSemanticCheck(yyvsp[-2].str,yyvsp[-1].num)){yyerror("semantic error: block not defined");return;}}}
 #line 2091 "./exec/y.tab.c"
     break;
 
@@ -2116,7 +2116,7 @@ yyreduce:
 
   case 88: /* measure_stmt: MEASURE ':' register ARROW register  */
 #line 256 "./Parser/parser_main.y"
-                                                              {if((!yyvsp[-2].flag && (yyvsp[-2].num < 0 || yyvsp[-2].num >= quantum_registers)) || (!yyvsp[0].flag && (yyvsp[0].num < 0 || yyvsp[0].num >= classical_registers))){yyerror(); return 1;}}
+                                                              {if((!yyvsp[-2].flag && (yyvsp[-2].num < 0 || yyvsp[-2].num >= quantum_registers)) || (!yyvsp[0].flag && (yyvsp[0].num < 0 || yyvsp[0].num >= classical_registers))){yyerror("semantic error: register number out of bounds"); return 1;}}
 #line 2121 "./exec/y.tab.c"
     break;
 
@@ -2134,55 +2134,55 @@ yyreduce:
 
   case 119: /* var_list: var_list ',' ID  */
 #line 308 "./Parser/parser_main.y"
-                                             {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,yyvsp[-1].str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror(); return 1;} yyval.num = 1 + yyvsp[-2].num;}
+                                             {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable used without declaration"); return 1;}} else if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} yyval.num = 1 + yyvsp[-2].num;}
 #line 2139 "./exec/y.tab.c"
     break;
 
   case 120: /* var_list: ID  */
 #line 309 "./Parser/parser_main.y"
-                                             {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1, Int,true,0,0,true);} else if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror(); return 1;} yyval.num = 1;}
+                                             {if(isInOutput){if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable redeclaration"); return 1;}} else if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;} yyval.num = 1;}
 #line 2145 "./exec/y.tab.c"
     break;
 
   case 121: /* $@9: %empty  */
 #line 312 "./Parser/parser_main.y"
-                                 {if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror(); return 1;}}
+                                 {if(!inList(&head,yyvsp[0].str)){insertInList(&head,yyvsp[0].str);} else {yyerror("semantic error: loop variable redeclaration"); return 1;}}
 #line 2151 "./exec/y.tab.c"
     break;
 
   case 122: /* for_stmt: FOR ID $@9 IN '(' range ')' '{' main_stmt_list '}'  */
 #line 312 "./Parser/parser_main.y"
-                                                                                                                                                              {removeTopKFromList(&head,1);}
+                                                                                                                                                                                                           {removeTopKFromList(&head,1);}
 #line 2157 "./exec/y.tab.c"
     break;
 
   case 123: /* $@10: %empty  */
 #line 315 "./Parser/parser_main.y"
-                                                                         {if(yyvsp[-5].num != yyvsp[-1].num){yyerror(); return 1;}}
+                                                                         {if(yyvsp[-5].num != yyvsp[-1].num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}}
 #line 2163 "./exec/y.tab.c"
     break;
 
   case 124: /* for_lex_stmt: FOR_LEX '(' var_list ')' IN '(' range_list ')' $@10 '{' main_stmt_list '}'  */
 #line 315 "./Parser/parser_main.y"
-                                                                                                                                             {removeTopKFromList(&head,yyvsp[-9].num);}
+                                                                                                                                                                                                    {removeTopKFromList(&head,yyvsp[-9].num);}
 #line 2169 "./exec/y.tab.c"
     break;
 
   case 125: /* $@11: %empty  */
 #line 318 "./Parser/parser_main.y"
-                                                                         {if(yyvsp[-5].num != yyvsp[-1].num){yyerror(); return 1;}}
+                                                                         {if(yyvsp[-5].num != yyvsp[-1].num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}}
 #line 2175 "./exec/y.tab.c"
     break;
 
   case 126: /* for_zip_stmt: FOR_ZIP '(' var_list ')' IN '(' range_list ')' $@11 '{' main_stmt_list '}'  */
 #line 318 "./Parser/parser_main.y"
-                                                                                                                                             {removeTopKFromList(&head,yyvsp[-9].num);}
+                                                                                                                                                                                                    {removeTopKFromList(&head,yyvsp[-9].num);}
 #line 2181 "./exec/y.tab.c"
     break;
 
   case 128: /* out_id: ID  */
 #line 330 "./Parser/parser_main.y"
-                             {yyval.out_flag = 0; yyval.str = yyvsp[0].str;}
+                             {yyval.out_flag = 0; assignString(yyval.str,yyvsp[0].str);}
 #line 2187 "./exec/y.tab.c"
     break;
 
@@ -2284,13 +2284,13 @@ yyreduce:
 
   case 147: /* matrix_const: '[' row_list ']'  */
 #line 364 "./Parser/parser_main.y"
-                                                   {if(yyvsp[-1].rows == yyvsp[-1].cols) {yyval.rows = yyvsp[-1].rows;} else {yyerror(); return 1;}}
+                                                   {if(yyvsp[-1].rows == yyvsp[-1].cols) {yyval.rows = yyvsp[-1].rows;} else {yyerror("semantic error: only square matrices permitted"); return 1;}}
 #line 2289 "./exec/y.tab.c"
     break;
 
   case 148: /* row_list: row_list ',' row  */
 #line 367 "./Parser/parser_main.y"
-                                                   {yyval.rows = yyvsp[-2].rows + 1; if(yyvsp[-2].cols == yyvsp[0].cols) {yyval.cols = yyvsp[-2].cols;} else {yyerror(); return 1;}}
+                                                   {yyval.rows = yyvsp[-2].rows + 1; if(yyvsp[-2].cols == yyvsp[0].cols) {yyval.cols = yyvsp[-2].cols;} else {yyerror("semantic error: rows of different length cannot form matrix"); return 1;}}
 #line 2295 "./exec/y.tab.c"
     break;
 
@@ -2398,7 +2398,7 @@ yyreduce:
 
   case 168: /* vec_list: vec_list ',' prim_const  */
 #line 403 "./Parser/parser_main.y"
-                                                  {temp_type = compatibleCheck(yyvsp[-2].type, yyvsp[0].type); if(temp_type != -1) {yyval.type = temp_type;} else {yyerror(); return 1;} yyval.dim = yyvsp[-2].dim + 1; if(yyval.type == Matrix){ if(yyvsp[-2].rows != yyvsp[0].rows){yyerror();return 1;}else{yyval.rows = yyvsp[-2].rows;} }}
+                                                  {temp_type = compatibleCheck(yyvsp[-2].type, yyvsp[0].type); if(temp_type != -1) {yyval.type = temp_type;} else {yyerror("semantic error: incompatible types in list"); return 1;} yyval.dim = yyvsp[-2].dim + 1; if(yyval.type == Matrix){ if(yyvsp[-2].rows != yyvsp[0].rows){yyerror("semantic error: incompatible matrix dimensions in list");return 1;}else{yyval.rows = yyvsp[-2].rows;} }}
 #line 2403 "./exec/y.tab.c"
     break;
 
@@ -2410,67 +2410,67 @@ yyreduce:
 
   case 170: /* calls: ADD '(' out_rhs ',' out_rhs ')'  */
 #line 408 "./Parser/parser_main.y"
-                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); printf("%d\n", temp_type); if((!yyvsp[-3].prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State/*|| temp_type==String*/)) {yyval.prim = false; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else {yyerror(); return 1;}}
+                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); printf("%d\n", temp_type); if((!yyvsp[-3].prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State/*|| temp_type==String*/)) {yyval.prim = false; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2415 "./exec/y.tab.c"
     break;
 
   case 171: /* calls: SUB '(' out_rhs ',' out_rhs ')'  */
 #line 409 "./Parser/parser_main.y"
-                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); if((!yyvsp[-3].prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State)) {yyval.prim = false; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else {yyerror(); return 1;}}
+                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); if((!yyvsp[-3].prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State)) {yyval.prim = false; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2421 "./exec/y.tab.c"
     break;
 
   case 172: /* calls: DOT '(' out_rhs ',' out_rhs ')'  */
 #line 410 "./Parser/parser_main.y"
-                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); if((!yyvsp[-3].prim) && (temp_type>= 0) && (temp_type<=COMPATIBLE)) {yyval.prim = true; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else if ((!yyvsp[-3].prim) && (!yyvsp[-1].prim) && (yyvsp[-3].type<=COMPATIBLE) && (yyvsp[-1].type==Matrix)) {yyval.prim = true; yyval.type = Matrix; yyval.dim = 0;} else if(yyvsp[-3].prim && (temp_type==State)) {yyval.prim = true; yyval.type = Complex;} else {yyerror(); return 1;}}
+                                                                                                                              {temp_type = compatibleCheckAdv(yyvsp[-1].type, yyvsp[-3].type, yyvsp[-1].prim, yyvsp[-3].prim, yyvsp[-1].dim, yyvsp[-3].dim); if((!yyvsp[-3].prim) && (temp_type>= 0) && (temp_type<=COMPATIBLE)) {yyval.prim = true; yyval.type = temp_type; yyval.dim = yyvsp[-3].dim;} else if ((!yyvsp[-3].prim) && (!yyvsp[-1].prim) && (yyvsp[-3].type<=COMPATIBLE) && (yyvsp[-1].type==Matrix)) {yyval.prim = true; yyval.type = Matrix; yyval.dim = 0;} else if(yyvsp[-3].prim && (temp_type==State)) {yyval.prim = true; yyval.type = Complex;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2427 "./exec/y.tab.c"
     break;
 
   case 173: /* calls: STD_DEV '(' out_rhs ')'  */
 #line 411 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type==Uint) || (yyvsp[-1].type==Int) || (yyvsp[-1].type==Float))) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = yyvsp[-1].dim;} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type==Uint) || (yyvsp[-1].type==Int) || (yyvsp[-1].type==Float))) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = yyvsp[-1].dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2433 "./exec/y.tab.c"
     break;
 
   case 174: /* calls: VAR '(' out_rhs ')'  */
 #line 412 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type==Uint) || (yyvsp[-1].type==Int) || (yyvsp[-1].type==Float))) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = yyvsp[-1].dim;} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type==Uint) || (yyvsp[-1].type==Int) || (yyvsp[-1].type==Float))) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = yyvsp[-1].dim;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2439 "./exec/y.tab.c"
     break;
 
   case 175: /* calls: CONDENSE '(' out_rhs ',' NUMBER ')'  */
 #line 413 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-3].prim) && ((yyvsp[-3].type==Uint) || (yyvsp[-3].type==Int))) {yyval.prim = false; yyval.type = yyvsp[-3].type; yyval.dim = condenser(yyvsp[-3].dim, 1);} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-3].prim) && ((yyvsp[-3].type==Uint) || (yyvsp[-3].type==Int))) {yyval.prim = false; yyval.type = yyvsp[-3].type; yyval.dim = condenser(yyvsp[-3].dim, 1);} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2445 "./exec/y.tab.c"
     break;
 
   case 176: /* calls: CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'  */
 #line 414 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-5].prim) && ((yyvsp[-5].type==Uint) || (yyvsp[-5].type==Int))) {yyval.prim = false; yyval.type = yyvsp[-5].type; yyval.dim = condenser(yyvsp[-5].dim, yyvsp[-2].cond_count);} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-5].prim) && ((yyvsp[-5].type==Uint) || (yyvsp[-5].type==Int))) {yyval.prim = false; yyval.type = yyvsp[-5].type; yyval.dim = condenser(yyvsp[-5].dim, yyvsp[-2].cond_count);} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2451 "./exec/y.tab.c"
     break;
 
   case 177: /* calls: SUM '(' out_rhs ')'  */
 #line 415 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type<=COMPATIBLE) || yyvsp[-1].type==Matrix /*|| temp_type==String*/)) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = 0;} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type<=COMPATIBLE) || yyvsp[-1].type==Matrix /*|| temp_type==String*/)) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = 0;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2457 "./exec/y.tab.c"
     break;
 
   case 178: /* calls: AVG '(' out_rhs ')'  */
 #line 416 "./Parser/parser_main.y"
-                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type<=COMPATIBLE) || yyvsp[-1].type==Matrix)) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = 0;} else {yyerror(); return 1;}}
+                                                                                                                              {if((!yyvsp[-1].prim) && ((yyvsp[-1].type<=COMPATIBLE) || yyvsp[-1].type==Matrix)) {yyval.prim = true; yyval.type = yyvsp[-1].type; yyval.dim = 0;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2463 "./exec/y.tab.c"
     break;
 
   case 179: /* uint_list: uint_list ',' out_rhs  */
 #line 422 "./Parser/parser_main.y"
-                                                 {if(yyvsp[-2].type <= Int) {yyval.cond_count = yyvsp[-2].cond_count + 1;} else {yyerror(); return 1;}}
+                                                 {if(yyvsp[-2].type <= Int) {yyval.cond_count = yyvsp[-2].cond_count + 1;} else {yyerror("semantic error: only integer elements permitted"); return 1;}}
 #line 2469 "./exec/y.tab.c"
     break;
 
   case 180: /* uint_list: out_rhs  */
 #line 423 "./Parser/parser_main.y"
-                                                 {if(yyvsp[0].type <= Int) {yyval.cond_count = 1;} else {yyerror(); return 1;}}
+                                                 {if(yyvsp[0].type <= Int) {yyval.cond_count = 1;} else {yyerror("semantic error: only integer elements permitted"); return 1;}}
 #line 2475 "./exec/y.tab.c"
     break;
 
@@ -2488,25 +2488,25 @@ yyreduce:
 
   case 183: /* out_rhs: out_id  */
 #line 429 "./Parser/parser_main.y"
-                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,1); if(sample != NULL){yyval.prim = sample->primitive; yyval.type = sample->type; if(yyval.type == Matrix){yyval.rows = sample->matrix_dim;} if(!yyval.prim){yyval.dim = sample->dim;}} else{yyerror(); return 1;}} else if(yyval.out_flag == 1){yyval.type = Int; yyval.prim = false; yyval.dim = (1 << classical_registers); yyval.rows = 0;} else{yyval.type = State; yyval.prim = false; yyval.dim = quantum_registers; yyval.rows = 0;}}
+                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,1); if(sample != NULL){yyval.prim = sample->primitive; yyval.type = sample->type; if(yyval.type == Matrix){yyval.rows = sample->matrix_dim;} if(!yyval.prim){yyval.dim = sample->dim;}} else{yyerror("semantic error: variable not declared"); return 1;}} else if(yyval.out_flag == 1){yyval.type = Int; yyval.prim = false; yyval.dim = (1 << classical_registers); yyval.rows = 0;} else{yyval.type = State; yyval.prim = false; yyval.dim = quantum_registers; yyval.rows = 0;}}
 #line 2493 "./exec/y.tab.c"
     break;
 
   case 184: /* out_rhs: out_id '[' out_rhs ']'  */
 #line 430 "./Parser/parser_main.y"
-                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-3].str,outputLevel,1); if(sample != NULL){if(yyvsp[-1].type <= Uint){if(sample->primitive) {if(sample->type==State) {yyval.type = Complex; yyval.prim = true;} else {yyerror(); return 1;}} else {yyval.type = sample->type; yyval.prim = true;}} else {yyerror(); return 1;}} else{yyerror(); return 1;}} else if(yyval.out_flag == 1){yyval.type = Uint; yyval.prim = true;} else{yyval.type = State; yyval.prim = true;}}
+                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-3].str,outputLevel,1); if(sample != NULL){if(yyvsp[-1].type <= Uint){if(sample->primitive) {if(sample->type==State) {yyval.type = Complex; yyval.prim = true;} else {yyerror("semantic error"); return 1;}} else {yyval.type = sample->type; yyval.prim = true;}} else {yyerror("semantic error"); return 1;}} else{yyerror("semantic error: variable not declared"); return 1;}} else if(yyval.out_flag == 1){yyval.type = Uint; yyval.prim = true;} else{yyval.type = State; yyval.prim = true;}}
 #line 2499 "./exec/y.tab.c"
     break;
 
   case 185: /* out_rhs: out_id '[' out_rhs ']' '[' out_rhs ']'  */
 #line 431 "./Parser/parser_main.y"
-                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-6].str,outputLevel,1); if(sample != NULL){if((yyvsp[-4].type <= Uint) && (yyvsp[-2].type <= Uint)) {if(sample->type) {if(sample->type==Matrix) {yyval.type = Complex; yyval.prim = true;} else {yyerror(); return 1;}} else if(sample->type==State) {yyval.type = Complex; yyval.prim = true;} else {yyerror(); return 1;}}} else{yyerror(); return 1;}} else if(yyval.out_flag == 1){yyerror(); return 1;} else{yyval.type = Complex; yyval.prim = true;}}
+                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-6].str,outputLevel,1); if(sample != NULL){if((yyvsp[-4].type <= Uint) && (yyvsp[-2].type <= Uint)) {if(sample->type) {if(sample->type==Matrix) {yyval.type = Complex; yyval.prim = true;} else {yyerror("semantic error: variable not declared"); return 1;}} else if(sample->type==State) {yyval.type = Complex; yyval.prim = true;} else {yyerror("semantic error"); return 1;}}} else{yyerror("semantic error"); return 1;}} else if(yyval.out_flag == 1){yyerror("semantic error"); return 1;} else{yyval.type = Complex; yyval.prim = true;}}
 #line 2505 "./exec/y.tab.c"
     break;
 
   case 186: /* out_rhs: out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']'  */
 #line 432 "./Parser/parser_main.y"
-                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-9].str,outputLevel,1); if(sample != NULL){if((yyvsp[-7].type <= Uint) && (yyvsp[-5].type <= Uint) && (yyvsp[-3].type <= Uint)) {if(sample->primitive) {yyerror(); return 1;} else if(sample->type==Matrix) {yyval.type = Complex; yyval.prim = true;} else {yyerror(); return 1;}}} else{yyerror(); return 1;}} else{yyerror(); return 1;}}
+                                                                                 {if(yyval.out_flag == 0){struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-9].str,outputLevel,1); if(sample != NULL){if((yyvsp[-7].type <= Uint) && (yyvsp[-5].type <= Uint) && (yyvsp[-3].type <= Uint)) {if(sample->primitive) {yyerror("semantic error: variable not declared"); return 1;} else if(sample->type==Matrix) {yyval.type = Complex; yyval.prim = true;} else {yyerror("semantic error"); return 1;}}} else{yyerror("semantic error"); return 1;}} else{yyerror("semantic error"); return 1;}}
 #line 2511 "./exec/y.tab.c"
     break;
 
@@ -2524,97 +2524,97 @@ yyreduce:
 
   case 189: /* out_rhs: '!' out_rhs  */
 #line 435 "./Parser/parser_main.y"
-                                                                                 {if(yyvsp[0].type==Bool && yyvsp[0].prim) {yyval.prim = true; yyval.type = Bool;} else {yyerror(); return 1;}  }
+                                                                                 {if(yyvsp[0].type==Bool && yyvsp[0].prim) {yyval.prim = true; yyval.type = Bool;} else {yyerror("semantic error"); return 1;}  }
 #line 2529 "./exec/y.tab.c"
     break;
 
   case 190: /* out_rhs: out_rhs AND out_rhs  */
 #line 436 "./Parser/parser_main.y"
-                                                                                 {if(yyvsp[-2].type==Bool && yyvsp[-2].prim && yyvsp[0].type==Bool && yyvsp[0].prim)  {yyval.prim = true; yyval.type = Bool;} else {yyerror(); return 1;} }
+                                                                                 {if(yyvsp[-2].type==Bool && yyvsp[-2].prim && yyvsp[0].type==Bool && yyvsp[0].prim)  {yyval.prim = true; yyval.type = Bool;} else {yyerror("semantic error"); return 1;} }
 #line 2535 "./exec/y.tab.c"
     break;
 
   case 191: /* out_rhs: out_rhs OR out_rhs  */
 #line 437 "./Parser/parser_main.y"
-                                                                                 {if(yyvsp[-2].type==Bool && yyvsp[-2].prim && yyvsp[0].type==Bool && yyvsp[0].prim)  {yyval.prim = true; yyval.type = Bool;} else {yyerror(); return 1;} }
+                                                                                 {if(yyvsp[-2].type==Bool && yyvsp[-2].prim && yyvsp[0].type==Bool && yyvsp[0].prim)  {yyval.prim = true; yyval.type = Bool;} else {yyerror("semantic error"); return 1;} }
 #line 2541 "./exec/y.tab.c"
     break;
 
   case 192: /* out_rhs: out_rhs COMP out_rhs  */
 #line 438 "./Parser/parser_main.y"
-                                                                                 {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type != -1 && temp_type < COMPARABLE) {yyval.prim = true; yyval.type = Bool;} else {yyerror(); return 1;}  }
+                                                                                 {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type != -1 && temp_type < COMPARABLE) {yyval.prim = true; yyval.type = Bool;} else {yyerror("semantic error"); return 1;}  }
 #line 2547 "./exec/y.tab.c"
     break;
 
   case 193: /* out_rhs: out_rhs EQUALITY out_rhs  */
 #line 439 "./Parser/parser_main.y"
-                                                                                 {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type != -1 && temp_type < COMPARABLE) {yyval.prim = true; yyval.type = Bool;} else {yyerror(); return 1;}  }
+                                                                                 {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type != -1 && temp_type < COMPARABLE) {yyval.prim = true; yyval.type = Bool;} else {yyerror("semantic error"); return 1;}  }
 #line 2553 "./exec/y.tab.c"
     break;
 
   case 194: /* out_rhs: out_rhs '*' out_rhs  */
 #line 440 "./Parser/parser_main.y"
-                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && (temp_type <= Complex && temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type;} else if(yyvsp[-2].prim && yyvsp[0].prim && yyvsp[-2].type<=Complex && yyvsp[0].type==Matrix) {yyval.prim = true; yyval.type = Matrix;} else if ((yyvsp[-2].prim && yyvsp[0].prim) && ((yyvsp[-2].type == String && yyvsp[0].type == Uint) || (yyvsp[0].type == String && yyvsp[-2].type == Uint))) {yyval.prim = true; yyval.type = String;} else {yyerror(); return 1;}}
+                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && (temp_type <= Complex && temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type;} else if(yyvsp[-2].prim && yyvsp[0].prim && yyvsp[-2].type<=Complex && yyvsp[0].type==Matrix) {yyval.prim = true; yyval.type = Matrix;} else if ((yyvsp[-2].prim && yyvsp[0].prim) && ((yyvsp[-2].type == String && yyvsp[0].type == Uint) || (yyvsp[0].type == String && yyvsp[-2].type == Uint))) {yyval.prim = true; yyval.type = String;} else {yyerror("semantic error"); return 1;}}
 #line 2559 "./exec/y.tab.c"
     break;
 
   case 195: /* out_rhs: out_rhs '/' out_rhs  */
 #line 441 "./Parser/parser_main.y"
-                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && (temp_type <= Complex && temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type;} else {yyerror(); return 1;}}
+                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && (temp_type <= Complex && temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type;} else {yyerror("semantic error"); return 1;}}
 #line 2565 "./exec/y.tab.c"
     break;
 
   case 196: /* out_rhs: out_rhs '+' out_rhs  */
 #line 442 "./Parser/parser_main.y"
-                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type; if(temp_type == Matrix) {yyval.rows=yyvsp[-2].rows;} yyval.dim=yyvsp[-2].dim;} else if ((yyvsp[-2].prim==true) && (yyvsp[-2].type == String)) {yyval.prim = true; yyval.type = String;} else {yyerror(); return 1;}}
+                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type; if(temp_type == Matrix) {yyval.rows=yyvsp[-2].rows;} yyval.dim=yyvsp[-2].dim;} else if ((yyvsp[-2].prim==true) && (yyvsp[-2].type == String)) {yyval.prim = true; yyval.type = String;} else {yyerror("semantic error"); return 1;}}
 #line 2571 "./exec/y.tab.c"
     break;
 
   case 197: /* out_rhs: out_rhs '-' out_rhs  */
 #line 443 "./Parser/parser_main.y"
-                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type; if(temp_type == Matrix) {yyval.rows=yyvsp[-2].rows;} yyval.dim=yyvsp[-2].dim;} else {yyerror(); return 1;} }
+                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type; if(temp_type == Matrix) {yyval.rows=yyvsp[-2].rows;} yyval.dim=yyvsp[-2].dim;} else {yyerror("semantic error"); return 1;} }
 #line 2577 "./exec/y.tab.c"
     break;
 
   case 198: /* out_rhs: out_rhs '@' out_rhs  */
 #line 444 "./Parser/parser_main.y"
-                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && temp_type == Matrix) {if(yyvsp[-2].rows == yyvsp[0].rows) {yyval.prim = true; yyval.type = temp_type; yyval.rows = yyvsp[-2].rows;} else {yyerror(); return 1;}} else if(yyvsp[-2].prim && temp_type == State) {yyval.prim = true; yyval.type = Complex;} else if(!yyvsp[-2].prim && (temp_type <= COMPATIBLE) && (temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type; yyval.dim = 0;} else if (yyvsp[-2].type<=COMPATIBLE && yyvsp[0].type==Matrix) {yyval.prim = true; yyval.type = Matrix; yyval.dim = 0;} else {yyerror(); return 1;}}
+                                                                                                                                                                                       {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(yyvsp[-2].prim && temp_type == Matrix) {if(yyvsp[-2].rows == yyvsp[0].rows) {yyval.prim = true; yyval.type = temp_type; yyval.rows = yyvsp[-2].rows;} else {yyerror("semantic error"); return 1;}} else if(yyvsp[-2].prim && temp_type == State) {yyval.prim = true; yyval.type = Complex;} else if(!yyvsp[-2].prim && (temp_type <= COMPATIBLE) && (temp_type >= 0)) {yyval.prim = true; yyval.type = temp_type; yyval.dim = 0;} else if (yyvsp[-2].type<=COMPATIBLE && yyvsp[0].type==Matrix) {yyval.prim = true; yyval.type = Matrix; yyval.dim = 0;} else {yyerror("semantic error"); return 1;}}
 #line 2583 "./exec/y.tab.c"
     break;
 
   case 199: /* out_rhs: out_rhs '&' out_rhs  */
 #line 447 "./Parser/parser_main.y"
-                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror(); return 1;}}
+                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2589 "./exec/y.tab.c"
     break;
 
   case 200: /* out_rhs: out_rhs '^' out_rhs  */
 #line 448 "./Parser/parser_main.y"
-                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror(); return 1;}}
+                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2595 "./exec/y.tab.c"
     break;
 
   case 201: /* out_rhs: out_rhs '|' out_rhs  */
 #line 449 "./Parser/parser_main.y"
-                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror(); return 1;}}
+                                                                                                                                                                  {temp_type = compatibleCheckAdv(yyvsp[-2].type, yyvsp[0].type, yyvsp[-2].prim, yyvsp[0].prim, yyvsp[-2].dim, yyvsp[0].dim); if(temp_type <= Int) {yyval.prim = yyvsp[-2].prim; yyval.type = temp_type;} else {yyerror("semantic error: incompatible operands"); return 1;}}
 #line 2601 "./exec/y.tab.c"
     break;
 
   case 202: /* out_expr: ID '=' out_rhs  */
 #line 453 "./Parser/parser_main.y"
-                                                      {fprintf(fp,"expression statement\n"); if(isDeclaration){yyval.type = yyvsp[0].type; yyval.str = yyvsp[-2].str; yyval.prim = yyvsp[0].prim; if(!yyvsp[0].prim){yyval.dim = yyvsp[0].dim;} if(yyvsp[0].type == Matrix){yyval.rows = yyvsp[0].rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-2].str,outputLevel,1); if(entry->type != yyvsp[0].type){yyerror(); return 1;}}}
+                                                      {fprintf(fp,"expression statement\n"); if(isDeclaration){yyval.type = yyvsp[0].type; assignString(yyval.str,yyvsp[-2].str); yyval.prim = yyvsp[0].prim; if(!yyvsp[0].prim){yyval.dim = yyvsp[0].dim;} if(yyvsp[0].type == Matrix){yyval.rows = yyvsp[0].rows;} } else {struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,yyvsp[-2].str,outputLevel,1); if(entry->type != yyvsp[0].type){yyerror("semantic error"); return 1;}}}
 #line 2607 "./exec/y.tab.c"
     break;
 
   case 203: /* decl: prim_type out_expr  */
 #line 456 "./Parser/parser_main.y"
-                                                      {fprintf(fp,"Primitive datatype declaration statement\n"); if( (yyvsp[0].prim==false) || ((yyvsp[-1].type < COMPATIBLE) && (yyvsp[-1].type < yyvsp[0].type)) || ((yyvsp[-1].type >= COMPATIBLE) && (yyvsp[-1].type != yyvsp[0].type)) || getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,0) != NULL){yyerror(); return 1;} else {if(yyvsp[0].type == Matrix) {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[0].type,true,yyvsp[0].rows,0,false);} else {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[0].type,true,0,0,false);}}}
+                                                      {fprintf(fp,"Primitive datatype declaration statement\n"); if (getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,0) != NULL) {yyerror("semantic error: variable redeclaration"); return 1;} else if( (yyvsp[0].prim==false) || ((yyvsp[-1].type < COMPATIBLE) && (yyvsp[-1].type < yyvsp[0].type)) || ((yyvsp[-1].type >= COMPATIBLE) && (yyvsp[-1].type != yyvsp[0].type)) ){yyerror("semantic error: incompatible types"); return 1;} else {if(yyvsp[0].type == Matrix) {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[0].type,true,yyvsp[0].rows,0,false);} else {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[0].type,true,0,0,false);}}}
 #line 2613 "./exec/y.tab.c"
     break;
 
   case 204: /* decl: list_type out_expr  */
 #line 458 "./Parser/parser_main.y"
-                                                      {fprintf(fp,"List datatype declaration statement\n"); if( (yyvsp[0].prim==true) || ((yyvsp[-1].type < COMPATIBLE) && (yyvsp[-1].type < yyvsp[0].type)) || ((yyvsp[-1].type >= COMPATIBLE) && (yyvsp[-1].type != yyvsp[0].type)) || getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,0) != NULL){yyerror(); return 1;} else {if(yyvsp[0].type == Matrix) {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[-1].type,false,yyvsp[0].rows,yyvsp[0].dim,false);} else {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[-1].type,false,0,yyvsp[0].dim,false);}}}
+                                                      {fprintf(fp,"List datatype declaration statement\n"); if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel,0) != NULL) {yyerror("semantic error: variable redeclaration"); return 1;} else if( (yyvsp[0].prim==true) || ((yyvsp[-1].type < COMPATIBLE) && (yyvsp[-1].type < yyvsp[0].type)) || ((yyvsp[-1].type >= COMPATIBLE) && (yyvsp[-1].type != yyvsp[0].type)) ){yyerror("semantic error: incompatible types"); return 1;} else {if(yyvsp[0].type == Matrix) {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[-1].type,false,yyvsp[0].rows,yyvsp[0].dim,false);} else {insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel,yyvsp[-1].type,false,0,yyvsp[0].dim,false);}}}
 #line 2619 "./exec/y.tab.c"
     break;
 
@@ -2680,55 +2680,55 @@ yyreduce:
 
   case 221: /* $@14: %empty  */
 #line 492 "./Parser/parser_main.y"
-                                 {if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,0) != NULL){yyerror(); return 1;} else insertInOutputTable(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,Int,true,0,0,true);}
+                                 {if(getOutputSymbolEntry(&OutputSymbolTable,yyvsp[0].str,outputLevel + 1,1) == NULL){yyerror("semantic error: variable used without declaration"); return 1;}}
 #line 2685 "./exec/y.tab.c"
     break;
 
   case 222: /* $@15: %empty  */
 #line 492 "./Parser/parser_main.y"
-                                                                                                                                                                                                                                                   {outputLevel++;}
+                                                                                                                                                                                                               {outputLevel++;printf("Entered loop\n");}
 #line 2691 "./exec/y.tab.c"
     break;
 
   case 223: /* out_for_stmt: FOR ID $@14 IN '(' range ')' '{' $@15 out_main '}'  */
 #line 492 "./Parser/parser_main.y"
-                                                                                                                                                                                                                                                                                 {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                                                                                                                                                                                                                                                                      {exitOutputSymbolScope(&OutputSymbolTable,outputLevel);printf("exited loop\n") ;outputLevel--;}
 #line 2697 "./exec/y.tab.c"
     break;
 
   case 224: /* $@16: %empty  */
 #line 495 "./Parser/parser_main.y"
-                                                                          {if(yyvsp[-5].num != yyvsp[-1].num){yyerror(); return 1;}}
+                                                                          {if(yyvsp[-5].num != yyvsp[-1].num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}}
 #line 2703 "./exec/y.tab.c"
     break;
 
   case 225: /* $@17: %empty  */
 #line 495 "./Parser/parser_main.y"
-                                                                                                                           {outputLevel++;}
+                                                                                                                                                                                  {outputLevel++;}
 #line 2709 "./exec/y.tab.c"
     break;
 
   case 226: /* out_for_lex_stmt: FOR_LEX '(' var_list ')' IN '(' range_list ')' $@16 '{' $@17 out_main '}'  */
 #line 495 "./Parser/parser_main.y"
-                                                                                                                                                         {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                                                                                                                                                                                                                {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
 #line 2715 "./exec/y.tab.c"
     break;
 
   case 227: /* $@18: %empty  */
 #line 498 "./Parser/parser_main.y"
-                                                                          {if(yyvsp[-5].num != yyvsp[-1].num){yyerror(); return 1;}}
+                                                                          {if(yyvsp[-5].num != yyvsp[-1].num){yyerror("semantic error: mismatch in loop variables and ranges"); return 1;}}
 #line 2721 "./exec/y.tab.c"
     break;
 
   case 228: /* $@19: %empty  */
 #line 498 "./Parser/parser_main.y"
-                                                                                                                           {outputLevel++;}
+                                                                                                                                                                                  {outputLevel++;}
 #line 2727 "./exec/y.tab.c"
     break;
 
   case 229: /* out_for_zip_stmt: FOR_ZIP '(' var_list ')' IN '(' range_list ')' $@18 '{' $@19 out_main '}'  */
 #line 498 "./Parser/parser_main.y"
-                                                                                                                                                         {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                                                                                                                                                                                                                {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
 #line 2733 "./exec/y.tab.c"
     break;
 
@@ -2953,6 +2953,13 @@ yyreturnlab:
 #line 516 "./Parser/parser_main.y"
 
 
+void assignString(char* str1, char* str2){
+   str1 = (char*)malloc(sizeof(char)*strlen(str2));
+   for(int i=0;i<strlen(str2);i++){
+      str1[i] = str2[i];
+   }
+}
+
 bool firstLetterCapital(char *str) {
    return (str[0] >= 65 && str[0] <= 90);
 }
@@ -3045,6 +3052,7 @@ void printBlockTable(){
 }
 
 int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
+   if(rows!=cols){return 0;}
    struct GateTable* temp = *Head;
    while(temp != NULL){
       if(strcmp(temp->id,data) == 0){
@@ -3152,6 +3160,7 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, i
    newNode->prev = *Head;  // covers NULL case already
 
    *Head = newNode;
+   printf("Insertion : %s %d %d %d %d\n", newNode->id, newNode->level, newNode->primitive, newNode->dim, newNode->matrix_dim);
 }
 
 
@@ -3175,6 +3184,7 @@ void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level){
     struct OutputSymbolEntry* prevEntry;
 
     while(symbolEntry != NULL && symbolEntry->level == level){
+        printf("Deletion : %s %d %d %d %d\n", symbolEntry->id, symbolEntry->level, symbolEntry->primitive, symbolEntry->dim, symbolEntry->matrix_dim);
         prevEntry = symbolEntry->prev;
         free(symbolEntry->id);
         free(symbolEntry);
@@ -3257,7 +3267,7 @@ int main(int argc,char* argv[])
   return 0;
 }
 
-void yyerror(){
-   printf("Error\n");
-   fprintf(fp,"Syntax error at line %d\n",line);
+void yyerror(char* err){
+   printf("At line %d: %s\n", line, err);
+   fprintf(fp,"At line %d: %s\n",line, err);
 }

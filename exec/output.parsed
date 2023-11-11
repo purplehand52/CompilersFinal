@@ -34,7 +34,10 @@ expression statement
 Primitive datatype declaration statement
 expression statement
 Primitive datatype declaration statement
-Echo statement
+expression statement
+Primitive datatype declaration statement
+expression statement
+Primitive datatype declaration statement
 expression statement
 Primitive datatype declaration statement
 expression statement
@@ -43,6 +46,8 @@ expression statement
 Primitive datatype declaration statement
 expression statement
 For statement in output section
+expression statement
+Primitive datatype declaration statement
 For statement in output section
 
 Output section ends

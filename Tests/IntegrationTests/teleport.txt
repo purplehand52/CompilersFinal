@@ -48,7 +48,22 @@
 
     $ Compute Fidelity $
     state original = {(0, 0), (0, 1)}
-    float fidelity = dot(sub(original, q_output[2]), sub(original, q_output[2]))
-    echo("Fidelity Reported: ",fidelity)
+
+    int a = 1
+   $ int a = 2  $
+    int i = 0
+
+    for i in (1:2){
+        int a = 3
+        int j = 0 
+        $ int j = 1 $
+        for j in (4:6){
+            int a = 7
+            int j = 8
+            a = a + 1
+        }
+        int y = 9
+    }
+
 
 \end_output
