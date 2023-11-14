@@ -1,6 +1,8 @@
 #include <iostream>
 #include "complex.h"
 #include "matrix.h"
+#include "state.h"
+#include "math.h"
 
 using namespace std;
 
@@ -27,16 +29,34 @@ int main()
 
     Y.set_entry(0, 0, Complex(0, 0));
     Y.set_entry(0, 1, Complex(0, -1));
-    Y.set_entry(1, 0, Complex(0, 5));
+    Y.set_entry(1, 0, Complex(0, 1));
     Y.set_entry(1, 1, Complex(0, 0));
     Y.show();
 
-    Matrix A = X*Y;
-    A.show();
-    Matrix A_T = !A;
-    A_T.show();
+    // Y.set_entry(0, 0, Complex(0, 0));
+    // Y.set_entry(0, 1, Complex(0, -1));
+    // Y.set_entry(1, 0, Complex(0, 5));
+    // Y.set_entry(1, 1, Complex(0, 0));
+    // Y.show();
 
-    cout << Y.is_unitary() << endl;
+    // Matrix A = X*Y;
+    // A.show();
+    // Matrix A_T = !A;
+    // A_T.show();
+
+    // cout << Y.is_unitary() << endl;
+
+    State sample = State(1);
+    sample.set_entry(0, Complex(1, 0));
+    sample.set_entry(1, Complex(1, 0));
+    sample.normalize();
+    State on_x = sample.transform(X);
+    State on_y = sample.transform(Y);
+
+    sample.show();
+    on_x.show();
+    on_y.show();
+    
 
     return 0;
 }

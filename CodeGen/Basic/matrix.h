@@ -33,6 +33,9 @@ class Matrix
 
         /* Displays */
         void show();
+
+        /* Friend Class */
+        friend class State;
 };
 
 #endif
