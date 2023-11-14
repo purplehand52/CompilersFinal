@@ -2,6 +2,16 @@
 #include <math.h>
 #include <iostream>
 #include <string>
+#include <sstream>
+
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 6)
+{
+    std::ostringstream out;
+    out.precision(n);
+    out << std::fixed << a_value;
+    return std::move(out).str();
+}
 
 /* Constructors */
 Complex::Complex()
@@ -109,7 +119,14 @@ void Complex::show()
 std::string Complex::to_str()
 {
     std::string o;
-    if(this->imag >= 0) o = std::to_string(this->real) + " + " + std::to_string(this->imag) + "i";
-    else o = std::to_string(this->real) + " - " + std::to_string(-(this->imag)) + "i";
+    if(this->imag >= 0) o = to_string_with_precision(this->real, 2) + " + " + to_string_with_precision(this->imag, 2) + "i";
+    else o = to_string_with_precision(this->real, 2) + " - " + to_string_with_precision(-(this->imag), 2) + "i";
+
+    // if(this->imag >= 0) o = std::format("{:.2f}", this->real) + " + " + std::format("{:.2f}", this->imag) + "i";
+    // else o = std::format("{:.2f}", this->real) + " - " + std::format("{:.2f}", this->imag) + "i";
+
+    // std::cout.precision(2);
+
+
     return o;
 }

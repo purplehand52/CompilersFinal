@@ -12,16 +12,17 @@ unsigned int pow_two(unsigned int n)
 }
 
 /* Constructors */
-Matrix::Matrix(unsigned int n)
+Matrix::Matrix(unsigned int m)
 {
-    this->n = n;
-    this->arr = (Complex*)malloc(n*n*sizeof(Complex));
-    for(int i = 0; i < this->n; i++)
+    n = m;
+    arr = (Complex**)malloc(n*sizeof(Complex*));
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < this->n; j++)
+        arr[i] = (Complex*)malloc(n*sizeof(Complex));
+        for(int j = 0; j < n; j++)
         {
-            if(i == j) this->arr[i*this->n+j] = Complex(1, 0);
-            else this->arr[i*this->n+j] = Complex();
+            if(i == j) arr[i][j] = Complex(1, 0);
+            else arr[i][j] = Complex();
         }
     }
 }
@@ -30,14 +31,19 @@ Matrix::Matrix(unsigned int n)
 void Matrix::set_entry(unsigned int i, unsigned int j, Complex c)
 {
     if((i >= n) || (j >= n)) throw std::invalid_argument("Out of bounds!!!");
-    this->arr[i*this->n+j] = c;
+    arr[i][j] = c;
 }
 
 /* Get Function */
 Complex Matrix::get_entry(unsigned int i, unsigned int j) const
 {
     if((i >= n) || (j >= n)) throw std::invalid_argument("Out of bounds!!!");
-    return this->arr[i*this->n+j];
+    return arr[i][j];
+}
+
+Complex** Matrix::get_arr()
+{
+    return arr;
 }
 
 unsigned int Matrix::get_dim() const
@@ -48,13 +54,13 @@ unsigned int Matrix::get_dim() const
 /* Operators */
 Matrix Matrix::operator+(Matrix const& op)
 {
-    if(this->n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
-    Matrix ans = Matrix(this->n);
-    for(int i = 0; i < this->n; i++)
+    if(n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
+    Matrix ans = Matrix(n);
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < this->n; j++)
+        for(int j = 0; j < n; j++)
         {
-            ans.set_entry(i, j, this->arr[i*this->n+j] + op.get_entry(i,j));
+            ans.arr[i][j] = arr[i][j] + op.arr[i][j];
         }
     }
     return ans;
@@ -62,13 +68,13 @@ Matrix Matrix::operator+(Matrix const& op)
 
 Matrix Matrix::operator-(Matrix const& op)
 {
-    if(this->n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
-    Matrix ans = Matrix(this->n);
-    for(int i = 0; i < this->n; i++)
+    if(n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
+    Matrix ans = Matrix(n);
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < this->n; j++)
+        for(int j = 0; j < n; j++)
         {
-            ans.set_entry(i, j, this->arr[i*this->n+j] - op.get_entry(i,j));
+            ans.arr[i][j] = arr[i][j] - op.arr[i][j];
         }
     }
     return ans;
@@ -76,19 +82,19 @@ Matrix Matrix::operator-(Matrix const& op)
 
 Matrix Matrix::operator*(Matrix const& op)
 {
-    if(this->n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
-    Matrix ans = Matrix(this->n);
+    if(n != op.get_dim()) throw std::invalid_argument("Incompatible Matrices!");
+    Matrix ans = Matrix(n);
     Complex temp;
-    for(int i = 0; i < this->n; i++)
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < this->n; j++)
+        for(int j = 0; j < n; j++)
         {
             temp = Complex();
-            for(int k = 0; k < this->n; k++)
+            for(int k = 0; k < n; k++)
             {
-                temp = temp + this->arr[i*this->n+k] * op.get_entry(k, j);
+                temp = temp + arr[i][k] * op.arr[k][j];
             }
-            ans.set_entry(i, j, temp);
+            ans.arr[i][j] = temp;
         }
     }
     return ans;
@@ -101,7 +107,7 @@ Matrix Matrix::operator!()
     {
         for(int j = 0; j < this->n; j++)
         {
-            ans.set_entry(j, i, !this->arr[i*this->n+j]);
+            ans.arr[j][i] = !arr[i][j];
         }
     }
     return ans;
@@ -118,21 +124,38 @@ bool Matrix::is_unitary() const
     {
         for(int j = 0; j < this->n; j++)
         {
-            if(eye.get_entry(i, j) != ans.get_entry(i, j)) return false;
+            if(eye.arr[i][j] != ans.arr[i][j]) return false;
         }
     }
     return true;
+}
+
+/* Resize */
+void Matrix::resize(unsigned int m)
+{
+    //free(this->arr);
+    n = m;
+    arr = (Complex**)malloc(m*sizeof(Complex*));
+    for(int i = 0; i < m; i++)
+    {
+        arr[i] = (Complex*)malloc(m*sizeof(Complex));
+        for(int j = 0; j < m; j++)
+        {
+            if(i == j) arr[i][j] = Complex(1, 0);
+            else arr[i][j] = Complex();
+        }
+    }
 }
 
 /* Show */
 void Matrix::show()
 {
     std::cout << "--------------------------------------------------------------------------" << std::endl;
-    for(int i = 0; i < this->n; i++)
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < this->n; j++)
+        for(int j = 0; j < n; j++)
         {
-            std::cout << arr[i*this->n+j].to_str() << "\t";
+            std::cout << arr[i][j].to_str() << "\t";
         }
         std::cout << std::endl;
     }
@@ -153,13 +176,12 @@ Matrix Matrix::kronecker_product(Matrix sample) /* Computes [THIS # SAMPLE] */
     {
         for(int out_j = 0; out_j < n; out_j++)
         {
-            temp = arr[out_i*n + out_j];
+            temp = arr[out_i][out_j];
             for(int inn_i = 0; inn_i < sample.n; inn_i++)
             {
                 for(int inn_j = 0; inn_j < sample.n; inn_j++)
                 {
-                    //ans.arr[out_i*n + inn_i][out_j*n + inn_j]
-                    ans.arr[(out_i*n + inn_i)*n*sample.n + out_j*n + inn_j] = temp * sample.arr[inn_i*sample.n + inn_j];
+                    ans.arr[out_i*sample.n + inn_i][out_j*sample.n + inn_j] = temp * sample.arr[inn_i][inn_j];
                 }
             }
         }
@@ -174,15 +196,39 @@ Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for
 {
     if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Fill!");
 
-    Matrix ans = Matrix(2);
+    Matrix ans = Matrix(1<<regs);
 
-    /* Compute */
-    for(int i = 1; i <= regs; i++)
+    if(place == 1) ans = this->kronecker_product(Matrix(1 << (regs-1)));
+    else if(place == regs) ans = Matrix(1 << (regs-1)).kronecker_product(*this);
+    else ans = Matrix(1 << (place-1)).kronecker_product(this->kronecker_fill(1, regs-place+1));
+    
+    /* Return */
+    return ans;
+}
+
+/* Kronecker Control fill */
+/* Note: If control consists of (2, 4, 5) : then control = 000000110100 */
+/* Note: If target is 7: then target = 000010000000*/
+Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target, unsigned int regs)
+{
+    if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Control-Fill!");
+    if((control & target) != 0) throw std::invalid_argument("Target inside Control Registers!");
+    if(pow_two(target) == -1) throw std::invalid_argument("Only one target allowed!");
+
+    Matrix ans = Matrix(1<<regs);
+    unsigned int a, b;
+
+    for(int i = 0; i < (1<<regs); i++)
     {
-        if(i != place) ans = ans.kronecker_product(Matrix(2));
-        else ans = ans.kronecker_product(*this);
+        if((control & i) != control) continue;
+        (i & target) ? (a = 1) : (a = 0);
+        for(int j = 0; j < (1<<regs); j++)
+        {
+            if((control & j) != control) continue;
+            (j & target) ? (b = 1) : (b = 0);
+            ans.arr[i][j] = arr[a][b];
+        }
     }
 
-    /* Return */
     return ans;
 }

@@ -8,61 +8,47 @@ using namespace std;
 
 int main()
 {
-    // Complex a = Complex(3, 5);
-    // Complex b = Complex(12, -5);
-    // cout << b.to_str() << endl;
-    // Complex c = !b;
-    // cout << c.to_str() << endl;
-    // Complex c = b/a;
-
-    // cout << c.to_str() << endl;
-    // cout << b.get_norm() << endl;
-
+    /* Operators */
     Matrix X = Matrix(2);
     Matrix Y = Matrix(2);
+    Matrix Z = Matrix(2);
     
     X.set_entry(0, 0, Complex(0, 0));
     X.set_entry(0, 1, Complex(1, 0));
     X.set_entry(1, 0, Complex(1, 0));
     X.set_entry(1, 1, Complex(0, 0));
-    X.show();
+    // X.show();
 
     Y.set_entry(0, 0, Complex(0, 0));
     Y.set_entry(0, 1, Complex(0, -1));
     Y.set_entry(1, 0, Complex(0, 1));
     Y.set_entry(1, 1, Complex(0, 0));
-    Y.show();
-
-    // Y.set_entry(0, 0, Complex(0, 0));
-    // Y.set_entry(0, 1, Complex(0, -1));
-    // Y.set_entry(1, 0, Complex(0, 5));
-    // Y.set_entry(1, 1, Complex(0, 0));
     // Y.show();
 
-    // Matrix A = X*Y;
-    // A.show();
-    // Matrix A_T = !A;
-    // A_T.show();
+    Z.set_entry(0, 0, Complex(1, 0));
+    Z.set_entry(0, 1, Complex(0, 0));
+    Z.set_entry(1, 0, Complex(-1, 0));
+    Z.set_entry(1, 1, Complex(0, 0));
+    // Y.show();
 
-    // cout << Y.is_unitary() << endl;
-
-    State sample = State(1);
+    /* State (Stage 0)*/
+    StateVec sample = StateVec(2);
     sample.set_entry(0, Complex(1, 0));
-    sample.set_entry(1, Complex(1, 0));
+    sample.set_entry(1, Complex(0, 0));
+    sample.set_entry(2, Complex(0, 0));
+    sample.set_entry(3, Complex(1, 0));
     sample.normalize();
-    State on_x = sample.transform(X);
-    State on_y = sample.transform(Y);
-
     sample.show();
-    on_x.show();
-    on_y.show();
 
-    Matrix comp = X.kronecker_product(Y);
-    Matrix filled = X.kronecker_fill(2, 3);
-
-    comp.show();
-    filled.show();
+    /* State (Stage 1)*/
+    Matrix op = X.kronecker_control_fill(2, 1, 2);
+    op.show();
+    StateVec after_X = sample.transform(X.kronecker_control_fill(2, 1, 2));
+    after_X.show();
     
+    /* Measure */
+    int result = after_X.measure_prob(0);
+    cout << result << endl;
 
-    return 0;
+    return 0;   
 }
