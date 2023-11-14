@@ -56,6 +56,12 @@ int main()
     sample.show();
     on_x.show();
     on_y.show();
+
+    Matrix comp = X.kronecker_product(Y);
+    Matrix filled = X.kronecker_fill(2, 3);
+
+    comp.show();
+    filled.show();
     
 
     return 0;

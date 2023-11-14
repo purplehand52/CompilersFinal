@@ -34,6 +34,10 @@ class Matrix
         /* Displays */
         void show();
 
+        /* Tensors */
+        Matrix kronecker_product(Matrix sample);
+        Matrix kronecker_fill(unsigned int place, unsigned int regs);
+
         /* Friend Class */
         friend class State;
 };

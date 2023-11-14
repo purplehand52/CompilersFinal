@@ -1,6 +1,15 @@
 #include <iostream>
 #include <stdexcept>
 #include "matrix.h"
+#include "math.h"
+
+/* Helpers */
+unsigned int pow_two(unsigned int n)
+{
+    if(n == 0) return -1;
+    if(n & (n - 1)) return -1;
+    return floor(log2(n));
+}
 
 /* Constructors */
 Matrix::Matrix(unsigned int n)
@@ -129,4 +138,51 @@ void Matrix::show()
     }
     std::cout << "--------------------------------------------------------------------------" << std::endl;
     std::cout << std::endl;
+}
+
+/* Kronecker product */
+Matrix Matrix::kronecker_product(Matrix sample) /* Computes [THIS # SAMPLE] */
+{
+    //if((pow_two(n) < 0) || (pow_two(sample.n) < 0)) throw std::invalid_argument("Incompatible Matrices for Kronecker-Product!");
+
+    Matrix ans = Matrix(n * sample.n);
+    Complex temp;
+
+    /* Compute */
+    for(int out_i = 0; out_i < n; out_i++)
+    {
+        for(int out_j = 0; out_j < n; out_j++)
+        {
+            temp = arr[out_i*n + out_j];
+            for(int inn_i = 0; inn_i < sample.n; inn_i++)
+            {
+                for(int inn_j = 0; inn_j < sample.n; inn_j++)
+                {
+                    //ans.arr[out_i*n + inn_i][out_j*n + inn_j]
+                    ans.arr[(out_i*n + inn_i)*n*sample.n + out_j*n + inn_j] = temp * sample.arr[inn_i*sample.n + inn_j];
+                }
+            }
+        }
+    }
+
+    /* Return */
+    return ans;
+}
+
+/* Kronecker Fill */
+Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for 2*2 matrices */
+{
+    if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Fill!");
+
+    Matrix ans = Matrix(2);
+
+    /* Compute */
+    for(int i = 1; i <= regs; i++)
+    {
+        if(i != place) ans = ans.kronecker_product(Matrix(2));
+        else ans = ans.kronecker_product(*this);
+    }
+
+    /* Return */
+    return ans;
 }
