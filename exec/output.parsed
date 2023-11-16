@@ -3,26 +3,17 @@ Init section begins
 
 Register and iteration initialization section
 Setting initial state of quantum registers
+Setting initial state of classical registers
 Block definition section begins
-Block definition section ends
-
-Init section ends
-
-Main section begins
-
+Pre - defined Gate call statement
+Pre - defined Gate call statement
+Pre - defined Gate call statement
+Block definition
 Conditional statement begin
 Pre - defined Gate call statement
 Conditional statement end
-For - Lex statement
-Measure statement
-For - Zip statement
-
-Main section ends
-
-Output section begins
-
-expression statement
-Primitive datatype declaration statement
-expression statement
-Primitive datatype declaration statement
-At line 52: semantic error: variable redeclaration
+Block definition
+Block definition section ends
+Gate definition section begins
+Gate definition
+At line 26: semantic error: gate definition requires square matrix
