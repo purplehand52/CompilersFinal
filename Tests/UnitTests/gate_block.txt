@@ -21,17 +21,17 @@ block X_even (i,p) -> p
     }
 ]
 
-
+$
 gate S =[[(1 , 0), (0, 0),3],
-         [(0 , 0), (0, 1),4]]
+         [(0 , 0), (0, 1),4]] $
 
- gate Test = [[1,2],[2,3],[6,5],[3,1]]
+$ gate Test = [[1,2],[2,3],[6,5],[3,1]] $
 
 \end_init
 
 \begin_main
     H -> 0                   $ in built gate $
-    S -> 1                   $ user defined gate $
+   $ S -> 1  $                 $ user defined gate $
     Y3 (0,1,2)               $ block call with target $
     for i in (0:3){
         X_even (i,p) -> i        $ block call with control->target $
@@ -41,5 +41,10 @@ gate S =[[(1 , 0), (0, 0),3],
 
 
 \begin_output
+    int i = 0
+    int x = 9
+    int a = 10000
+    int j = 110200
+    int s =12323423
 
 \end_output

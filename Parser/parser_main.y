@@ -9,12 +9,15 @@
 
    extern FILE* yyin,*fp2;
    extern int line;
-   FILE * fp;
+   FILE * fp,*out;
 // comment
    int yylex();
    void yyerror(char* str);
+   char * IntToString(int num);
+   void printForLex(int num);
+   void printForZip(int num);
 
-   int classical_registers,quantum_registers,iterations,temp_type;
+   int classical_registers,quantum_registers,iterations,temp_type,indent;
    int * classical_states,classical_index=0,quantum_index=0;
    struct Quantum* quantum_states;
    int isInBlock=0;
@@ -24,6 +27,7 @@
 
    struct List* head = NULL;
    struct List* id_list = NULL;
+   struct List2* range_list = NULL;
    struct BlockTable* BlockSymbolTable = NULL;
    struct GateTable* GateSymbolTable = NULL;
 
@@ -365,32 +369,47 @@ expr                    : expr COMP expr
                         ;
 
 /* negative numbers? */
-value                   : NUMBER
-                        | ID
+value                   : NUMBER             {$$.str = IntToString($1.num);}
+                        | ID                 {$$.str = $1.str;}
                         ;
 
-range                   : value ':' value
-                        | value ':' value ':' value
+range                   : value ':' value    {$$.start = IntToString($1.num); $$.end = IntToString($3.num); $$.step = IntToString(1);}
+                        | value ':' value ':' value   {$$.start = IntToString($1.num); $$.end = IntToString($3.num); $$.step = IntToString($5.num);}
                         ;
 
-range_list              : range_list ',' range     {$$.num = 1 + $1.num;}
-                        | range                    {$$.num = 1;}
+range_list              : range ',' range_list     {  $$.num = 1 + $3.num;
+                                                      struct List2* newNode = (struct List2*)malloc(sizeof(struct List2));
+                                                      newNode->start = $1.start;
+                                                      newNode->end = $1.end;
+                                                      newNode->step = $1.step;
+                                                      newNode->next = range_list;
+                                                      range_list = newNode;
+                                                   }
+                        | range                    {  $$.num = 1;
+                                                      struct List2* newNode = (struct List2*)malloc(sizeof(struct List2));
+                                                      newNode->start = $1.start;
+                                                      newNode->end = $1.end;
+                                                      newNode->step = $1.step;
+                                                      newNode->next = NULL;
+                                                      range_list = newNode;
+                                                   }
                         ;
 
-var_list                : var_list ',' ID    {  if(isInOutput){
-                                                   if(getOutputSymbolEntry(&OutputSymbolTable,$3.str,outputLevel + 1,1) == NULL){
+var_list                : ID ',' var_list   {  if(isInOutput){
+                                                   if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,1) == NULL){
                                                       yyerror("semantic error: variable used without declaration");
                                                       return 1;
                                                    }
                                                 }     
-                                                else if(!inList(&head,$3.str)){
-                                                   insertInList(&head,$3.str);
+                                                if(!inList(&head,$1.str)){
+                                                   printf("hi2\n");
+                                                   insertInList(&head,$1.str);
                                                 } 
                                                 else {
                                                    yyerror("semantic error: loop variable redeclaration");
                                                    return 1;
                                                 } 
-                                                $$.num = 1 + $1.num;
+                                                $$.num = 1 + $3.num;
                                              }
                         | ID                 {  if(isInOutput){
                                                    if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,1) == NULL){
@@ -398,7 +417,8 @@ var_list                : var_list ',' ID    {  if(isInOutput){
                                                       return 1;
                                                    }
                                                 } 
-                                                else if(!inList(&head,$1.str)){
+                                                if(!inList(&head,$1.str)){
+                                                   printf("hi\n");
                                                    insertInList(&head,$1.str);
                                                 } 
                                                 else{
@@ -445,19 +465,19 @@ while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
 // */
 
 /* Datatypes */
-out_id                  : ID   {$$.out_flag = 0; assignString($$.str,$1.str);}
-                        | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;}
-                        | QOUT {$$.out_flag = 2; $$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;}
+out_id                  : ID   {$$.out_flag = 0; $$.str = $1.str;}
+                        | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;$$.str = $1.str;}
+                        | QOUT {$$.out_flag = 2; $$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;$$.str = $1.str;}
                         ;
 
-prim_type               : INT       {$$.type = Int; $$.prim = true;}
-                        | UINT      {$$.type = Uint; $$.prim = true;}
-                        | FLOAT     {$$.type = Float; $$.prim = true;}
-                        | COMPLEX   {$$.type = Complex; $$.prim = true;}
-                        | STRING    {$$.type = String; $$.prim = true;}
-                        | MATRIX    {$$.type = Matrix; $$.prim = true;}
-                        | STATE     {$$.type = State; $$.prim = true;}
-                        | BOOL      {$$.type = Bool; $$.prim = true;}
+prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"int ");}
+                        | UINT      {$$.type = Uint; $$.prim = true;fprintf(out,"unsigned int ");}
+                        | FLOAT     {$$.type = Float; $$.prim = true;fprintf(out,"float ");}
+                        | COMPLEX   {$$.type = Complex; $$.prim = true;fprintf(out,"Complex ");}
+                        | STRING    {$$.type = String; $$.prim = true;fprintf(out,"string ");}
+                        | MATRIX    {$$.type = Matrix; $$.prim = true;fprintf(out,"Matrix ");}
+                        | STATE     {$$.type = State; $$.prim = true;fprintf(out,"StateVec ");}
+                        | BOOL      {$$.type = Bool; $$.prim = true;fprintf(out,"bool ");}
                         ;
 
 list_type               : LIST '[' prim_type ']' {$$.type = $3.type; $$.prim = false;}
@@ -467,8 +487,8 @@ list_type               : LIST '[' prim_type ']' {$$.type = $3.type; $$.prim = f
                         | list_type
                         ; */
 
-bool_const              : TRUE      
-                        | FALSE
+bool_const              : TRUE      {$$.num = 1;}
+                        | FALSE     {$$.num = 0;}
                         ;
 
 num                     : DEC       {$$.real = $1.real;}
@@ -519,15 +539,15 @@ temp                    : complex_const               {$$.cpx = $1.cpx;}
                         | num                         {$$.cpx.real = $1.real; $$.cpx.imag = 0;}
                         ;
 
-prim_const              : bool_const      {$$.type = Bool;}
-                        | complex_const   {$$.type = Complex;}
-                        | matrix_const    {$$.type = Matrix; $$.rows = $1.rows;}
-                        | state_const     {$$.type = State;}
-                        | NUMBER          {$$.type = Uint;}
-                        | NEG             {$$.type = Int;}
-                        | DEC             {$$.type = Float;}
-                        | EXP             {$$.type = Float;}
-                        | STRING          {$$.type = String;}
+prim_const              : bool_const     {$$.type = Bool;$$.str = (char *)malloc(sizeof(char)*6);if($$.num)snprintf($$.str,6,"true");else snprintf($$.str,6,"false");}
+                        | complex_const  {$$.type = Complex;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"Complex(%f,%f)",$1.cpx.real,$1.cpx.imag);}
+                        | matrix_const   {$$.type = Matrix; $$.rows = $1.rows;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,15,"Matrix(%d)",$1.rows);}
+                        | state_const    {$$.type = State;}
+                        | NUMBER         {$$.type = Uint;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
+                        | NEG            {$$.type = Int;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
+                        | DEC            {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
+                        | EXP            {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
+                        | STRING         {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,20,"%s",$1.str);}
                         ;
 
 vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim; 
@@ -712,7 +732,7 @@ uint_list               : uint_list ',' out_rhs  { if($1.type <= Int){
                         ;
 
 /* Expressions :*/
-out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.type;}
+out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.type;$$.str = $1.str;}
                         | vec_const             { $$.prim = false; $$.dim = $1.dim; 
                                                   $$.type = $1.type; 
                                                   if($$.type == Matrix){
@@ -748,6 +768,7 @@ out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.ty
                                                       $$.dim = quantum_registers; 
                                                       $$.rows = 0;
                                                    }
+                                                   fprintf(out,"%s",$1.str);
                                                 }
                         | out_id '[' out_rhs ']'{
                                                    if($$.out_flag == 0){
@@ -864,16 +885,16 @@ out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.ty
                                                    if(!$$.prim) $$.dim = $1.dim; 
                                                    printf("%d %d\n", $$.prim, $$.type);
                                                 }
-                        | '(' out_rhs ')'       {$$.type = $2.type;}
-                        | '!' out_rhs           {  if($2.type==Bool && $2.prim){
-                                                      $$.prim = true; 
-                                                      $$.type = Bool;
-                                                   } 
-                                                   else{
-                                                      yyerror("semantic error"); 
-                                                      return 1;
-                                                   }  
-                                                }                         
+                        | '(' out_rhs ')'         {fprintf(out,")");$$.type = $2.type;}
+                        | '!' out_rhs             {  if($2.type==Bool && $2.prim){
+                                                         $$.prim = true; 
+                                                         $$.type = Bool;
+                                                      } 
+                                                      else{
+                                                         yyerror("semantic error"); 
+                                                         return 1;
+                                                      }  
+                                                   }                         
                         | out_rhs AND out_rhs   {  if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim){
                                                       $$.prim = true; 
                                                       $$.type = Bool;
@@ -892,7 +913,7 @@ out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.ty
                                                       return 1;
                                                    } 
                                                 }
-                        | out_rhs COMP out_rhs  {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
+                        | out_rhs COMP  out_rhs  {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                    if(temp_type != -1 && temp_type < COMPARABLE){
                                                       $$.prim = true; 
                                                       $$.type = Bool;
@@ -912,7 +933,7 @@ out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.ty
                                                          return 1;
                                                       }  
                                                    }
-                        | out_rhs '*' out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
+                        | out_rhs '*'  out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && (temp_type <= Complex && temp_type >= 0)){
                                                          $$.prim = true; 
                                                          $$.type = temp_type;
@@ -971,7 +992,7 @@ out_rhs                 : prim_const            {$$.prim = true; $$.type = $1.ty
                                                          return 1;
                                                       } 
                                                    }
-                        | out_rhs '@' out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                         {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
+                        | out_rhs '@'  out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                         {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && temp_type == Matrix){
                                                          if($1.rows == $3.rows){
                                                             $$.prim = true; 
@@ -1052,6 +1073,9 @@ out_expr                : ID '=' out_rhs           {  fprintf(fp,"expression sta
                                                             return 1;
                                                          }
                                                       }
+                                                      
+                                                      $$.str2 = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                      snprintf($$.str2,strlen($1.str)+strlen($3.str)+10,"%s=%s;",$1.str,$3.str);
                                                    }
                         ;
 
@@ -1068,6 +1092,8 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
                                                          if($2.type == Matrix) insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,$2.rows,0,false);
                                                          else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$2.type,true,0,0,false);
                                                       }
+                                                      // printing declaration statements to cpp file
+                                                      fprintf(out,"%s\n",$2.str2);
                                                    }
 
                         | list_type out_expr       {  fprintf(fp,"List datatype declaration statement\n"); 
@@ -1122,24 +1148,36 @@ out_for_stmt            : FOR ID {  if(getOutputSymbolEntry(&OutputSymbolTable,$
                                        return 1;
                                     }
                                  } 
-                          IN '(' range ')' '{' {outputLevel++;printf("Entered loop\n");} 
-                          out_main '}'         {exitOutputSymbolScope(&OutputSymbolTable,outputLevel);printf("exited loop\n") ;outputLevel--;}
+                          IN '(' range ')' '{' {outputLevel++;fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);} 
+                          out_main '}'         {fprintf(out,"}\n");exitOutputSymbolScope(&OutputSymbolTable,outputLevel);outputLevel--;}
                         ;
 
 out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {   if($3.num != $7.num){
                                                                                  yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                                  return 1;
                                                                               }
+                                                                              printForLex($3.num);
                                                                           } 
-                          '{' {outputLevel++;} out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                          '{' {outputLevel++;} out_main '}'               {   int x = indent-1;
+                                                                              for(int i=0;i<$3.num;i++){
+                                                                                 for(int j=0;j<x;j++){
+                                                                                    fprintf(out,"\t");
+                                                                                 }
+                                                                                 x--;
+                                                                                 fprintf(out,"}\n");
+                                                                              }
+                                                                              exitOutputSymbolScope(&OutputSymbolTable,outputLevel);
+                                                                              outputLevel--;}
                         ;
 
 out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {   if($3.num != $7.num){
                                                                                  yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                                  return 1;
                                                                               }
+                                                                              printForZip($3.num);
                                                                           } 
-                          '{' {outputLevel++;} out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                          '{' {outputLevel++;} 
+                          out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
 out_while_stmt          : WHILE '(' expr ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
@@ -1158,6 +1196,43 @@ out_stmt                : out_control
                         | {isDeclaration = true;} decl
                         ;
 %%
+
+void printForZip(int num){
+   struct List* temp = head;
+   struct List2* temp2 = range_list;
+
+   for(int i=0;i<num;i++){
+
+   }
+}
+
+void printForLex(int num){
+   struct List* temp = head;
+   struct List2* temp2 = range_list;
+   int x = outputLevel-1;
+   for(int i=0;i<num;i++){
+      for(int j=0;j<x;j++){
+         fprintf(out,"\t");
+      }
+      x++;
+      fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",temp->id,temp2->start,temp->id,temp2->end,temp->id,temp2->step);
+      temp = temp->next;
+      temp2 = temp2->next;
+   }
+   indent = x;
+}
+
+char * IntToString(int n){
+   int temp = n,len=0;
+   while(temp != 0) {
+      temp = temp/10;
+      len++;
+   }
+   len += 1;
+   char * str = (char *)malloc(sizeof(char)*len);
+   sprintf(str,"%d",n);
+   return str;
+}
 
 void assignString(char* str1, char* str2){
    str1 = (char*)malloc(sizeof(char)*strlen(str2));
@@ -1366,7 +1441,7 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, i
    newNode->prev = *Head;  // covers NULL case already
 
    *Head = newNode;
-   printf("Insertion : %s %d %d %d %d\n", newNode->id, newNode->level, newNode->primitive, newNode->dim, newNode->matrix_dim);
+   /* printf("Insertion : %s %d %d %d %d\n", newNode->id, newNode->level, newNode->primitive, newNode->dim, newNode->matrix_dim); */
 }
 
 
@@ -1468,6 +1543,7 @@ int main(int argc,char* argv[])
   yyin = fopen(argv[1],"r");
   fp2 = fopen("tokens.txt","w");
   fp = fopen("output.parsed","w");
+  out = fopen("out.txt","w");
   yyparse();
 
   return 0;

@@ -1011,12 +1011,12 @@ YY_RULE_SETUP
 case 21:
 YY_RULE_SETUP
 #line 74 "./lexer/lexical.l"
-{printReserved();return COUT;}
+{printReserved();allocateMemory();return COUT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 #line 75 "./lexer/lexical.l"
-{printReserved();return QOUT;}
+{printReserved();allocateMemory();return QOUT;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
@@ -1206,27 +1206,27 @@ YY_RULE_SETUP
 case 60:
 YY_RULE_SETUP
 #line 118 "./lexer/lexical.l"
-{printComparator();return COMP;}
+{printComparator();allocateMemory(); return COMP;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
 #line 119 "./lexer/lexical.l"
-{printComparator();return EQUALITY;}
+{printComparator();allocateMemory();return EQUALITY;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
 #line 120 "./lexer/lexical.l"
-{printLogical();return yytext[0];}
+{printLogical();allocateMemory();return yytext[0];}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
 #line 121 "./lexer/lexical.l"
-{printLogical();return OR;}
+{printLogical();allocateMemory();return OR;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
 #line 122 "./lexer/lexical.l"
-{printLogical();return AND;}
+{printLogical();allocateMemory();return AND;}
 	YY_BREAK
 case 65:
 /* rule 65 can match eol */
@@ -1267,7 +1267,7 @@ YY_RULE_SETUP
 case 72:
 YY_RULE_SETUP
 #line 132 "./lexer/lexical.l"
-{fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];}yylval.str[strlen(yytext)] = '\0';return ID;}
+{fprintf(fp2,"ID: %s\n",yytext);allocateMemory();return ID;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
@@ -2291,6 +2291,14 @@ void yyfree (void * ptr )
 
 #line 136 "./lexer/lexical.l"
 
+
+void allocateMemory(){
+    yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); 
+    for(int i=0;i<strlen(yytext);i++){
+        yylval.str[i] = yytext[i];
+    }
+    yylval.str[strlen(yytext)] = '\0';
+}
 
 void printReserved(){
     fprintf(fp2,"reserved keyword : %s\n",yytext);

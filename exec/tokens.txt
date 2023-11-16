@@ -106,39 +106,67 @@ special symbol: ->
 ID: p
 special symbol: }
 special symbol: ]
-reserved keyword : gate
-ID: S
-operator: =
-special symbol: [
-special symbol: [
+special symbol: \
+reserved keyword : end_init
+special symbol: \
+reserved keyword : begin_main
+reserved keyword : H
+special symbol: ->
+constant: 0
+ID: Y3
 special symbol: (
+constant: 0
+special symbol: ,
 constant: 1
 special symbol: ,
-constant: 0
+constant: 2
 special symbol: )
-special symbol: ,
+reserved keyword : for
+ID: i
+reserved keyword : in
 special symbol: (
 constant: 0
-special symbol: ,
-constant: 0
-special symbol: )
-special symbol: ,
+punctuation: :
 constant: 3
-special symbol: ]
-special symbol: ,
-special symbol: [
-special symbol: (
-constant: 0
-special symbol: ,
-constant: 0
 special symbol: )
-special symbol: ,
+special symbol: {
+ID: X_even
 special symbol: (
-constant: 0
+ID: i
 special symbol: ,
-constant: 1
+ID: p
 special symbol: )
-special symbol: ,
-constant: 4
-special symbol: ]
-special symbol: ]
+special symbol: ->
+ID: i
+reserved keyword : measure
+punctuation: :
+ID: i
+special symbol: ->
+ID: i
+special symbol: }
+special symbol: \
+reserved keyword : end_main
+special symbol: \
+reserved keyword : begin_output
+reserved keyword : int
+ID: i
+operator: =
+constant: 0
+reserved keyword : int
+ID: x
+operator: =
+constant: 9
+reserved keyword : int
+ID: a
+operator: =
+constant: 10000
+reserved keyword : int
+ID: j
+operator: =
+constant: 110200
+reserved keyword : int
+ID: s
+operator: =
+constant: 12323423
+special symbol: \
+reserved keyword : end_output

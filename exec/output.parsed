@@ -14,6 +14,32 @@ Pre - defined Gate call statement
 Conditional statement end
 Block definition
 Block definition section ends
-Gate definition section begins
-Gate definition
-At line 26: semantic error: gate definition requires square matrix
+
+Init section ends
+
+Main section begins
+
+Pre - defined Gate call statement
+Block call statement
+Block call statement
+Measure statement
+For statement
+
+Main section ends
+
+Output section begins
+
+expression statement
+Primitive datatype declaration statement
+expression statement
+Primitive datatype declaration statement
+expression statement
+Primitive datatype declaration statement
+expression statement
+Primitive datatype declaration statement
+expression statement
+Primitive datatype declaration statement
+
+Output section ends
+
+Parsing successful!

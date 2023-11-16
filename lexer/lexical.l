@@ -71,8 +71,8 @@ Equality                (==|!=)
 "condense"              {printReserved();return CONDENSE;}
 "sum"                   {printReserved();return SUM;}
 
-"c_output"              {printReserved();return COUT;}
-"q_output"              {printReserved();return QOUT;}
+"c_output"              {printReserved();allocateMemory();return COUT;}
+"q_output"              {printReserved();allocateMemory();return QOUT;}
 
 "true"                  {printReserved();return TRUE;}
 "false"                 {printReserved();return FALSE;}
@@ -115,11 +115,11 @@ Equality                (==|!=)
 "barrier"               {printReserved();return BARRIER;}
 [XYZH]                  {printReserved();return GATE;}
 
-{Comparators}           {printComparator();return COMP;}
-{Equality}              {printComparator();return EQUALITY;}
-{Logicals}              {printLogical();return yytext[0];}
-"||"                    {printLogical();return OR;}
-"&&"                    {printLogical();return AND;}
+{Comparators}           {printComparator();allocateMemory(); return COMP;}
+{Equality}              {printComparator();allocateMemory();return EQUALITY;}
+{Logicals}              {printLogical();allocateMemory();return yytext[0];}
+"||"                    {printLogical();allocateMemory();return OR;}
+"&&"                    {printLogical();allocateMemory();return AND;}
 
 {String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 {Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
@@ -129,11 +129,19 @@ Equality                (==|!=)
 {Dec}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
 {Exp}                   {fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 {Imag}                  {fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
-{id}                    {fprintf(fp2,"ID: %s\n",yytext); yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); for(int i=0;i<strlen(yytext);i++){yylval.str[i] = yytext[i];}yylval.str[strlen(yytext)] = '\0';return ID;}
+{id}                    {fprintf(fp2,"ID: %s\n",yytext);allocateMemory();return ID;}
 [-+*/=%@]               {printOperator();return yytext[0];}
 .                       {printf("%s\n",yytext);} /*If code reaches here then there is an error */
 
 %%
+
+void allocateMemory(){
+    yylval.str = (char *)malloc(sizeof(char)*strlen(yytext+1)); 
+    for(int i=0;i<strlen(yytext);i++){
+        yylval.str[i] = yytext[i];
+    }
+    yylval.str[strlen(yytext)] = '\0';
+}
 
 void printReserved(){
     fprintf(fp2,"reserved keyword : %s\n",yytext);
