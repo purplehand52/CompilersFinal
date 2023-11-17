@@ -172,9 +172,45 @@ ID: s
 operator: =
 ID: i
 operator: +
-special symbol: (
 ID: x
 operator: *
 ID: j
-special symbol: )
 operator: -
+ID: s
+reserved keyword : condition
+special symbol: (
+ID: j
+comparator: <
+ID: s
+special symbol: )
+special symbol: {
+reserved keyword : echo
+special symbol: (
+ID: i
+special symbol: ,
+punctuation: "
+constant: The value of x is: 
+punctuation: "
+special symbol: ,
+ID: x
+special symbol: ,
+punctuation: "
+constant:  
+punctuation: "
+special symbol: ,
+ID: aaa
+special symbol: )
+special symbol: }
+reserved keyword : otherwise
+special symbol: (
+special symbol: (
+ID: i
+comparator: ==
+ID: x
+special symbol: )
+logical: ||
+special symbol: (
+ID: x
+comparator: <=
+ID: i
+special symbol: )

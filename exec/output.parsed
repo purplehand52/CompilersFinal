@@ -39,4 +39,7 @@ expression statement
 Primitive datatype declaration statement
 expression statement
 Primitive datatype declaration statement
-At line 50: semantic error 16
+expression statement
+Output section conditional statement begins
+Echo statement
+At line 54: semantic error 11

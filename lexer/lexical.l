@@ -121,7 +121,7 @@ Equality                (==|!=)
 "||"                    {printLogical();allocateMemory();return OR;}
 "&&"                    {printLogical();allocateMemory();return AND;}
 
-{String}                {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
+{String}                {allocateMemory();yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 {Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 
 {Number}                {fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}

@@ -1232,7 +1232,7 @@ case 65:
 /* rule 65 can match eol */
 YY_RULE_SETUP
 #line 124 "./lexer/lexical.l"
-{yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
+{allocateMemory();yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP

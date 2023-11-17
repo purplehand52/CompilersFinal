@@ -480,7 +480,7 @@ prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"
                         | BOOL      {$$.type = Bool; $$.prim = true;fprintf(out,"bool ");}
                         ;
 
-list_type               : LIST '[' prim_type ']' {$$.type = $3.type; $$.prim = false;}
+list_type               : LIST '[' {fprintf(out,"list[");} prim_type ']' {$$.type = $3.type; $$.prim = false;fprintf(out,"]");}
                         ;
 
 /* data_type               : prim_type
@@ -558,7 +558,7 @@ prim_const              : bool_const      {  $$.type = Bool;
                         | NEG             {$$.type = Int;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
                         | DEC             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
                         | EXP             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
-                        | STRING          {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,20,"%s",$1.str);}
+                        | STRING          {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,25,"%s",$1.str);}
                         ;
 
 vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim; 
@@ -932,8 +932,8 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error 10"); 
                                                          return 1;
                                                       } 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s && %s",$1.str,$3.str);
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+5,"%s && %s",$1.str,$3.str);
                                                       free($1.str);
                                                       free($3.str);
 
@@ -946,8 +946,8 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       yyerror("semantic error 11"); 
                                                       return 1;
                                                    } 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s || %s",$1.str,$3.str);
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+5,"%s || %s",$1.str,$3.str);
                                                       free($1.str);
                                                       free($3.str);
                                                 }
@@ -960,8 +960,8 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       yyerror("semantic error 12"); 
                                                       return 1;
                                                    }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str),"%s %s %s",$1.str,$2.str,$3.str);
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)+3));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str)+3,"%s %s %s",$1.str,$2.str,$3.str);
                                                       free($1.str);
                                                       free($3.str);
                                                 }
@@ -974,8 +974,8 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error 13"); 
                                                          return 1;
                                                       } 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str),"%s %s %s",$1.str,$2.str,$3.str);
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)+3));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str)+3,"%s %s %s",$1.str,$2.str,$3.str);
                                                       free($1.str);
                                                       free($3.str); 
                                                    }
@@ -1192,11 +1192,20 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
                         ;
 
 /* Echo Statement */
-echo_stmt               : ECHO '(' echo_list ')'      {fprintf(fp,"Echo statement\n");}
+echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statement\n");
+                                                         fprintf(out,"cout<<%s<<endl;\n",$3.str);
+                                                      }
                         ;
 
-echo_list               : echo_list ',' out_rhs
-                        | out_rhs
+echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
+                        | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                                                         snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         free($1.str);   
+                                                      }
                         ;
 
 /* Save Statement */
@@ -1211,14 +1220,14 @@ out_control             : {fprintf(fp,"Output section conditional statement begi
                         | out_while_stmt              {fprintf(fp,"while statement in output section\n");}
                         ;
 
-out_cond_stmt           : CONDITION '(' out_rhs ')' '{' {outputLevel++;} out_main '}' out_other_list out_other_final {outputLevel--;}
+out_cond_stmt           : CONDITION '(' out_rhs ')' '{' {outputLevel++;printf("%s\n",$3.str);fprintf(out,"if(%s){\n",$3.str);} out_main '}' {fprintf(out,"}\n");} out_other_list out_other_final {outputLevel--;}
                         ;
 
-out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' out_main '}'
+out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' {outputLevel++;fprintf(out,"else if(%s){\n",$4.str);} out_main '}' {fprintf(out,"}\n");outputLevel--;}
                         | /* epsilon */
                         ;
 
-out_other_final         : OTHERWISE '{' out_main '}'
+out_other_final         : OTHERWISE '{' {outputLevel++;fprintf(out,"else{\n");} out_main '}' {outputLevel--;fprintf(out,"}\n");}
                         | /* epsilon */
                         ;
 
@@ -1259,7 +1268,7 @@ out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {   if
                           out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
-out_while_stmt          : WHILE '(' expr ')' '{' {outputLevel++;} out_main '}' {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+out_while_stmt          : WHILE '(' out_rhs ')' '{' {outputLevel++;fprintf(out,"while(%s){\n",$3.str);} out_main '}' {fprintf(out,"}\n");exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
                         ;
 
 
@@ -1271,7 +1280,7 @@ out_main                : out_main out_stmt
 out_stmt                : out_control
                         | save_stmt
                         | echo_stmt
-                        | {isDeclaration = false;} out_expr {fprintf(out,"%s",$2.str2);}
+                        | {isDeclaration = false;} out_expr {fprintf(out,"%s\n",$2.str2);}
                         | {isDeclaration = true;} decl
                         ;
 %%
