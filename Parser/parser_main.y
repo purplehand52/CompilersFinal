@@ -539,15 +539,26 @@ temp                    : complex_const               {$$.cpx = $1.cpx;}
                         | num                         {$$.cpx.real = $1.real; $$.cpx.imag = 0;}
                         ;
 
-prim_const              : bool_const     {$$.type = Bool;$$.str = (char *)malloc(sizeof(char)*6);if($$.num)snprintf($$.str,6,"true");else snprintf($$.str,6,"false");}
-                        | complex_const  {$$.type = Complex;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"Complex(%f,%f)",$1.cpx.real,$1.cpx.imag);}
-                        | matrix_const   {$$.type = Matrix; $$.rows = $1.rows;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,15,"Matrix(%d)",$1.rows);}
-                        | state_const    {$$.type = State;}
-                        | NUMBER         {$$.type = Uint;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
-                        | NEG            {$$.type = Int;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
-                        | DEC            {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
-                        | EXP            {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
-                        | STRING         {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,20,"%s",$1.str);}
+prim_const              : bool_const      {  $$.type = Bool;
+                                             $$.str = (char *)malloc(sizeof(char)*6);
+                                             if($$.num)snprintf($$.str,6,"true");
+                                             else snprintf($$.str,6,"false");
+                                          }
+                        | complex_const   {  $$.type = Complex;
+                                             $$.str = (char *)malloc(sizeof(char)*20);$$.str = $1.str;
+                                             snprintf($$.str,20,"Complex(%f,%f)",$1.cpx.real,$1.cpx.imag);
+                                          }
+                        | matrix_const    {  $$.type = Matrix; 
+                                             $$.rows = $1.rows;
+                                             $$.str = (char *)malloc(sizeof(char)*20);
+                                             snprintf($$.str,15,"Matrix(%d)",$1.rows);
+                                          }
+                        | state_const     {$$.type = State;}
+                        | NUMBER          {$$.type = Uint;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
+                        | NEG             {$$.type = Int;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
+                        | DEC             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
+                        | EXP             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
+                        | STRING          {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,20,"%s",$1.str);}
                         ;
 
 vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim; 
@@ -558,6 +569,9 @@ vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim;
                                                    else{
                                                       $$.rows = 0;
                                                    } 
+                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
+                                                   snprintf($$.str,strlen($2.str)+3,"[%s]",$2.str);
+                                                   free($2.str);
                                                 }
                         ;
 
@@ -579,11 +593,17 @@ vec_list                : vec_list ',' prim_const  {  temp_type = compatibleChec
                                                             $$.rows = $1.rows;
                                                          } 
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+2));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | prim_const               {  $$.type = $1.type; $$.dim = 1; 
                                                       if($$.type == Matrix){
                                                          $$.rows = $1.rows;
                                                       }
+                                                      $$.str = $1.str;
+                                                      free($1.str);
                                                    }
                         ;
 
@@ -739,6 +759,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.rows = $1.rows;
                                                   } 
                                                   else $$.rows = 0;
+                                                  $$.str = $1.str;
                                                 }
                         | out_id                {  if($$.out_flag == 0){
                                                       struct OutputSymbolEntry* sample = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); 
@@ -768,7 +789,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.dim = quantum_registers; 
                                                       $$.rows = 0;
                                                    }
-                                                   fprintf(out,"%s",$1.str);
+                                                   $$.str = $1.str;
                                                 }
                         | out_id '[' out_rhs ']'{
                                                    if($$.out_flag == 0){
@@ -791,7 +812,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                             }
                                                          } 
                                                          else{
-                                                            yyerror("semantic error"); 
+                                                            yyerror("semantic error 2"); 
                                                             return 1;
                                                          }
                                                       } 
@@ -830,18 +851,18 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                                $$.prim = true;
                                                             } 
                                                             else{
-                                                               yyerror("semantic error"); 
+                                                               yyerror("semantic error 3"); 
                                                                return 1;
                                                             }
                                                          }
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         yyerror("semantic error 4"); 
                                                          return 1;
                                                       }
                                                    } 
                                                    else if($$.out_flag == 1){
-                                                      yyerror("semantic error");
+                                                      yyerror("semantic error 5");
                                                       return 1;
                                                    } 
                                                    else{
@@ -864,54 +885,71 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                                $$.prim = true;
                                                             } 
                                                             else{
-                                                               yyerror("semantic error"); 
+                                                               yyerror("semantic error 6"); 
                                                                return 1;
                                                             }
                                                          }
                                                       } 
                                                       else{
-                                                         yyerror("semantic error");
+                                                         yyerror("semantic error 7");
                                                          return 1;
                                                       }
                                                    } 
                                                    else{
-                                                      yyerror("semantic error"); 
+                                                      yyerror("semantic error 8"); 
                                                       return 1;
                                                    }
                                                 }
-                        | calls                 {  $$.prim = $1.prim; 
-                                                   $$.type = $1.type; 
-                                                   if($1.type == Matrix) $$.rows = $1.rows; 
-                                                   if(!$$.prim) $$.dim = $1.dim; 
-                                                   printf("%d %d\n", $$.prim, $$.type);
-                                                }
-                        | '(' out_rhs ')'         {fprintf(out,")");$$.type = $2.type;}
+                           | calls                 {  $$.prim = $1.prim; 
+                                                      $$.type = $1.type; 
+                                                      if($1.type == Matrix) $$.rows = $1.rows; 
+                                                      if(!$$.prim) $$.dim = $1.dim; 
+                                                      printf("%d %d\n", $$.prim, $$.type);
+                                                   }
+                        | '(' out_rhs ')'         {   $$.type = $2.type;
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
+                                                      snprintf($$.str,strlen($2.str)+3,"(%s)",$2.str);
+                                                      printf("%s",$$.str);
+                                                      free($2.str);
+                                                  }
                         | '!' out_rhs             {  if($2.type==Bool && $2.prim){
                                                          $$.prim = true; 
                                                          $$.type = Bool;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         yyerror("semantic error 9"); 
                                                          return 1;
                                                       }  
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+1));
+                                                      snprintf($$.str,strlen($2.str)+2,"!%s",$2.str);
+                                                      free($2.str);
                                                    }                         
-                        | out_rhs AND out_rhs   {  if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim){
-                                                      $$.prim = true; 
-                                                      $$.type = Bool;
-                                                   } 
-                                                   else{
-                                                      yyerror("semantic error"); 
-                                                      return 1;
-                                                   } 
-                                                }
+                           | out_rhs AND out_rhs   {  if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim){
+                                                         $$.prim = true; 
+                                                         $$.type = Bool;
+                                                      } 
+                                                      else{
+                                                         yyerror("semantic error 10"); 
+                                                         return 1;
+                                                      } 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s && %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
+
+                                                   }
                         | out_rhs OR out_rhs    {  if($1.type==Bool && $1.prim && $3.type==Bool && $3.prim){
                                                       $$.prim = true; 
                                                       $$.type = Bool;
                                                    } 
                                                    else{
-                                                      yyerror("semantic error"); 
+                                                      yyerror("semantic error 11"); 
                                                       return 1;
                                                    } 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s || %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                 }
                         | out_rhs COMP  out_rhs  {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                    if(temp_type != -1 && temp_type < COMPARABLE){
@@ -919,9 +957,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.type = Bool;
                                                    } 
                                                    else{
-                                                      yyerror("semantic error"); 
+                                                      yyerror("semantic error 12"); 
                                                       return 1;
                                                    }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str),"%s %s %s",$1.str,$2.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                 }
                         | out_rhs EQUALITY out_rhs { temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if(temp_type != -1 && temp_type < COMPARABLE){
@@ -929,9 +971,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = Bool;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         yyerror("semantic error 13"); 
                                                          return 1;
-                                                      }  
+                                                      } 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($2.str)));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($2.str),"%s %s %s",$1.str,$2.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str); 
                                                    }
                         | out_rhs '*'  out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && (temp_type <= Complex && temp_type >= 0)){
@@ -947,9 +993,14 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = String;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         printf("hi\n");
+                                                         yyerror("semantic error 14"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | out_rhs '/' out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && (temp_type <= Complex && temp_type >= 0)){
@@ -957,9 +1008,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = temp_type;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         yyerror("semantic error 15"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s / %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | out_rhs '+' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*), string-concatenate */      
                                                    {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -976,9 +1031,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = String;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error");
+                                                         yyerror("semantic error 16");
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*) */                {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)){
@@ -988,9 +1047,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.dim=$1.dim;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error");
+                                                         yyerror("semantic error 17");
                                                          return 1;
                                                       } 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);                                                      
                                                    }
                         | out_rhs '@'  out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                         {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && temp_type == Matrix){
@@ -1000,7 +1063,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                             $$.rows = $1.rows;
                                                          } 
                                                          else{
-                                                            yyerror("semantic error"); 
+                                                            yyerror("semantic error 18"); 
                                                             return 1;
                                                          }
                                                       } 
@@ -1019,9 +1082,13 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.dim = 0;
                                                       } 
                                                       else{
-                                                         yyerror("semantic error"); 
+                                                         yyerror("semantic error 19"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s @ %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | out_rhs '&' out_rhs   /* Works for uint, int, list(uint, int)*/ 
                                                    {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1033,6 +1100,10 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s & %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);
                                                    }
                         | out_rhs '^' out_rhs   /* Works for uint, int, list(uint, int)*/                                                     
                                                    {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1044,6 +1115,10 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s ^ %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);                                                      
                                                    }
                         | out_rhs '|' out_rhs   /* Works for uint, int, list(uint, int) */                                             
                                                    { temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1055,6 +1130,10 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s | %s",$1.str,$3.str);
+                                                      free($1.str);
+                                                      free($3.str);                                                      
                                                    }
                         ;
 
@@ -1069,13 +1148,13 @@ out_expr                : ID '=' out_rhs           {  fprintf(fp,"expression sta
                                                       } 
                                                       else{
                                                          struct OutputSymbolEntry* entry = getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel,1); if(entry->type != $3.type){
-                                                            yyerror("semantic error"); 
+                                                            yyerror("semantic error 20"); 
                                                             return 1;
                                                          }
                                                       }
                                                       
                                                       $$.str2 = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
-                                                      snprintf($$.str2,strlen($1.str)+strlen($3.str)+10,"%s=%s;",$1.str,$3.str);
+                                                      snprintf($$.str2,strlen($1.str)+strlen($3.str)+10,"%s = %s;",$1.str,$3.str);
                                                    }
                         ;
 
@@ -1192,7 +1271,7 @@ out_main                : out_main out_stmt
 out_stmt                : out_control
                         | save_stmt
                         | echo_stmt
-                        | {isDeclaration = false;} out_expr
+                        | {isDeclaration = false;} out_expr {fprintf(out,"%s",$2.str2);}
                         | {isDeclaration = true;} decl
                         ;
 %%

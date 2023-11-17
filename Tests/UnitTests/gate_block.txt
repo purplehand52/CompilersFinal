@@ -43,8 +43,10 @@ $ gate Test = [[1,2],[2,3],[6,5],[3,1]] $
 \begin_output
     int i = 0
     int x = 9
-    int a = 10000
+    int aaa = 10000
     int j = 110200
     int s =12323423
+
+    s = i+(x*j)-s
 
 \end_output

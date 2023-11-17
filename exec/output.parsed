@@ -39,7 +39,4 @@ expression statement
 Primitive datatype declaration statement
 expression statement
 Primitive datatype declaration statement
-
-Output section ends
-
-Parsing successful!
+At line 50: semantic error 16

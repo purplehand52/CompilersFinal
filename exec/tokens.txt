@@ -157,7 +157,7 @@ ID: x
 operator: =
 constant: 9
 reserved keyword : int
-ID: a
+ID: aaa
 operator: =
 constant: 10000
 reserved keyword : int
@@ -168,5 +168,13 @@ reserved keyword : int
 ID: s
 operator: =
 constant: 12323423
-special symbol: \
-reserved keyword : end_output
+ID: s
+operator: =
+ID: i
+operator: +
+special symbol: (
+ID: x
+operator: *
+ID: j
+special symbol: )
+operator: -
