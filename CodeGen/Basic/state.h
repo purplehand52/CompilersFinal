@@ -3,6 +3,7 @@
 
 #include "complex.h"
 #include "matrix.h"
+#include "type.h"
 #include <stdbool.h>
 
 class StateVec
@@ -14,6 +15,7 @@ class StateVec
     public:
         /* Constructions */
         StateVec(unsigned int n);
+        StateVec(unsigned int n, struct Quantum* q);
 
         /* Set Functions */
         void set_entry(unsigned int i, Complex c);

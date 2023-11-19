@@ -13,6 +13,26 @@ StateVec::StateVec(unsigned int n)
     for(int i = 1; i < (1<<n); i++) arr[i] = Complex();
 }
 
+StateVec::StateVec(unsigned int n, struct Quantum* q)
+{
+    if(n == 0) throw std::invalid_argument("Cannot have 0 quantum registers!");
+    this->regs = n;
+    this->arr = (Complex*)malloc((1<<n)*sizeof(Complex));
+    
+    for(int i = 0; i < (1<<n); i++)
+    {
+        arr[i] = Complex(1, 0);
+        for(int j = 0; j < n; j++)
+        {
+            if(i & (1<<j)) arr[i] = arr[i]*q[n-1-j].b;
+            else arr[i] = arr[i]*q[n-1-j].a;
+            std::cout << arr[i].to_str() << std::endl;
+        }
+        std::cout << std::endl;
+    }
+    normalize();
+}
+
 /* Set Functions */
 void StateVec::set_entry(unsigned int i, Complex c)
 {

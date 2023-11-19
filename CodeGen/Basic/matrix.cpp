@@ -11,6 +11,28 @@ unsigned int pow_two(unsigned int n)
     return floor(log2(n));
 }
 
+int string_and(std::string a, std::string b)
+{
+    /* Prefix */
+    int max = a.length();
+    if(a.length() > b.length()) 
+    {
+        std::string temp(a.length() - b.length(), '0');
+        b = temp + b;
+    }
+    else if(b.length() > a.length())
+    {
+        max = b.length();
+        std::string temp(b.length() - a.length(), '0');
+        a = temp + a;
+    }
+
+    /* Compute dot */
+    int result = 0;
+    for(int i = 0; i < max; i++) if((a[i] == '1') && (b[i] == '1')) result += 1;
+    return result;
+}
+
 /* Constructors */
 Matrix::Matrix(unsigned int m)
 {
