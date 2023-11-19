@@ -37,23 +37,23 @@ int main()
 
     /* State (Stage 0) */
     struct Quantum q[2];
-    q[0].a = Complex(1/sqrt(2), 0);
-    q[0].b = Complex(1/sqrt(2), 0);
-    q[1].a = Complex(1, 0);
-    q[1].b = Complex(0, 0);
+    q[1].a = Complex(1/sqrt(2), 0);
+    q[1].b = Complex(1/sqrt(2), 0);
+    q[0].a = Complex(1, 0);
+    q[0].b = Complex(0, 0);
     StateVec sample = StateVec(2, q);
     sample.show();
     
     /* Stage 1 */
-    Matrix op = X.kronecker_control_fill(2, 1, 2);
-    op.show();
-    StateVec after_X = sample.transform(X.kronecker_control_fill(2, 1, 2));
-    after_X.show();
+    // Matrix op = X.kronecker_control_fill(2, 1, 2);
+    // op.show();
+    // StateVec after_X = sample.transform(X.kronecker_control_fill(2, 1, 2));
+    // after_X.show();
 
     /* Measure */
-    int result = after_X.measure_prob(0);
+    int result = sample.measure_prob(1);
     cout << result << endl;
-    after_X.show();
+    sample.show();
 
     /* State (Stage 1)*/
     // 

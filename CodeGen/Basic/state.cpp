@@ -24,8 +24,8 @@ StateVec::StateVec(unsigned int n, struct Quantum* q)
         arr[i] = Complex(1, 0);
         for(int j = 0; j < n; j++)
         {
-            if(i & (1<<j)) arr[i] = arr[i]*q[n-1-j].b;
-            else arr[i] = arr[i]*q[n-1-j].a;
+            if(i & (1<<j)) arr[i] = arr[i]*q[j].b;
+            else arr[i] = arr[i]*q[j].a;
             std::cout << arr[i].to_str() << std::endl;
         }
         std::cout << std::endl;
@@ -101,7 +101,6 @@ int StateVec::measure_prob(unsigned int target)
 
     /* Choose */
     int result;
-    Complex norm_const = Complex(sqrt(prob), 0);
     float sample = (float) rand()/RAND_MAX;
     (prob > sample) ? (result = 1) : (result = 0);
     std::cout << prob << std::endl;
@@ -111,9 +110,14 @@ int StateVec::measure_prob(unsigned int target)
     int j = 0;
     for(int k = 0; k < (1<<regs); k++) 
     {
-        if(comp & k)
+        if((comp & k) && (result == 1))
         {
-            new_st[j] = arr[k]/norm_const;
+            new_st[j] = arr[k];
+            j++;
+        }
+        else if(!(comp & k) && (result == 0))
+        {
+            new_st[j] = arr[k];
             j++;
         }
     }
@@ -132,7 +136,7 @@ int StateVec::measure_prob(unsigned int target)
         arr = NULL;
     }
     
-
+    normalize();
     return result;
 }
 
