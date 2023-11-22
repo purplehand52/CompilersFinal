@@ -101,7 +101,18 @@ output_section          :  '\\' OUTPUT_BEGIN {fprintf(fp,"\nOutput section begin
     INIT SECTION 
    ..............
 */
-mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER {  fprintf(fp,"Register and iteration initialization section\n");classical_registers = $10.num;quantum_registers = $5.num;iterations = $14.num;}
+mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSICAL '=' NUMBER '#' ITERS '=' NUMBER {  fprintf(fp,"Register and iteration initialization section\n");
+                                                                                                                        classical_registers = $10.num;
+                                                                                                                        quantum_registers = $5.num;
+                                                                                                                        iterations = $14.num;
+                                                                                                                        fprintf(out,"int num_iterations = %d;\n", iterations);
+                                                                                                                        fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
+                                                                                                                        fprintf(out,"int classical_registers = %d;\n", classical_registers);
+                                                                                                                        fprintf(out, "int quantum_register_map[%d];\n", quantum_registers)
+                                                                                                                        fprintf(out, "for(int i =0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
+                                                                                                                        fprintf(out, "int classical_register_map[%d];\n", classical_registers)
+                                                                                                                        fprintf(out, "for(int i =0; i<classical_registers; i++) {classical_register_map[i] = i;}\n");
+                                                                                                                     }
                         ;
 
 // can only one type of states be set?
