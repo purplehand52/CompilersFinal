@@ -194,6 +194,10 @@ comparator: <
 ID: s
 special symbol: )
 special symbol: {
+reserved keyword : int
+ID: x
+operator: =
+constant: 10
 reserved keyword : echo
 special symbol: (
 ID: i
@@ -220,6 +224,10 @@ ID: x
 special symbol: )
 special symbol: )
 special symbol: {
+reserved keyword : int
+ID: xu
+operator: =
+constant: 999
 reserved keyword : echo
 special symbol: (
 ID: j
@@ -236,9 +244,32 @@ punctuation: "
 special symbol: ,
 ID: s
 special symbol: )
+reserved keyword : list
+special symbol: [
+reserved keyword : int
+special symbol: ]
+ID: list_ex
+operator: =
+special symbol: [
+constant: 1
+special symbol: ,
+constant: 2
+special symbol: ,
+constant: 3
+special symbol: ,
+constant: 4234
+special symbol: ,
+constant: 235
+special symbol: ,
+constant: 234
+special symbol: ]
 special symbol: }
 reserved keyword : otherwise
 special symbol: {
+reserved keyword : int
+ID: y
+operator: =
+constant: 0
 ID: s
 operator: =
 ID: s

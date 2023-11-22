@@ -971,42 +971,42 @@ YY_RULE_SETUP
 case 13:
 YY_RULE_SETUP
 #line 65 "./lexer/lexical.l"
-{printReserved();return ADD;}
+{printReserved();allocateMemory();return ADD;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
 #line 66 "./lexer/lexical.l"
-{printReserved();return SUB;}
+{printReserved();allocateMemory();return SUB;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
 #line 67 "./lexer/lexical.l"
-{printReserved();return DOT;}
+{printReserved();allocateMemory();return DOT;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
 #line 68 "./lexer/lexical.l"
-{printReserved();return STD_DEV;}
+{printReserved();allocateMemory();return STD_DEV;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
 #line 69 "./lexer/lexical.l"
-{printReserved();return VAR;}
+{printReserved();allocateMemory();return VAR;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 #line 70 "./lexer/lexical.l"
-{printReserved();return AVG;}
+{printReserved();allocateMemory();return AVG;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
 #line 71 "./lexer/lexical.l"
-{printReserved();return CONDENSE;}
+{printReserved();allocateMemory();return CONDENSE;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
 #line 72 "./lexer/lexical.l"
-{printReserved();return SUM;}
+{printReserved();allocateMemory();return SUM;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP

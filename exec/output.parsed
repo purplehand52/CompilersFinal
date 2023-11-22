@@ -41,8 +41,16 @@ expression statement
 Primitive datatype declaration statement
 expression statement
 Output section conditional statement begins
+expression statement
+Primitive datatype declaration statement
 Echo statement
+expression statement
+Primitive datatype declaration statement
 Echo statement
+expression statement
+List datatype declaration statement
+expression statement
+Primitive datatype declaration statement
 expression statement
 Output section conditional statement ends
 

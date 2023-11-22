@@ -49,12 +49,16 @@ $ gate Test = [[1,2],[2,3],[6,5],[3,1]] $
 
     s = i+(((x*i)+i)-(aaa))
     condition(j < s){
+        int x = 10
         echo(i,"The value of x is: ",x," ",aaa)
     }
     otherwise((i == x)){
+        int xu = 999
         echo(j,"The value of x is: ",x," ",s)
+        list[int] list_ex = [1,2,3,4234,235,234] 
     }
     otherwise{
+        int y = 0
         s = s + 1
     }
 

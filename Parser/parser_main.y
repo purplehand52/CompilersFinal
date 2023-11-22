@@ -83,7 +83,7 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");printOutputTable(&OutputSymbolTable);}
+prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -567,13 +567,16 @@ vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim;
                                                    else{
                                                       $$.rows = 0;
                                                    } 
+                                                   // At this point head contains the list of IDs/constants used in list declaration
+                                                   // Take values from here for codegen @Vedant
+                                                   // printList(&head);
                                                    $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
                                                    snprintf($$.str,strlen($2.str)+3,"[%s]",$2.str);
                                                    free($2.str);
                                                 }
                         ;
 
-vec_list                : vec_list ',' prim_const  {  temp_type = compatibleCheck($1.type, $3.type); 
+vec_list                : prim_const ',' vec_list  {  temp_type = compatibleCheck($3.type, $1.type); 
                                                       if(temp_type != -1){
                                                          $$.type = temp_type;
                                                       } 
@@ -581,18 +584,19 @@ vec_list                : vec_list ',' prim_const  {  temp_type = compatibleChec
                                                          yyerror("semantic error: incompatible types in list"); 
                                                          return 1;
                                                       } 
-                                                      $$.dim = $1.dim + 1; 
+                                                      $$.dim = $3.dim + 1; 
                                                       if($$.type == Matrix){
                                                          if($1.rows != $3.rows){
                                                             yyerror("semantic error: incompatible matrix dimensions in list");
                                                             return 1;
                                                          }
                                                          else{
-                                                            $$.rows = $1.rows;
+                                                            $$.rows = $3.rows;
                                                          } 
                                                       }
+                                                      insertInList(&head,$1.str);
                                                       $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+2));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$1.str,$3.str);
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$3.str,$1.str);
                                                       free($1.str);
                                                       free($3.str);
                                                    }
@@ -601,7 +605,8 @@ vec_list                : vec_list ',' prim_const  {  temp_type = compatibleChec
                                                          $$.rows = $1.rows;
                                                       }
                                                       $$.str = $1.str;
-                                                      free($1.str);
+                                                      head = NULL;
+                                                      insertInList(&head,$1.str);
                                                    }
                         ;
 
@@ -824,7 +829,6 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.rows = 0;
                                                    }
                                                    $$.str = $1.str;
-                                                   free($1.str);
                                                 }
                         | out_id '[' out_rhs ']'{
                                                    if($$.out_flag == 0){
@@ -1269,7 +1273,7 @@ out_control             : {fprintf(fp,"Output section conditional statement begi
                         | out_while_stmt              {fprintf(fp,"while statement in output section\n");}
                         ;
 
-out_cond_stmt           : CONDITION '(' out_rhs ')' '{' {outputLevel++;printf("%s\n",$3.str);fprintf(out,"if(%s){\n",$3.str);} out_main '}' {fprintf(out,"}\n");} out_other_list out_other_final {outputLevel--;}
+out_cond_stmt           : CONDITION '(' out_rhs ')' '{' {outputLevel++;fprintf(out,"if(%s){\n",$3.str);} out_main '}' {fprintf(out,"}\n");outputLevel--;} out_other_list out_other_final
                         ;
 
 out_other_list          : out_other_list OTHERWISE '(' out_rhs ')' '{' {outputLevel++;fprintf(out,"else if(%s){\n",$4.str);} out_main '}' {fprintf(out,"}\n");outputLevel--;}
@@ -1384,10 +1388,11 @@ bool firstLetterCapital(char *str) {
 
 void insertInList(struct List** Head,char * data){
    struct List* newNode = (struct List*)malloc(sizeof(struct List));
-   newNode->id = (char *)malloc(sizeof(char)*strlen(data));
+   newNode->id = (char *)malloc(sizeof(char)*(strlen(data)+1));
    for(int i=0;i<strlen(data);i++){
       newNode->id[i] = data[i];
    }
+   newNode->id[strlen(data)] = '\0';
    if(*Head == NULL){
       newNode->next = NULL;
    }
@@ -1617,7 +1622,7 @@ void printOutputTable(struct OutputSymbolEntry ** OutputSymbolTable){
    struct OutputSymbolEntry* temp = *OutputSymbolTable;
    while(temp != NULL){
       printf("%s ",temp->id);
-      printf("%d %d %d %d\n",temp->id, temp->level, temp->primitive, temp->dim);
+      printf("%d %d %d %d\n",temp->type, temp->level, temp->primitive, temp->dim);
       /* Check for scopes here! */
       temp = temp->prev;
    }
