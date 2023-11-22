@@ -42,4 +42,10 @@ Primitive datatype declaration statement
 expression statement
 Output section conditional statement begins
 Echo statement
-At line 54: semantic error 11
+Echo statement
+expression statement
+Output section conditional statement ends
+
+Output section ends
+
+Parsing successful!

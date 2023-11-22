@@ -47,7 +47,7 @@ $ gate Test = [[1,2],[2,3],[6,5],[3,1]] $
     int j = 110200
     int s =12323423
 
-    s = i+x*j-s
+    s = i+(((x*i)+i)-(aaa))
     condition(j < s){
         echo(i,"The value of x is: ",x," ",aaa)
     }

@@ -62,14 +62,14 @@ Equality                (==|!=)
 "\."                    {printSpecial();return yytext[0];}
 {Arrow}                 {printSpecial();return ARROW;}
 
-"add"                   {printReserved();return ADD;}
-"sub"                   {printReserved();return SUB;}
-"dot"                   {printReserved();return DOT;}
-"std_dev"               {printReserved();return STD_DEV;}
-"var"                   {printReserved();return VAR;}
-"avg"                   {printReserved();return AVG;}
-"condense"              {printReserved();return CONDENSE;}
-"sum"                   {printReserved();return SUM;}
+"add"                   {printReserved();allocateMemory();return ADD;}
+"sub"                   {printReserved();allocateMemory();return SUB;}
+"dot"                   {printReserved();allocateMemory();return DOT;}
+"std_dev"               {printReserved();allocateMemory();return STD_DEV;}
+"var"                   {printReserved();allocateMemory();return VAR;}
+"avg"                   {printReserved();allocateMemory();return AVG;}
+"condense"              {printReserved();allocateMemory();return CONDENSE;}
+"sum"                   {printReserved();allocateMemory();return SUM;}
 
 "c_output"              {printReserved();allocateMemory();return COUT;}
 "q_output"              {printReserved();allocateMemory();return QOUT;}

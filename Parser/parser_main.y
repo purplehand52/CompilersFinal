@@ -402,7 +402,6 @@ var_list                : ID ',' var_list   {  if(isInOutput){
                                                    }
                                                 }     
                                                 if(!inList(&head,$1.str)){
-                                                   printf("hi2\n");
                                                    insertInList(&head,$1.str);
                                                 } 
                                                 else {
@@ -418,7 +417,6 @@ var_list                : ID ',' var_list   {  if(isInOutput){
                                                    }
                                                 } 
                                                 if(!inList(&head,$1.str)){
-                                                   printf("hi\n");
                                                    insertInList(&head,$1.str);
                                                 } 
                                                 else{
@@ -620,6 +618,10 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands");
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
+                        free($3.str);
+                        free($5.str);
                      }
                      | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state) */             
                      {
@@ -633,6 +635,10 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
+                        free($3.str);
+                        free($5.str);
                      }      
                      | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex), List(Comp*Mat), State*State*/
                      {
@@ -655,6 +661,10 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
+                        free($3.str);
+                        free($5.str);
                      }        
                      | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                            
                      {
@@ -667,6 +677,9 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                        free($3.str);
                      }   
                      | VAR '(' out_rhs ')'               /* List (uint, int) */                                            
                      {
@@ -679,6 +692,9 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands");
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                        free($3.str);
                      }
                      | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */                      
                      {
@@ -691,6 +707,9 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+20));
+                        snprintf($$.str,strlen($1.str)+strlen($3.str)+20,"%s(%s,%d)",$1.str,$3.str,$5.num);
+                        free($3.str);
                      }
                      | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */              
                      {
@@ -703,6 +722,10 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($6.str)));
+                        snprintf($$.str,strlen($1.str)+strlen($3.str)+20,"%s(%s,(%s))",$1.str,$3.str,$6.str);
+                        free($3.str);
+                        free($6.str);
                      }
                      | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */          
                      {
@@ -715,6 +738,9 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                        free($3.str);
                      }
                      | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */                  
                      {
@@ -727,6 +753,9 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                        free($3.str);
                      }
                         /*| REAL */
                         /*| IMAG */
@@ -740,6 +769,10 @@ uint_list               : uint_list ',' out_rhs  { if($1.type <= Int){
                                                       yyerror("semantic error: only integer elements permitted"); 
                                                       return 1;
                                                    }
+                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+2));
+                                                   snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$1.str,$3.str);
+                                                   free($1.str);
+                                                   free($3.str);
                                                  }
                         | out_rhs                { if($1.type <= Int){
                                                       $$.cond_count = 1;
@@ -748,6 +781,7 @@ uint_list               : uint_list ',' out_rhs  { if($1.type <= Int){
                                                       yyerror("semantic error: only integer elements permitted"); 
                                                       return 1;
                                                    }
+                                                   $$.str = $1.str;
                                                  }
                         ;
 
@@ -790,6 +824,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.rows = 0;
                                                    }
                                                    $$.str = $1.str;
+                                                   free($1.str);
                                                 }
                         | out_id '[' out_rhs ']'{
                                                    if($$.out_flag == 0){
@@ -829,6 +864,10 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.type = State; 
                                                       $$.prim = true;
                                                    }
+                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+3)); 
+                                                   snprintf($$.str,strlen($1.str)+strlen($3.str)+3,"%s[%s]",$1.str,$3.str); 
+                                                   free($1.str);
+                                                   free($3.str);
                                                 }
                         | out_id '[' out_rhs ']' '[' out_rhs ']'                 
                                                 {
@@ -869,6 +908,11 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.type = Complex; 
                                                       $$.prim = true;
                                                    }
+                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($6.str)+5)); 
+                                                   snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($6.str)+5,"%s[%s][%s]",$1.str,$3.str,$6.str);    
+                                                   free($1.str);
+                                                   free($3.str);
+                                                   free($6.str);                                                
                                                 }
                         | out_id '[' out_rhs ']' '[' out_rhs ']' '[' out_rhs ']' 
                                                 {
@@ -899,6 +943,12 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       yyerror("semantic error 8"); 
                                                       return 1;
                                                    }
+                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+strlen($6.str)+strlen($9.str)+5)); 
+                                                   snprintf($$.str,strlen($1.str)+strlen($3.str)+strlen($6.str)+5,"%s[%s][%s][%s]",$1.str,$3.str,$6.str, $9.str);    
+                                                   free($1.str);
+                                                   free($3.str);
+                                                   free($6.str); 
+                                                   free($9.str);
                                                 }
                            | calls                 {  $$.prim = $1.prim; 
                                                       $$.type = $1.type; 
@@ -907,9 +957,9 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       printf("%d %d\n", $$.prim, $$.type);
                                                    }
                         | '(' out_rhs ')'         {   $$.type = $2.type;
+                                                      $$.prim = $2.prim;
                                                       $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
                                                       snprintf($$.str,strlen($2.str)+3,"(%s)",$2.str);
-                                                      printf("%s",$$.str);
                                                       free($2.str);
                                                   }
                         | '!' out_rhs             {  if($2.type==Bool && $2.prim){
@@ -993,7 +1043,6 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = String;
                                                       } 
                                                       else{
-                                                         printf("hi\n");
                                                          yyerror("semantic error 14"); 
                                                          return 1;
                                                       }
