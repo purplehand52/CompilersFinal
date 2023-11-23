@@ -17,7 +17,7 @@ std::vector<T> addLists(const std::vector<T> list1, std::vector<T> list2) {
 }
 
 template <typename T>
-std::vector<T> addLists(const std::vector<T> list1, std::vector<T> list2) {
+std::vector<T> subLists(const std::vector<T> list1, std::vector<T> list2) {
     if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
     
     std::vector<T> result;
