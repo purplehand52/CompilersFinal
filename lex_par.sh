@@ -15,3 +15,7 @@ else
     ./a.out $testpath2
 fi
 
+cd ../
+g++ ./exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp
+./a.out
+
