@@ -120,7 +120,7 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
                                                                                                                         fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
                                                                                                                         fprintf(out, "int quantum_register_map[%d];\n", quantum_registers);
-                                                                                                                        fprintf(out, "Matrix op(1<<quantum_registers);");
+                                                                                                                        fprintf(out, "Matrix op = Matrix(1<<quantum_registers)\n;");
                                                                                                                      }
                         ;
 
@@ -450,16 +450,25 @@ register_expr_list      : register_expr_list ',' register_expr       {
 measure_stmt            : MEASURE ':' register ARROW register {
                            if((!$3.flag && ($3.num < 0 || $3.num >= quantum_registers)) || (!$5.flag && ($5.num < 0 || $5.num >= classical_registers))){
                               yyerror("semantic error: register number out of bounds"); 
-                              free($3.str);
+                              free($3.str); 
                               free($5.str);
                               return 1;
                            }
+                           fprintf(out,"q_output = q_output.transform(op);\n");
+                           fprintf(out,"c_output[%s] = q_output.measure_prob(quantum_register_map[%s]);\n", $5.str, $3.str);        
+                           fprintf(out, "quantum_registers--;\n");                                                                  
+                           fprintf(out, "op = Matrix(1<<quantum_registers);\n");                                                    /* renewed op matrix */
+                           fprintf(out, "quantum_register_map[%s] = -1;\n", $3.str);
+                           fprintf(out, "for(int i=%s+1; i<%d; i++){quantum_register_map[i]--;}\n", $3.str, quantum_registers);     /* shifting mapping */
                            free($3.str);
                            free($5.str);
                         } /* check if register1 and register2 are in bounds */
                         ;
 
-barrier_stmt            : '\\' BARRIER
+barrier_stmt            : '\\' BARRIER    {
+                                             fprintf(out,"q_output = q_output.transform(op);\n");
+                                             fprintf(out, "op = Matrix(1<<quantum_registers);\n");
+                                          }
                         ;
 
 condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
