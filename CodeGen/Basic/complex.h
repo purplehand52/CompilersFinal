@@ -29,6 +29,7 @@ class Complex
         Complex operator-(Complex const& op);
         Complex operator*(Complex const& op);
         Complex operator/(Complex const& op);
+        Complex operator/(const int a);
         bool operator==(Complex const& op);
         bool operator!=(Complex const& op);
         Complex operator!();

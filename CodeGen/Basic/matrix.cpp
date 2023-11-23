@@ -132,6 +132,19 @@ Matrix Matrix::operator*(Complex const& op)
     return ans;
 }
 
+Matrix Matrix::operator/(const int a)
+{
+    Matrix ans = Matrix(this->n);
+    for(int i = 0; i < this->n; i++)
+    {
+        for(int j = 0; j < this->n; j++)
+        {
+            ans.arr[j][i] = this->arr[i][j]/float(a);
+        }
+    }
+    return ans;
+}
+
 Matrix Matrix::operator!()
 {
     Matrix ans = Matrix(this->n);

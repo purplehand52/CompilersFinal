@@ -87,6 +87,14 @@ Complex Complex::operator/(Complex const& op)
     return ans;
 }
 
+Complex Complex::operator/(const int a)
+{
+    Complex ans;
+    ans.set_real(this->real/float(a));
+    ans.set_imag(this->imag/float(a));
+    return ans;
+}
+
 bool Complex::operator==(Complex const& op)
 {
     if(this->real != op.get_real()) return false;
