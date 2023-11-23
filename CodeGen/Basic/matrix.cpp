@@ -240,12 +240,13 @@ Matrix Matrix::kronecker_product(Matrix sample) /* Computes [THIS # SAMPLE] */
 Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for 2*2 matrices */
 {
     if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Fill!");
+    if(place >= regs) throw std::invalid_argument("Place out of bounds!");
 
     Matrix ans = Matrix(1<<regs);
 
-    if(place == 1) ans = this->kronecker_product(Matrix(1 << (regs-1)));
-    else if(place == regs) ans = Matrix(1 << (regs-1)).kronecker_product(*this);
-    else ans = Matrix(1 << (place-1)).kronecker_product(this->kronecker_fill(1, regs-place+1));
+    if(place == 0) ans = Matrix(1 << (regs-1)).kronecker_product(*this); 
+    else if(place == regs-1) ans = this->kronecker_product(Matrix(1 << (regs-1)));
+    else ans = Matrix(1 << (regs-place+1)).kronecker_product(this->kronecker_fill(0, place-1));
     
     /* Return */
     return ans;
@@ -256,9 +257,12 @@ Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for
 /* Note: If target is 7: then target = 000010000000*/
 Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target, unsigned int regs)
 {
+    unsigned int target_bits = 1<<target;
+
+    if(control==0) return kronecker_fill(target, regs);
     if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Control-Fill!");
-    if((control & target) != 0) throw std::invalid_argument("Target inside Control Registers!");
-    if(pow_two(target) == -1) throw std::invalid_argument("Only one target allowed!");
+    if((control & target_bits) != 0) throw std::invalid_argument("Target inside Control Registers!");
+    if(pow_two(target_bits) == -1) throw std::invalid_argument("Only one target allowed!");
 
     Matrix ans = Matrix(1<<regs);
     unsigned int a, b;
@@ -266,11 +270,11 @@ Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target,
     for(int i = 0; i < (1<<regs); i++)
     {
         if((control & i) != control) continue;
-        (i & target) ? (a = 1) : (a = 0);
+        (i & target_bits) ? (a = 1) : (a = 0);
         for(int j = 0; j < (1<<regs); j++)
         {
             if((control & j) != control) continue;
-            (j & target) ? (b = 1) : (b = 0);
+            (j & target_bits) ? (b = 1) : (b = 0);
             ans.arr[i][j] = arr[a][b];
         }
     }
