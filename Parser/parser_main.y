@@ -108,10 +108,10 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         fprintf(out,"int num_iterations = %d;\n", iterations);
                                                                                                                         fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
                                                                                                                         fprintf(out,"int classical_registers = %d;\n", classical_registers);
-                                                                                                                        fprintf(out, "int quantum_register_map[%d];\n", quantum_registers)
+                                                                                                                        fprintf(out, "int quantum_register_map[%d];\n", quantum_registers);
                                                                                                                         fprintf(out, "for(int i =0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
-                                                                                                                        fprintf(out, "int classical_register_map[%d];\n", classical_registers)
-                                                                                                                        fprintf(out, "for(int i =0; i<classical_registers; i++) {classical_register_map[i] = i;}\n");
+                                                                                                                        fprintf(out, "int c_output[%d];\n", classical_registers);
+                                                                                                                        fprintf(out, "for(int i =0; i<classical_registers; i++) {c_output[i] = 0;}\n");
                                                                                                                      }
                         ;
 
@@ -271,16 +271,32 @@ register                : NUMBER  { if($1.num < 0){
                                     } 
                                     $$.num = $1.num;
                                     $$.flag=0;
+                                    $$.str = (char *)malloc(sizeof(char)*20);
+                                    snprintf($$.str,20,"%d",$1.num);
                                  }/* check non negative*/
-                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}$$.flag = 1;}
+                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}$$.flag = 1;
+                                    assignString($$.str,$1.str);
+                                 }
                         ;
 
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
-call_stmt               : classic_control GATE quantum_control ARROW register {fprintf(fp,"Pre - defined Gate call statement\n");}
-                        | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");}
-                        | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");}
-                        | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");}
+call_stmt               : classic_control GATE quantum_control ARROW register {
+                                                                                 fprintf(fp,"Pre - defined Gate call statement\n");
+                                                                                 fprintf(out, "if(%s) {\n", $1.str);
+                                                                                 free($1.str);
+                                                                                 fprintf(out, "}\n");
+                                                                                 //free($5.str);
+                                                                              }
+                        | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");
+                                                                                 //free($5.str);
+                                                                              }
+                        | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");
+                                                                                 //free($4.str);
+                                                                              }
+                        | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");
+                                                                                 //free($4.str);
+                                                                              }
                         | classic_control block_id parameters optional        {  fprintf(fp,"Block call statement\n");
                                                                                  if(!isInBlock){
                                                                                     if(!BlockCallSemanticCheck($2.str,$3.num)){
@@ -299,7 +315,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {f
                                                                               }
                         ;
 
-parameters              : register                 {$$.num = 1;}
+parameters              : register                 {$$.num = 1; free($1.str);}
                         | '(' register_list ')'    {$$.num = $2.num;}
                         ;
 
@@ -307,32 +323,58 @@ optional                :
                         | ARROW target
                         ;
 
-register_list           : register_list ',' register  {$$.num = 1 + $1.num;}
-                        | register                    {$$.num = 1;}
+register_list           : register_list ',' register  {$$.num = 1 + $1.num; free($3.str);}
+                        | register                    {$$.num = 1; free($1.str);}
                         ;
 
-classic_control         : register '?'                         /* removing epsilon rule resolved all conflicts */
-                        | '(' register_list ')' '?'
+classic_control         : register_expr '?'                 {
+                                                               $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                               snprintf($$.str,strlen($1.str)+1,"%s",$1.str); 
+                                                               // assignString($$.str,$1.str); 
+                                                               free($1.str); 
+                                                            }        /* removing epsilon rule resolved all conflicts */
+                        | '(' register_expr_list ')' '?'    {
+                                                               $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+1));
+                                                               snprintf($$.str,strlen($2.str)+1,"%s",$2.str);
+                                                               // assignString($$.str,$2.str);
+                                                               free($2.str);
+                                                            }
                         ;
 
 quantum_control         : /* epsilon */                         /* optional */
-                        | ':' register
-                        | ':' '(' register_list ')'
+                        | ':' register                         {free($2.str);}
+                        | ':' '(' register_list ')'            
                         ;
 
-target                  : register                              /* blocks allow multiple targets */
+target                  : register                           {free($1.str);}   /* blocks allow multiple targets */
                         | '(' register_list ')' 
                         ;
 
-/* can use for not, product etc 
-register_expr           : register
-                        | '!' register
+/* for simple expressions for classic control */
+register_expr           : register                                   {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+11));
+                                                                        snprintf($$.str,strlen($1.str)+11,"c_output[%s]",$1.str);
+                                                                        free($1.str);
+                                                                     }                 
+                        | '!' register                               {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+12));
+                                                                        snprintf($$.str,strlen($2.str)+12,"!c_output[%s]",$2.str);
+                                                                        free($2.str);
+                                                                     }      
                         ;
 
-register_expr_list      : register_expr_list ',' register_expr
-                        | register_expr
+register_expr_list      : register_expr_list ',' register_expr       {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+7));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+7,"%s && (%s)",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);    
+                                                                     }   
+                        | register_expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        free($1.str);
+                                                                     }                    
                         ;
-*/
 
 
 measure_stmt            : MEASURE ':' register ARROW register {
@@ -1387,7 +1429,7 @@ char * IntToString(int n){
 }
 
 void assignString(char* str1, char* str2){
-   str1 = (char*)malloc(sizeof(char)*strlen(str2));
+   str1 = (char*)malloc(sizeof(char)*(strlen(str2)+1));
    for(int i=0;i<strlen(str2);i++){
       str1[i] = str2[i];
    }

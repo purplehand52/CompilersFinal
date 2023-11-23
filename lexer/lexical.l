@@ -120,6 +120,7 @@ Equality                (==|!=)
 {Logicals}              {printLogical();allocateMemory();return yytext[0];}
 "||"                    {printLogical();allocateMemory();return OR;}
 "&&"                    {printLogical();allocateMemory();return AND;}
+"!"                     {printLogical();return yytext[0];}
 
 {String}                {allocateMemory();yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 {Character}             {yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
