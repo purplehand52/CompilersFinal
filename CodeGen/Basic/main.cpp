@@ -51,7 +51,7 @@ int main()
     // after_X.show();
 
     /* Measure */
-    int result = sample.measure_prob(1);
+    int result = sample.measure_prob(0);
     cout << result << endl;
     sample.show();
 

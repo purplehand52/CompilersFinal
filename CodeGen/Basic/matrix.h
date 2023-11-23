@@ -27,6 +27,7 @@ class Matrix
         Matrix operator+(Matrix const& op);
         Matrix operator-(Matrix const& op);
         Matrix operator*(Matrix const& op);
+        Matrix operator*(Complex const& op);
         Matrix operator!();
 
         /* Misc */

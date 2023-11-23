@@ -122,6 +122,16 @@ Matrix Matrix::operator*(Matrix const& op)
     return ans;
 }
 
+Matrix Matrix::operator*(Complex const& op)
+{
+    Matrix ans = Matrix(n);
+    for(int i = 0; i < n; i++)
+    {
+        for(int j = 0; j < n; j++) ans.arr[i][j] = arr[i][j] * op;
+    }
+    return ans;
+}
+
 Matrix Matrix::operator!()
 {
     Matrix ans = Matrix(this->n);

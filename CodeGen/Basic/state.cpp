@@ -26,9 +26,9 @@ StateVec::StateVec(unsigned int n, struct Quantum* q)
         {
             if(i & (1<<j)) arr[i] = arr[i]*q[j].b;
             else arr[i] = arr[i]*q[j].a;
-            std::cout << arr[i].to_str() << std::endl;
+            // std::cout << arr[i].to_str() << std::endl;
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
     normalize();
 }
