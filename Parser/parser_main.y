@@ -110,8 +110,6 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         fprintf(out,"int classical_registers = %d;\n", classical_registers);
                                                                                                                         fprintf(out, "int quantum_register_map[%d];\n", quantum_registers);
                                                                                                                         fprintf(out, "for(int i =0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
-                                                                                                                        fprintf(out, "int c_output[%d];\n", classical_registers);
-                                                                                                                        fprintf(out, "for(int i =0; i<classical_registers; i++) {c_output[i] = 0;}\n");
                                                                                                                      }
                         ;
 
@@ -123,20 +121,26 @@ set_states              :   set_quantum_states set_classical_states
                         |
                         ;
 
-set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list {fprintf(fp,"Setting initial state of quantum registers\n");}
+set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list { fprintf(fp,"Setting initial state of quantum registers\n");
+                                                                              fprintf(out, "struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q)", quantum_registers,$6.str, quantum_registers);
+                                                                            }
                         ;
 
-set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {fprintf(fp,"Setting initial state of classical registers\n");}
+set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {   fprintf(fp,"Setting initial state of classical registers\n");
+                                                                                    fprintf(out, "int c_output[%d] = {%s};\n", classical_registers,$6.str);
+                                                                                }
                         ;
 
 quantum_state_list      :   quantum_state_list ',' state_const       {  if(quantum_index == quantum_registers){
                                                                            yyerror("semantic error: quantum registers out of bounds");
                                                                            return 1;
                                                                         }  
-                                                                        quantum_states[quantum_index++] = $3.q;
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+110+2));
+                                                                        snprintf($$.str,strlen($1.str)+110+2,"%s,Quantum(Complex(%f,%f),Complex(%f,%f))",$1.str,$3.q.first.real,$3.q.first.imag,$3.q.second.real,$3.q.second.imag);
                                                                      }
-                        |   state_const                              {  quantum_states = (struct Quantum*)malloc(sizeof(struct Quantum)*quantum_registers);
-                                                                        quantum_states[quantum_index++] = $1.q;
+                        |   state_const                              {  
+                                                                        $$.str = (char *)malloc(sizeof(char)*110);
+                                                                        snprintf($$.str,110,"Quantum(Complex(%f,%f),Complex(%f,%f))",$1.q.first.real,$1.q.first.imag,$1.q.second.real,$1.q.second.imag);
                                                                      }
                         ;
 
@@ -144,10 +148,11 @@ classical_state_list    :   classical_state_list ',' classical_state { if(classi
                                                                            yyerror("semantic error: classical registers out of bounds");
                                                                            return 1;
                                                                         }
-                                                                        classical_states[classical_index++] = $3.num;
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+20+2));
+                                                                        snprintf($$.str,strlen($1.str)+20+2,"%s,%d",$1.str,$3.num);
                                                                      }
-                        |   classical_state                          {  classical_states = (int *)malloc(sizeof(int)*classical_registers);
-                                                                        classical_states[classical_index++] = $1.num;
+                        |   classical_state                          {  $$.str = (char *)malloc(sizeof(char)*20);
+                                                                        snprintf($$.str,20,"%d",$1.num);
                                                                      }
                         ;
 
