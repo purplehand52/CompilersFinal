@@ -351,8 +351,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 75
-#define YY_END_OF_BUFFER 76
+#define YY_NUM_RULES 76
+#define YY_END_OF_BUFFER 77
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -362,35 +362,35 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[270] =
     {   0,
-        0,    0,   76,   74,    1,    2,   74,   74,   10,   74,
-       73,   62,   74,    6,    5,   73,   11,   67,    4,    3,
-       60,   73,   60,    9,   72,   59,   71,    7,   62,   72,
-       72,   72,   72,   72,   72,   72,   72,   72,   72,   72,
-       72,   72,   72,   72,   72,   72,   62,   61,    0,   65,
-        0,    0,    8,   64,    0,    0,   68,   12,    0,   67,
-       60,   72,   72,   72,   72,   72,   72,   72,   72,   72,
-       72,   72,   72,   72,   72,   72,   72,   72,   35,   72,
-       72,   72,   72,   72,   72,   72,   72,   72,   72,   72,
-       72,   72,   72,   72,   63,    0,   66,   66,   69,   13,
+        0,    0,   77,   75,    1,    2,   65,   75,   10,   75,
+       74,   62,   75,    6,    5,   74,   11,   68,    4,    3,
+       60,   74,   60,    9,   73,   59,   72,    7,   62,   73,
+       73,   73,   73,   73,   73,   73,   73,   73,   73,   73,
+       73,   73,   73,   73,   73,   73,   62,   61,    0,   66,
+        0,    0,    8,   64,    0,    0,   69,   12,    0,   68,
+       60,   73,   73,   73,   73,   73,   73,   73,   73,   73,
+       73,   73,   73,   73,   73,   73,   73,   73,   35,   73,
+       73,   73,   73,   73,   73,   73,   73,   73,   73,   73,
+       73,   73,   73,   73,   63,    0,   67,   67,   70,   13,
 
-       18,   72,   72,   72,   72,   72,   72,   72,   72,   15,
-       72,   72,   72,   72,   49,   72,   26,   72,   72,   72,
-       72,   72,   72,   72,   72,   72,   72,   46,   72,   72,
-       72,   14,   20,   72,   72,   17,    0,   72,   72,   72,
-       25,   72,   72,   72,   72,   37,   72,   72,   72,   72,
-       34,   72,   33,   72,   72,   72,   72,   72,   72,   72,
-       36,   72,   72,   72,   23,   27,    0,   72,   72,   48,
-       72,   72,   72,   72,   72,   72,   72,   72,   24,   28,
-       72,   72,   45,   72,   72,   72,   72,   72,   72,   72,
-       32,   72,   72,    0,    0,   72,   72,   72,   72,   72,
+       18,   73,   73,   73,   73,   73,   73,   73,   73,   15,
+       73,   73,   73,   73,   49,   73,   26,   73,   73,   73,
+       73,   73,   73,   73,   73,   73,   73,   46,   73,   73,
+       73,   14,   20,   73,   73,   17,    0,   73,   73,   73,
+       25,   73,   73,   73,   73,   37,   73,   73,   73,   73,
+       34,   73,   33,   73,   73,   73,   73,   73,   73,   73,
+       36,   73,   73,   73,   23,   27,    0,   73,   73,   48,
+       73,   73,   73,   73,   73,   73,   73,   73,   24,   28,
+       73,   73,   45,   73,   73,   73,   73,   73,   73,   73,
+       32,   73,   73,    0,    0,   73,   73,   73,   73,   73,
 
-       72,   72,   72,   72,   72,   72,   72,   31,   72,   72,
-       72,   72,   72,   38,   47,   72,   30,   70,    0,   58,
-       72,   72,   72,   72,   72,   29,   72,   72,   72,   72,
-       72,   50,   51,   41,   72,   72,   43,   72,   16,    0,
-       72,   72,   72,   21,   72,   19,   72,   55,   57,   72,
-       72,   22,   72,    0,   72,   72,   72,   44,   39,   72,
-       40,   42,   54,   56,   72,   53,   72,   52,    0
+       73,   73,   73,   73,   73,   73,   73,   31,   73,   73,
+       73,   73,   73,   38,   47,   73,   30,   71,    0,   58,
+       73,   73,   73,   73,   73,   29,   73,   73,   73,   73,
+       73,   50,   51,   41,   73,   73,   43,   73,   16,    0,
+       73,   73,   73,   21,   73,   19,   73,   55,   57,   73,
+       73,   22,   73,    0,   73,   73,   73,   44,   39,   73,
+       40,   42,   54,   56,   73,   53,   73,   52,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -1229,62 +1229,67 @@ YY_RULE_SETUP
 {printLogical();allocateMemory();return AND;}
 	YY_BREAK
 case 65:
-/* rule 65 can match eol */
 YY_RULE_SETUP
-#line 124 "./lexer/lexical.l"
-{allocateMemory();yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
+#line 123 "./lexer/lexical.l"
+{printLogical();return yytext[0];}
 	YY_BREAK
 case 66:
+/* rule 66 can match eol */
 YY_RULE_SETUP
 #line 125 "./lexer/lexical.l"
-{yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
+{allocateMemory();yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: \"\nconstant: %s\npunctuation: \"\n",yytext+1);return STRING;}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 127 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}
+#line 126 "./lexer/lexical.l"
+{yytext[strlen(yytext)-1]='\0';fprintf(fp2,"punctuation: '\nconstant: %s\npunctuation: '\n",yytext+1);}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
 #line 128 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NEG;}
+{fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NUMBER;}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
 #line 129 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
+{fprintf(fp2,"constant: %s\n",yytext); yylval.num = atoi(yytext); return NEG;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
 #line 130 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
+{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return DEC;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
 #line 131 "./lexer/lexical.l"
-{fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
+{fprintf(fp2,"constant: %s\n",yytext); yylval.real = atof(yytext); return EXP;}
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
 #line 132 "./lexer/lexical.l"
-{fprintf(fp2,"ID: %s\n",yytext);allocateMemory();return ID;}
+{fprintf(fp2,"constant: %s\n",yytext); return IMAG;} 
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
 #line 133 "./lexer/lexical.l"
-{printOperator();return yytext[0];}
+{fprintf(fp2,"ID: %s\n",yytext);allocateMemory();return ID;}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
 #line 134 "./lexer/lexical.l"
-{printf("%s\n",yytext);} /*If code reaches here then there is an error */
+{printOperator();return yytext[0];}
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 136 "./lexer/lexical.l"
+#line 135 "./lexer/lexical.l"
+{printf("%s\n",yytext);} /*If code reaches here then there is an error */
+	YY_BREAK
+case 76:
+YY_RULE_SETUP
+#line 137 "./lexer/lexical.l"
 ECHO;
 	YY_BREAK
-#line 1288 "lex.yy.c"
+#line 1293 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2289,7 +2294,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 136 "./lexer/lexical.l"
+#line 137 "./lexer/lexical.l"
 
 
 void allocateMemory(){

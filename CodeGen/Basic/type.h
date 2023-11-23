@@ -21,4 +21,4 @@ struct Quantum
         }
     };
 
-#endif TYPE_H
+#endif

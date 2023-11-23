@@ -19,7 +19,6 @@
 
    int classical_registers,quantum_registers,iterations,temp_type,indent;
    int * classical_states,classical_index=0,quantum_index=0;
-   struct Quantum* quantum_states;
    int isInBlock=0;
    int outputLevel = 0;
    bool isInOutput = false;
@@ -83,7 +82,19 @@
 
 %%
 
-prgm                    : init_section main_section output_section {fprintf(fp,"\nParsing successful!\n");}
+prgm                    : {fprintf(out,"#include<iostream>\n"
+                                        "#include<vector>\n"
+                                        "#include\"../CodeGen/Basic/complex.h\"\n"
+                                        "#include\"../CodeGen/Basic/matrix.h\"\n"
+                                        "#include\"../CodeGen/Basic/type.h\"\n"
+                                        "#include\"../CodeGen/Basic/state.h\"\n\n"
+                                        "using namespace std;\n\n");
+                          } 
+                          init_section 
+                          {fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");} 
+                          main_section 
+                          output_section 
+                          {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
@@ -107,9 +118,8 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         iterations = $14.num;
                                                                                                                         fprintf(out,"int num_iterations = %d;\n", iterations);
                                                                                                                         fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
-                                                                                                                        fprintf(out,"int classical_registers = %d;\n", classical_registers);
+                                                                                                                        fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
                                                                                                                         fprintf(out, "int quantum_register_map[%d];\n", quantum_registers);
-                                                                                                                        fprintf(out, "for(int i =0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
                                                                                                                      }
                         ;
 
@@ -122,7 +132,7 @@ set_states              :   set_quantum_states set_classical_states
                         ;
 
 set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list { fprintf(fp,"Setting initial state of quantum registers\n");
-                                                                              fprintf(out, "struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q)", quantum_registers,$6.str, quantum_registers);
+                                                                              fprintf(out, "struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q);\n", quantum_registers,$6.str, quantum_registers);
                                                                             }
                         ;
 
@@ -137,10 +147,12 @@ quantum_state_list      :   quantum_state_list ',' state_const       {  if(quant
                                                                         }  
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+110+2));
                                                                         snprintf($$.str,strlen($1.str)+110+2,"%s,Quantum(Complex(%f,%f),Complex(%f,%f))",$1.str,$3.q.first.real,$3.q.first.imag,$3.q.second.real,$3.q.second.imag);
+                                                                        quantum_index++;
                                                                      }
                         |   state_const                              {  
                                                                         $$.str = (char *)malloc(sizeof(char)*110);
                                                                         snprintf($$.str,110,"Quantum(Complex(%f,%f),Complex(%f,%f))",$1.q.first.real,$1.q.first.imag,$1.q.second.real,$1.q.second.imag);
+                                                                        quantum_index = 1;
                                                                      }
                         ;
 
@@ -150,9 +162,11 @@ classical_state_list    :   classical_state_list ',' classical_state { if(classi
                                                                         }
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+20+2));
                                                                         snprintf($$.str,strlen($1.str)+20+2,"%s,%d",$1.str,$3.num);
+                                                                        classical_index++;
                                                                      }
                         |   classical_state                          {  $$.str = (char *)malloc(sizeof(char)*20);
                                                                         snprintf($$.str,20,"%d",$1.num);
+                                                                        classical_index  = 1;
                                                                      }
                         ;
 
@@ -536,7 +550,7 @@ prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"
                         | BOOL      {$$.type = Bool; $$.prim = true;fprintf(out,"bool ");}
                         ;
 
-list_type               : LIST '[' {fprintf(out,"list[");} prim_type ']' {$$.type = $3.type; $$.prim = false;fprintf(out,"]");}
+list_type               : LIST '[' {fprintf(out,"vector<");} prim_type ']' {$$.type = $3.type; $$.prim = false;fprintf(out,">");}
                         ;
 
 /* data_type               : prim_type
@@ -625,16 +639,13 @@ vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim;
                                                    else{
                                                       $$.rows = 0;
                                                    } 
-                                                   // At this point head contains the list of IDs/constants used in list declaration
-                                                   // Take values from here for codegen @Vedant
-                                                   // printList(&head);
                                                    $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
-                                                   snprintf($$.str,strlen($2.str)+3,"[%s]",$2.str);
+                                                   snprintf($$.str,strlen($2.str)+3,"{%s}",$2.str);
                                                    free($2.str);
                                                 }
                         ;
 
-vec_list                : prim_const ',' vec_list  {  temp_type = compatibleCheck($3.type, $1.type); 
+vec_list                : vec_list ',' prim_const   {  temp_type = compatibleCheck($1.type, $3.type); 
                                                       if(temp_type != -1){
                                                          $$.type = temp_type;
                                                       } 
@@ -642,19 +653,19 @@ vec_list                : prim_const ',' vec_list  {  temp_type = compatibleChec
                                                          yyerror("semantic error: incompatible types in list"); 
                                                          return 1;
                                                       } 
-                                                      $$.dim = $3.dim + 1; 
+                                                      $$.dim = $1.dim + 1; 
                                                       if($$.type == Matrix){
                                                          if($1.rows != $3.rows){
                                                             yyerror("semantic error: incompatible matrix dimensions in list");
                                                             return 1;
                                                          }
                                                          else{
-                                                            $$.rows = $3.rows;
+                                                            $$.rows = $1.rows;
                                                          } 
                                                       }
-                                                      insertInList(&head,$1.str);
+                                                      insertInList(&head,$3.str);
                                                       $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+2));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$3.str,$1.str);
+                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$1.str,$3.str);
                                                       free($1.str);
                                                       free($3.str);
                                                    }
@@ -1299,6 +1310,7 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
                                                          if($2.type == Matrix)insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,$2.rows,$2.dim,false); 
                                                          else insertInOutputTable(&OutputSymbolTable,$2.str,outputLevel,$1.type,false,0,$2.dim,false);
                                                       }
+                                                      fprintf(out,"%s\n",$2.str2);
                                                    }
                         ;
 
@@ -1743,7 +1755,7 @@ int main(int argc,char* argv[])
   yyin = fopen(argv[1],"r");
   fp2 = fopen("tokens.txt","w");
   fp = fopen("output.parsed","w");
-  out = fopen("out.txt","w");
+  out = fopen("out.cpp","w");
   yyparse();
 
   return 0;
