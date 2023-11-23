@@ -1,3 +1,5 @@
+#ifndef LIST_FUNC_H
+#define LIST_FUNC_H
 #include <vector>
 #include <iostream>
 #include <numeric>
@@ -215,3 +217,61 @@ Matrix meanMatrix(const std::vector<Matrix> list) {
 }
 
 /* Condenser function */
+/* Number of ones in binary representation of number */
+unsigned int numOnes(unsigned int num) {
+    unsigned int count = 0;
+    while(num) {
+        count += num & 1;
+        num = num>>1;
+    }
+
+    return count;
+}
+
+/* Least power of 2 greater than a number */
+unsigned int nextPowerOf2(unsigned int num) {
+    unsigned int count = 0;
+    if(num && !(num & (num - 1))) return num;
+    while(num != 0) {
+        num = num>>1;
+        count += 1;
+    }
+
+    return 1 << count;
+}
+
+
+/* Extract specific multiple bits from a number */
+unsigned int extractBits(unsigned int num, unsigned int place) {
+    unsigned int result = 0;
+    unsigned int count = 0;
+    unsigned int temp = 1;
+    while(temp <= num) {
+        if((temp & place) != 0) {
+            result += (num & temp) >> count;
+        }
+        else count++;
+        temp = temp << 1;
+    }
+
+    return result;
+}
+
+/* Condense a list of unsigned integers */
+std::vector<unsigned int> condense(const std::vector<unsigned int> list, unsigned int place) {
+    /* New size */
+    unsigned int n_size = nextPowerOf2(list.size())/(1<<numOnes(place));
+    
+    std::vector<unsigned int> result(n_size,0);
+
+    /* Iterate and condense */
+    unsigned int comp_place = nextPowerOf2(list.size()) - place - 1;
+    for(int i = 0; i < list.size(); i++) {
+        unsigned int index = extractBits(i,comp_place);
+        result[index] += list[i];
+    }
+
+    return result;
+}
+
+#endif
