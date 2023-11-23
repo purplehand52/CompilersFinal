@@ -87,7 +87,7 @@ Equality                (==|!=)
 "state"                 {printReserved();return STATE;}
 "list"                  {printReserved();return LIST;}
 
-"gate"                  {printReserved();return GATE;}
+"gate"                  {printReserved();return GATE_DEF; }
 
 "in"                    {printReserved();return IN;}
 "save"                  {printReserved();return SAVE;}
@@ -113,7 +113,7 @@ Equality                (==|!=)
 "begin_main"            {printReserved();return MAIN_BEGIN;}
 "end_main"              {printReserved();return MAIN_END;}
 "barrier"               {printReserved();return BARRIER;}
-[XYZH]                  {printReserved();return GATE;}
+[XYZH]                  {printReserved();allocateMemory();return GATE; }
 
 {Comparators}           {printComparator();allocateMemory(); return COMP;}
 {Equality}              {printComparator();allocateMemory();return EQUALITY;}
