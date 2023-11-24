@@ -80,8 +80,9 @@
 %left AND
 %left OR
 
-// TODO: handle variable declaration check in gate calls
-// TODO: handle variable declaration check in if predicates
+// TODO: handle variable declaration check in gate calls DONE
+// TODO: handle variable declaration check in measure statements DONE
+// TODO: handle variable declaration check in if predicates DONE
 
 %%
 
@@ -315,8 +316,13 @@ register                : NUMBER  { if($1.num < 0){
                                     $$.str = (char *)malloc(sizeof(char)*20);
                                     snprintf($$.str,20,"%d",$1.num);
                                  }/* check non negative*/
-                        | ID      {if(isInBlock){insertInList(&id_list,$1.str);}$$.flag = 1;
+                        | ID     {
+                                    if(isInBlock){insertInList(&id_list,$1.str);}
+                                    $$.flag = 1;
                                     assignString($$.str,$1.str);
+                                    if(!isInOutput) {
+                                       if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); return 1;}
+                                    }
                                  }
                         ;
 
@@ -543,7 +549,11 @@ arithmetic_expr         : arithmetic_expr '+' arithmetic_expr
                         | arithmetic_expr '*' arithmetic_expr
                         | arithmetic_expr '/' arithmetic_expr
                         | arithmetic_expr '%' arithmetic_expr
-                        | ID
+                        | ID                       {
+                                                      if(!isInOutput) {
+                                                         if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); return 1;}
+                                                      }
+                                                   }
                         | NUMBER
                         ;
 
