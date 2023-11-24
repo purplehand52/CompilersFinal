@@ -73,7 +73,6 @@ Equality                (==|!=)
 "sum"                   {printReserved();allocateMemory();return SUM;}
 
 "c_output"              {printReserved();allocateMemory();return COUT;}
-"q_output"              {printReserved();allocateMemory();return QOUT;}
 
 "true"                  {printReserved();return TRUE;}
 "false"                 {printReserved();return FALSE;}

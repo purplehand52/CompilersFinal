@@ -41,7 +41,7 @@
     \save "output.csv"
 
     $ Print the quantum register $
-    echo("Final Transferred State: ", q_output[2])
+    $ echo("Final Transferred State: ", q_output[2]) $
 
     $ Print the frequency list of classical registers $
     echo("Classical Register List: ", c_output)

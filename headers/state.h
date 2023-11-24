@@ -22,6 +22,7 @@ class StateVec
 
         /* Get Functions */
         Complex get_value(unsigned int i);
+        Complex* get_arr();
         unsigned int get_dim() const;
 
         /* Functions */
@@ -31,6 +32,8 @@ class StateVec
 
         /* Show */
         void show();
+
+        friend std::ostream& operator<<(std::ostream& os, const StateVec& state);
 };
 
 #endif

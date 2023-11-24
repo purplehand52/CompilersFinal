@@ -68,7 +68,7 @@
 %token COMP TRUE FALSE EQUALITY AND OR
 %token WHILE
 %token ADD SUB DOT STD_DEV VAR AVG CONDENSE SUM
-%token COUT QOUT
+%token COUT
 %token INT UINT FLOAT COMPLEX STRING MATRIX STATE BOOL IMAG LIST
 %token DEC EXP
 %token SAVE ECHO RETURN
@@ -84,10 +84,6 @@
 %left '!'
 %left AND
 %left OR
-
-// TODO: handle variable declaration check in gate calls DONE
-// TODO: handle variable declaration check in measure statements DONE
-// TODO: handle variable declaration check in if predicates DONE
 
 %%
 
@@ -860,7 +856,6 @@ while_stmt              : WHILE '(' expr ')'                          {fprintf(o
 /* Datatypes */
 out_id                  : ID   {$$.out_flag = 0; $$.str = $1.str;}
                         | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;$$.str = $1.str;}
-                        | QOUT {$$.out_flag = 2; $$.type = State; $$.prim = false; $$.dim = quantum_registers; $$.rows = 0;$$.str = $1.str;}
                         ;
 
 prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"int ");}
