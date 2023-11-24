@@ -23,10 +23,14 @@
    int outputLevel = 0;
    bool isInOutput = false;
    bool isDeclaration = false;
+   int isFirst = 1;
 
    struct List* head = NULL;
    struct List* id_list = NULL;
    struct List2* range_list = NULL;
+   struct List3* cpx_list = NULL;
+   struct List3* curr = NULL;
+   struct List3* cpx_head = NULL;
    struct BlockTable* BlockSymbolTable = NULL;
    struct GateTable* GateSymbolTable = NULL;
    struct Complex* gateList = NULL;
@@ -96,6 +100,15 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                         "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
 
+<<<<<<< Updated upstream
+=======
+                            fprintf(out,"int num_iterations = %d;\n", iterations);
+                            fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
+                            fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
+                            fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
+                            fprintf(out,"Matrix op = Matrix(1<<quantum_registers);\n");
+
+>>>>>>> Stashed changes
                             fprintf(out,"Matrix X = Matrix(2);\n"
                                           "Matrix Y = Matrix(2);\n"
                                           "Matrix Z = Matrix(2);\n"
@@ -862,6 +875,7 @@ matrix_const            : '[' row_list ']'         { if($2.rows == $2.cols) {
                                                          yyerror("semantic error: only square matrices permitted"); 
                                                          return 1;
                                                      }
+                                                     isFirst = 1;
                                                    }
                         ;
 
@@ -873,8 +887,24 @@ row_list                : row_list ',' row         {  $$.rows = $1.rows + 1;
                                                          yyerror("semantic error: rows of different length cannot form matrix"); 
                                                          return 1;
                                                       }
+                                                      struct List3* temp = cpx_list;
+                                                      while(temp->next != NULL){
+                                                         temp = temp->next;
+                                                      }
+                                                      curr->next = cpx_list;
+                                                      curr = temp;
                                                    }
-                        | row                         {$$.rows = 1; $$.cols = $1.cols;}
+                        | row                         {  $$.rows = 1; $$.cols = $1.cols;
+                                                         struct List3* temp = cpx_list;
+                                                         while(temp->next != NULL){
+                                                            temp = temp->next;
+                                                         }
+                                                         curr = temp;
+                                                         if(isFirst){
+                                                            cpx_head = cpx_list;
+                                                            isFirst = 0;
+                                                         }
+                                                      }
                         ;
 
 row                     : '[' comps ']'               {$$.cols = $2.cols;}
@@ -901,13 +931,12 @@ prim_const              : bool_const      {  $$.type = Bool;
                                              else snprintf($$.str,6,"false");
                                           }
                         | complex_const   {  $$.type = Complex;
-                                             $$.str = (char *)malloc(sizeof(char)*20);$$.str = $1.str;
-                                             snprintf($$.str,20,"Complex(%f,%f)",$1.cpx.real,$1.cpx.imag);
+                                             $$.str = (char *)malloc(sizeof(char)*120);
+                                             snprintf($$.str,120,"Complex(%f,%f)",$1.cpx.real,$1.cpx.imag);
                                           }
                         | matrix_const    {  $$.type = Matrix; 
                                              $$.rows = $1.rows;
-                                             $$.str = (char *)malloc(sizeof(char)*20);
-                                             snprintf($$.str,15,"Matrix(%d)",$1.rows);
+                                             $$.str = (char *)malloc(sizeof(char)*($$.rows*$$.rows*50));
                                           }
                         | state_const     {$$.type = State;}
                         | NUMBER          {$$.type = Uint;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}

@@ -44,6 +44,12 @@ struct st
         char *start,*step,*end;
         struct List2 *next;
     } list2;
+
+    struct List3
+    {
+        struct Complex cpx;
+        struct List3 *next;
+    } list3;
 };
 
 struct BlockTable{
