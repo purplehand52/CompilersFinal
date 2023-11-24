@@ -125,6 +125,7 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                               fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
                               fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
                               fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
+                              fprintf(out,"FILE *result = fopen(\"result.csv\",\"w\");\n");
                               fprintf(out,"for(int iters=0;iters < num_iterations;iters++){\n");
                               fprintf(out,"\tfor(int i=0;i<%d;i++{\n"
                                              "\t\tq_output.arr[i] = q_output_original.arr[i];\n"
@@ -139,9 +140,22 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                      );
                           }
                           main_section 
-                              {  
-                                 fprintf(out,"}\n");
-                              }
+                           {
+                              fprintf(out,"fprintf(result,\"Iteration #%d:\",iters);\n");
+                              fprintf(out,"fprintf(result,\"Classical Outputs: \");");
+                              fprintf(out,"for(int i=0;i<%d-1;i++){\n"
+                                             "\t\tfprintf(result,\"%%d, \",c_output[i]);\n"
+                                          "}\n",classical_registers);
+                              fprintf(out,"fprintf(result,\"%%d\\n\",c_output[%d-1]);\n",classical_registers);
+                              fprintf(out,"fprintf(result,\"Quantum Outputs: \");");
+                              fprintf(out,"for(int i=0;i<%d-1;i++){\n}"
+                                             "\t\tfprintf(result,\"(%%d, %%d), \",q_output.arr[i].real,q_output.arr[i].imag);\n"
+                                          "}\n",quantum_registers);
+                              fprintf(out,"fprintf(result,\"(%%d, %%d)\",q_output.arr[%d-1].real,q_output.arr[%d-1].imag);",quantum_registers,quantum_registers);
+                              
+                              fprintf(out,"}\n");
+                              fprintf(out,"fclose(result);\n");
+                           }
                           output_section 
                           {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
                         ;

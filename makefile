@@ -18,7 +18,7 @@ matrix: ./headers/matrix.h ./CodeGen/Basic/matrix.cpp
 state: ./headers/state.h ./CodeGen/Basic/state.cpp
 
 out: Parser
-	./exec/parser ./TestSuite/Semantics/$(SRC)
+	./exec/parser ./Tests/UnitTests/$(SRC)
 	mv out.cpp ./exec/out.cpp
 	mv output.parsed ./exec/output.parsed
 	mv tokens.txt ./exec/tokens.txt
