@@ -1500,15 +1500,37 @@ echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statem
                                                       }
                         ;
 
-echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
-                                                         free($1.str);
-                                                         free($3.str);
+echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         // snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
+                                                         // free($1.str);
+                                                         // free($3.str);
+                                                         if($3.prim){
+                                                            fprintf(out,"cout<<%s;",$3.str);
+                                                         }
+                                                         else{
+                                                            else{
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $3.dim, $3.str);
+                                                            }
+                                                         }
+
                                                       }
-                        | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
-                                                         snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
-                                                         printf("|%s|\n",$1.str);
-                                                         free($1.str);   
+                        | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                                                         // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         // free($1.str);   
+                                                         if($1.prim){
+                                                            fprintf(out,"cout<<%s;",$1.str);
+                                                         }
+                                                         else{
+                                                            else{
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $1.dim, $1.str);
+                                                            }
+                                                         }
                                                       }
                         ;
 
