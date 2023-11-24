@@ -80,6 +80,9 @@
 %left AND
 %left OR
 
+// TODO: handle variable declaration check in gate calls
+// TODO: handle variable declaration check in if predicates
+
 %%
 
 prgm                    : {fprintf(out,"#include<iostream>\n"
