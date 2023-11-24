@@ -50,7 +50,7 @@ float Complex::get_imag() const
 
 float Complex::get_norm() const
 {
-    return sqrt((this->real)*(this->real) << (this->imag)*(this->imag));
+    return sqrt((this->real)*(this->real) + (this->imag)*(this->imag));
 }
 
 /* Operators */
