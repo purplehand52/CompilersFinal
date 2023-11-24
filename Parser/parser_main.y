@@ -96,12 +96,6 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                         "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
 
-                            fprintf(out,"int num_iterations = %d;\n", iterations);
-                            fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
-                            fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
-                            fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
-                            fprintf(out,"Matrix op = Matrix(1<<quantum_registers)\n;");
-
                             fprintf(out,"Matrix X = Matrix(2);\n"
                                           "Matrix Y = Matrix(2);\n"
                                           "Matrix Z = Matrix(2);\n"
@@ -115,11 +109,6 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                                 "\treturn 0;\n"
                                           "}\n\n"
                                     );
-
-                           fprintf(out, "int quantum_register_map(int i){");
-                           fprintf(out, "if( (i>= %d) || (i<0) || (quantum_register_dict[i] == -1))", quantum_registers);           
-                           fprintf(out, "{throw std::runtime_error(\"Semantic Error: Invalid quantum register access\");}");
-                           fprintf(out, "return quantum_register_dict[i];\n}\n");
 
                             struct GateTable* temp = GateSymbolTable;
                             while(temp != NULL){
@@ -161,7 +150,16 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         classical_registers = $10.num;
                                                                                                                         quantum_registers = $5.num;
                                                                                                                         iterations = $14.num;
-                                                                                                                     }
+
+                                                                                                                        fprintf(out,"int num_iterations = %d;\n", iterations);
+                                                                                                                        fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
+                                                                                                                        fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
+                                                                                                                        fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
+                                                                                                                        fprintf(out,"Matrix op = Matrix(1<<quantum_registers)\n;");
+                                                                                                                        fprintf(out, "int quantum_register_map(int i){\n");
+                                                                                                                        fprintf(out, "if( (i>= %d) || (i<0) || (quantum_register_dict[i] == -1))\n", quantum_registers);           
+                                                                                                                        fprintf(out, "{throw std::runtime_error(\"Semantic Error: Invalid quantum register access\");}\n");
+                                                                                                                        fprintf(out, "return quantum_register_dict[i];\n}\n");                                                                                                                     }
                         ;
 
 // can only one type of states be set?
@@ -367,7 +365,7 @@ register                : NUMBER  { if($1.num < 0){
                                     $$.flag = 1;
                                     assignString($$.str,$1.str);
                                     if(!isInOutput && !isInBlock) {
-                                       if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); return 1;}
+                                       if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration (1)"); return 1;}
                                     }
                                  }
                         ;
@@ -376,7 +374,7 @@ register                : NUMBER  { if($1.num < 0){
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  fprintf(fp,"Pre - defined Gate call statement\n");
-                                                                                 if(!isInBlock ||isInBlock){
+                                                                                 if(1){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
@@ -387,7 +385,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($5.str);
                                                                               }
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");
-                                                                                 if(!isInBlock ||isInBlock){
+                                                                                 if(1){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
@@ -398,7 +396,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($5.str);                                                                                 free($5.str);
                                                                               }
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");
-                                                                                 if(!isInBlock ||isInBlock){
+                                                                                 if(1){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
@@ -410,7 +408,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                     yyerror("semantic error: block not defined");
                                                                                     return 1;
                                                                                  }
-                                                                                 if(!isInBlock ||isInBlock){
+                                                                                 if(1){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
@@ -482,13 +480,13 @@ register_list           : register_list ',' register  {
                                                       }
                         ;
 
-classic_control         : register_expr '?'                 {
+classic_control         : control_expr '?'                 {
                                                                $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
                                                                snprintf($$.str,strlen($1.str)+1,"%s",$1.str); 
                                                                // assignString($$.str,$1.str); 
                                                                free($1.str); 
                                                             }        /* removing epsilon rule resolved all conflicts */
-                        | '(' register_expr_list ')' '?'    {
+                        | '(' control_expr_list ')' '?'    {
                                                                $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+1));
                                                                snprintf($$.str,strlen($2.str)+1,"%s",$2.str);
                                                                // assignString($$.str,$2.str);
@@ -533,7 +531,7 @@ target                  : register                           {free($1.str);}   /
                         ;
 
 /* for simple expressions for classic control */
-register_expr           : register                                   {
+control_expr           : register                                   {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+11));
                                                                         snprintf($$.str,strlen($1.str)+11,"c_output[%s]",$1.str);
                                                                         free($1.str);
@@ -545,13 +543,13 @@ register_expr           : register                                   {
                                                                      }      
                         ;
 
-register_expr_list      : register_expr_list ',' register_expr       {
+control_expr_list      : control_expr_list ',' control_expr       {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+7));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+7,"%s && (%s)",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);    
                                                                      }   
-                        | register_expr                              {
+                        | control_expr                              {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
                                                                         snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
                                                                         free($1.str);
@@ -630,7 +628,7 @@ arithmetic_expr         : arithmetic_expr '+' arithmetic_expr        {
                                                                      }
                         | ID                       {
                                                       if(!isInOutput) {
-                                                         if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); free($1.str); return 1;}
+                                                         if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration (2)"); free($1.str); return 1;}
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
                                                          snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
                                                          free($1.str);  
@@ -641,6 +639,17 @@ arithmetic_expr         : arithmetic_expr '+' arithmetic_expr        {
                                                       snprintf($$.str,20,"%d",$1.num);
                                                    }
                         ;
+
+simple_expr             : '(' simple_expr ')'                        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        free($1.str);          
+                                                                     }
+                        | arithmetic_expr                            {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        free($1.str);             
+                                                                     }
 
 expr                    : expr COMP expr                             {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($2.str)+strlen($3.str)+3));
@@ -733,7 +742,7 @@ range_list              : range ',' range_list     {  $$.num = 1 + $3.num;
 
 var_list                : ID ',' var_list   {  if(isInOutput){
                                                    if(getOutputSymbolEntry(&OutputSymbolTable,$1.str,outputLevel + 1,1) == NULL){
-                                                      yyerror("semantic error: variable used without declaration");
+                                                      yyerror("semantic error: variable used without declaration (3)");
                                                       return 1;
                                                    }
                                                 }     
@@ -1649,7 +1658,7 @@ out_other_final         : OTHERWISE '{' {outputLevel++;fprintf(out,"else{\n");} 
                         ;
 
 out_for_stmt            : FOR ID {  if(getOutputSymbolEntry(&OutputSymbolTable,$2.str,outputLevel + 1,1) == NULL){
-                                       yyerror("semantic error: variable used without declaration"); 
+                                       yyerror("semantic error: variable used without declaration (4)"); 
                                        return 1;
                                     }
                                  } 
