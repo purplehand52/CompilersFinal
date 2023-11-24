@@ -22,7 +22,6 @@ class StateVec
 
         /* Get Functions */
         Complex get_value(unsigned int i);
-        Complex* get_arr();
         unsigned int get_dim() const;
 
         /* Functions */
