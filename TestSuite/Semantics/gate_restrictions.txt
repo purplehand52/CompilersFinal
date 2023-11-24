@@ -6,13 +6,13 @@
     #set classical states -> 0,0,0,0,0
     #set quantum states -> {1,0}, {1,0}, {1,0}, {1,0}, {1,0}
 
-    gate C = [[1, 1], [1, -1], [0, 0]]
+    gate C = [[1, 1], [1, -1]]
 
 \end_init
 
 \begin_main
 
-    BellGen : 1 -> 4
+    BellGen 1 -> 4
     H -> 4
     3 ? X : (0,1,2) -> 4
 

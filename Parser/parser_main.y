@@ -406,6 +406,10 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($4.str);    
                                                                               }
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");
+                                                                                 if(!BlockCallSemanticCheck($1.str,$2.num)){
+                                                                                    yyerror("semantic error: block not defined");
+                                                                                    return 1;
+                                                                                 }
                                                                                  if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
@@ -2093,9 +2097,8 @@ int main(int argc,char* argv[])
   fp2 = fopen("tokens.txt","w");
   fp = fopen("output.parsed","w");
   out = fopen("out.cpp","w");
-  yyparse();
 
-  return 0;
+  return yyparse();
 }
 
 void yyerror(char* err){

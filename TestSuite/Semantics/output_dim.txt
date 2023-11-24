@@ -17,22 +17,19 @@ $ Checks dimensions for lists and matrices $
         H -> i
     }
 
-    X : 0 -> i
-    X : 1 -> i
-
     measure : 0 -> 0
 
-\out_main
+\end_main
 
 \begin_output
 
     $ Example : 1 $
-    list[int] x = {1, 2, 3, 4, 5};
+    list[int] x = [1, 2, 3, 4, 5]
 
-    list[int] y = {x[0] + 1, x[0] + 2, x[0] + 3, x[0] + 4, x[0] + 5, x[0]};
+    list[int] y = [1, 2, 3, 4, 5]
 
     $ Mismatched dimensions (remove one element from y to not get error)$
-    list[int] z = x - y;
+    list[int] z = x - y
 
     echo(z)
 
@@ -43,11 +40,11 @@ $ Checks dimensions for lists and matrices $
                         [0, 1, 0, 0],
                         [1, 0, 0, 0] ]
 
-    matrix perm_2 = [   [1, 0, 0] 
+    matrix perm_2 = [   [1, 0, 0], 
                         [0, 0, 1], 
                         [0, 1, 0]]   
 
-    list[matrix] perm = {perm_1, perm_2};
+    list[matrix] perm = [[[0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0],[1, 0, 0, 0]], [[1, 0, 0], [0, 0, 1], [0, 1, 0]]];
 
     echo(perm)
        

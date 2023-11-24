@@ -17,12 +17,9 @@ $ Checks dimensions for lists and matrices $
         H -> i
     }
 
-    X : 0 -> i
-    X : 1 -> i
-
     measure : 0 -> 0
 
-\out_main
+\end_main
 
 \begin_output
     matrix a = [[1, 2], [3, 4]]
