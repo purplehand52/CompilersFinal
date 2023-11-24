@@ -692,7 +692,7 @@ prim_const              : bool_const      {  $$.type = Bool;
                         | NEG             {$$.type = Int;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%d",$1.num);}
                         | DEC             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
                         | EXP             {$$.type = Float;$$.str = (char *)malloc(sizeof(char)*20);snprintf($$.str,20,"%f",$1.real);}
-                        | STRING          {$$.type = String;$$.str = (char *)malloc(sizeof(char)*25);snprintf($$.str,25,"%s",$1.str);}
+                        | STRING          {$$.type = String;$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));snprintf($$.str,strlen($1.str)+1,"%s",$1.str);}
                         ;
 
 vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim; 
@@ -1391,6 +1391,7 @@ echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc
                                                       }
                         | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         printf("|%s|\n",$1.str);
                                                          free($1.str);   
                                                       }
                         ;
