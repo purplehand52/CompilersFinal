@@ -25,6 +25,8 @@ struct st
         float imag;
     } cpx;
 
+    struct Complex gates[4];
+
     struct Quantum
     {
         struct Complex first;
@@ -51,9 +53,14 @@ struct BlockTable{
     struct BlockTable* next;
 };
 
+struct cpx{
+    float real;
+    float imag;
+};
+
 struct GateTable{
     char *id;
-    int rows,cols;
+    struct cpx *arr;
     struct GateTable* next;
 };
 

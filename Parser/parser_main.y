@@ -29,6 +29,7 @@
    struct List2* range_list = NULL;
    struct BlockTable* BlockSymbolTable = NULL;
    struct GateTable* GateSymbolTable = NULL;
+   struct Complex* gateList = NULL;
 
    /* Output Section */
    struct OutputSymbolEntry* OutputSymbolTable = NULL;
@@ -36,7 +37,7 @@
    bool firstLetterCapital(char *str);
    struct OutputSymbolEntry* getOutputSymbolEntry(struct OutputSymbolEntry** Head, char* id, int level, int findFlag); // declaration
    void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level);
-   int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols);
+   int insertInGateTable(struct GateTable ** Head,char * data,struct cpx* arr);
    int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params);
    void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, int type, bool primitive, int matrix_dim, int dim, bool isLoopId);
    int BlockCallSemanticCheck(char *block_id,int num_params);
@@ -91,11 +92,36 @@ prgm                    : {fprintf(out,"#include<iostream>\n"
                                         "#include\"complex.h\"\n"
                                         "#include\"matrix.h\"\n"
                                         "#include\"type.h\"\n"
-                                        "#include\"state.h\"\n\n"
+                                        "#include\"state.h\"\n"
+                                        "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
                           } 
                           init_section 
-                          {fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");} 
+                          {   fprintf(out,"Matrix X = Matrix(2);\n"
+                                          "Matrix Y = Matrix(2);\n"
+                                          "Matrix Z = Matrix(2);\n"
+                                          "Matrix H = Matrix(2);\n"
+                                          "int initializeGate(Matrix x,Complex a,Complex b,Complex c,Complex d){\n"
+                                                "\tx.set_entry(0,0,a);\n"
+                                                "\tx.set_entry(0,1,b);\n"
+                                                "\tx.set_entry(1,0,c);\n"
+                                                "\tx.set_entry(1,1,d);\n"
+                                                "\tif(x.is_unitary()) return 1;\n"
+                                                "\treturn 0;\n"
+                                          "}\n\n"
+                                     );
+                              fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
+                              fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
+                              fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
+                              fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
+                              fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
+                              struct GateTable* temp = GateSymbolTable;
+                              while(temp != NULL){
+                                 fprintf(out,"if(!initializeGate(%s,Complex(%f,%f),Complex(%f,%f),Complex(%f,%f),Complex(%f,%f))) return 0;\n",
+                                 temp->id,temp->arr[0].real,temp->arr[0].imag,temp->arr[1].real,temp->arr[1].imag,temp->arr[2].real,temp->arr[2].imag,temp->arr[3].real,temp->arr[3].imag);
+                                 temp = temp->next;
+                              }
+                          } 
                           main_section 
                           output_section 
                           {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
@@ -129,20 +155,28 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                         ;
 
 // can only one type of states be set?
-set_states              :   set_quantum_states set_classical_states 
-                        |   set_classical_states set_quantum_states 
-                        |   set_quantum_states                      
-                        |   set_classical_states                    
-                        |
+set_states              :   set_quantum_states set_classical_states {fprintf(out,$1.str);fprintf(out,$2.str);}
+                        |   set_classical_states set_quantum_states {fprintf(out,$1.str);fprintf(out,$2.str);}
+                        |   set_quantum_states                      {fprintf(out,$1.str);fprintf(out,"int c_output[%d]={ 0 }",
+                                                                     classical_registers);
+                                                                    }
+                        |   set_classical_states                    {fprintf(out,$1.str);fprintf(out,"StateVec q_output = StateVec(%d);\n",
+                                                                     quantum_registers);
+                                                                    }
+                        |   { fprintf(out,"int c_output[%d]={ 0 }",classical_registers);
+                              fprintf(out,"StateVec q_output = StateVec(%d);\n",quantum_registers);
+                            }
                         ;
 
 set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list { fprintf(fp,"Setting initial state of quantum registers\n");
-                                                                              fprintf(out, "struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q);\n", quantum_registers,$6.str, quantum_registers);
+                                                                              $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)+200));
+                                                                              snprintf($$.str,strlen($6.str)+200,"struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q);\n", quantum_registers,$6.str, quantum_registers);
                                                                             }
                         ;
 
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {   fprintf(fp,"Setting initial state of classical registers\n");
-                                                                                    fprintf(out, "int c_output[%d] = {%s};\n", classical_registers,$6.str);
+                                                                                    $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)+100));
+                                                                                    snprintf($$.str,strlen($6.str)+100,"int c_output[%d] = {%s};\n", classical_registers,$6.str);
                                                                                 }
                         ;
 
@@ -187,26 +221,28 @@ gate_defn_list          :   gate_defn_list gate_defn
                         |   gate_defn
                         ;
 
-gate_defn               :   GATE_DEF ID '=' rhs  {  fprintf(fp,"Gate definition\n");
-                                                if(!insertInGateTable(&GateSymbolTable,$2.str,$4.rows,$4.cols)){
-                                                   yyerror("semantic error: gate definition requires square matrix");
-                                                   return 1;
-                                                }
-                                             }
+gate_defn               :   GATE_DEF ID '=' rhs  { fprintf(fp,"Gate definition\n");
+                                                   struct cpx arr[4];
+                                                   for(int i=0;i<4;i++){
+                                                      arr[i].real = $4.gates[i].real;
+                                                      arr[i].imag = $4.gates[i].imag;
+                                                   }
+                                                   if(!insertInGateTable(&GateSymbolTable,$2.str,arr)){
+                                                      yyerror("semantic error: gate definition requires square matrix");
+                                                      return 1;
+                                                   }
+                                                   fprintf(out,"Matrix %s = Matrix(%d);\n", $2.str, 2);
+                                                 }
                         ;
 
-rhs                     :   '[' tuple_list ']'  {$$.rows = $2.rows;$$.cols = $2.cols;}
+rhs                     :   '[' '[' temp ',' temp ']' ',' '[' temp ',' temp ']' ']'  {
+                                                                                       $$.gates[0] = $3.cpx;
+                                                                                       $$.gates[1] = $5.cpx;   
+                                                                                       $$.gates[2] = $9.cpx;
+                                                                                       $$.gates[3] = $11.cpx;
+                                                                                     }
                         |   '{' tuple_list2 '}'
 
-tuple_list              : tuple_list ',' '[' id_list ']' {  if($1.cols != $4.cols){
-                                                               yyerror("semantic error: rows of different length cannot form matrix");
-                                                               return 1;
-                                                            }
-                                                            int temp = $1.rows + 1;
-                                                            $$.rows = temp;
-                                                            $$.cols = $1.cols;
-                                                         }
-                        | '[' id_list ']'                {$$.rows = 1;$$.cols = $2.cols;}
 
 tuple_list2              : tuple_list2 ',' '(' id_list ')'
                         | '(' id_list ')'
@@ -1727,8 +1763,7 @@ void printBlockTable(){
    }
 }
 
-int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
-   if(rows!=cols){return 0;}
+int insertInGateTable(struct GateTable ** Head,char * data,struct cpx * arr){
    struct GateTable* temp = *Head;
    while(temp != NULL){
       if(strcmp(temp->id,data) == 0){
@@ -1737,12 +1772,18 @@ int insertInGateTable(struct GateTable ** Head,char * data,int rows,int cols){
       temp = temp->next;
    }
    struct GateTable* newNode = (struct GateTable*)malloc(sizeof(struct GateTable));
-   newNode->id = (char *)malloc(sizeof(char)*strlen(data));
+   newNode->id = (char *)malloc(sizeof(char)*(strlen(data)+1));
    for(int i=0;i<strlen(data);i++){
       newNode->id[i] = data[i];
    }
-   newNode->rows = rows;
-   newNode->cols = cols;
+   newNode->id[strlen(data)] = '\0';
+
+   struct cpx *temp2 = (struct cpx *)malloc(sizeof(struct cpx)*4);
+   for(int i=0;i<4;i++){
+      temp2[i] = arr[i];
+   }
+   newNode->arr = temp2;
+
    if(*Head == NULL){
       newNode->next = NULL;
    }
@@ -1757,7 +1798,9 @@ void printGateTable(struct GateTable ** GateSymbolTable){
    struct GateTable* temp = *GateSymbolTable;
    while(temp != NULL){
       printf("%s ",temp->id);
-      printf("%d %d\n",temp->rows,temp->cols);
+      for(int i=0;i<4;i++){
+         printf("(%f, %f) ",temp->arr[i].real,temp->arr[i].imag);
+      }
       temp = temp->next;
    }
 }
