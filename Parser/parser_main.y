@@ -115,11 +115,6 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                                 "\treturn 0;\n"
                                           "}\n\n"
                                     );
-                            fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
-                            fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
-                            fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
-                            fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
-                            fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
 
                             struct GateTable* temp = GateSymbolTable;
                             while(temp != NULL){
@@ -129,6 +124,13 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                             }
                           } 
                           init_section
+                          {
+                              fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
+                              fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
+                              fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
+                              fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
+                              fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
+                          }
                           main_section 
                           output_section 
                           {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
@@ -571,41 +573,125 @@ barrier_stmt            : '\\' BARRIER    {
                                           }
                         ;
 
-condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
+condition_stmt          : CONDITION '(' expr ')'                                       {fprintf(out,"if(%s){\n",$3.str); free($3.str);} 
+                         '{' main_stmt_list '}'                                        {fprintf(out,"}\n");} 
+                         otherwise_list otherwise_final         
                         ;
 
-otherwise_list          : otherwise_list OTHERWISE '(' expr ')' '{' main_stmt_list '}'
+otherwise_list          : otherwise_list OTHERWISE '(' expr ')'                        {fprintf(out,"else if(%s){\n",$4.str); free($4.str);} 
+                        '{' main_stmt_list '}'                                         {fprintf(out,"}\n");} 
                         | /* epsilon */
                         ;
 
-otherwise_final         : OTHERWISE '{' main_stmt_list '}'
+otherwise_final         : OTHERWISE                                                    {fprintf(out,"else{\n");}
+                         '{' main_stmt_list '}'                                        {fprintf(out,"}\n");} 
                         | /* epsilon */
                         ;
 
-arithmetic_expr         : arithmetic_expr '+' arithmetic_expr
-                        | arithmetic_expr '-' arithmetic_expr
-                        | arithmetic_expr '*' arithmetic_expr
-                        | arithmetic_expr '/' arithmetic_expr
-                        | arithmetic_expr '%' arithmetic_expr
+arithmetic_expr         : arithmetic_expr '+' arithmetic_expr        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | arithmetic_expr '-' arithmetic_expr        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | arithmetic_expr '*' arithmetic_expr        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | arithmetic_expr '/' arithmetic_expr        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s / %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | arithmetic_expr '%' arithmetic_expr        {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s % %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
                         | ID                       {
                                                       if(!isInOutput) {
-                                                         if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); return 1;}
-                                                      }
+                                                         if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); free($1.str); return 1;}
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                         snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
+                                                         free($1.str);  
+                                                      }  
                                                    }
-                        | NUMBER
+                        | NUMBER                   {
+                                                      $$.str = (char *)malloc(sizeof(char)*20);
+                                                      snprintf($$.str,20,"%d",$1.num);
+                                                   }
                         ;
 
-expr                    : expr COMP expr
-                        | expr EQUALITY expr
-                        | expr AND expr
-                        | expr OR expr
-                        | expr '^' expr
-                        | expr '&' expr
-                        | expr '|' expr
-                        | '(' expr ')'
-                        | arithmetic_expr
-                        | TRUE
-                        | FALSE
+expr                    : expr COMP expr                             {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($2.str)+strlen($3.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($2.str)+strlen($3.str)+5,"%s %s %s",$1.str,$2.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr EQUALITY expr                         {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+5,"%s == %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr AND expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+5,"%s && %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr OR expr                               {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+5));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+5,"%s || %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '^' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s ^ %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '&' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s & %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '|' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s | %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | '(' expr ')'                               {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        free($1.str);          
+                                                                     }
+                        | arithmetic_expr                            {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
+                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        free($1.str);             
+                                                                     }
+                        | TRUE                                       {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(2));
+                                                                        snprintf($$.str,1,"1");        
+                                                                     }
+                        | FALSE                                      {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(2));
+                                                                        snprintf($$.str,1,"0");       
+                                                                     }
                         ;
 
 /* negative numbers? */
@@ -706,7 +792,8 @@ for_zip_stmt            : FOR_ZIP '(' var_list ')' IN '(' range_list ')' { if($3
                                                  }
                         ;
 
-while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
+while_stmt              : WHILE '(' expr ')'                          {fprintf(out,"while(%s){\n",$3.str);} 
+                         '{' main_stmt_list '}'                       {fprintf(out,"}\n");}                                                                                                   
                         ;
 
 // /* ................ 
@@ -1637,7 +1724,7 @@ void printForZip(int num, int usage){
    temp = head;
    temp2= range_list;
    for(int i=0;i<num;i++){
-      fprintf(out, "%s < %s",temp->id,temp2->end);
+      fprintf(out, "%s += %s",temp->id,temp2->end);
       if(i<num-1){fprintf(out, ", ");}
       temp = temp->next;
       temp2 = temp2->next;
