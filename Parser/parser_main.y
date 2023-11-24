@@ -385,7 +385,7 @@ register                : NUMBER  { if($1.num < 0){
 
 
 /* separate rules for gate calls and block calls because same syntax means different things for both */
-call_stmt               : classic_control GATE quantum_control ARROW register {
+call_stmt               : classic_control GATE quantum_control ARROW simple_expr {
                                                                                  fprintf(fp,"Pre - defined Gate call statement\n");
                                                                                  if(1){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
@@ -397,7 +397,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($3.str);
                                                                                  free($5.str);
                                                                               }
-                        | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");
+                        | classic_control ID quantum_control ARROW simple_expr   {fprintf(fp,"user - defined Gate call statement\n");
                                                                                  if(1){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $2.str, $3.str, $5.str);
@@ -408,7 +408,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($3.str);
                                                                                  free($5.str);                                                                                 free($5.str);
                                                                               }
-                        | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");
+                        | GATE quantum_control ARROW simple_expr                 {fprintf(fp,"Pre - defined Gate call statement\n");
                                                                                  if(1){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
@@ -416,7 +416,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($2.str);
                                                                                  free($4.str);    
                                                                               }
-                        | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");
+                        | ID quantum_control ARROW simple_expr                   {fprintf(fp,"User - defined Gate call statement\n");
                                                                                  if(!BlockCallSemanticCheck($1.str,$2.num)){
                                                                                     yyerror("semantic error: block not defined");
                                                                                     return 1;
@@ -460,7 +460,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                               }
                         ;
 
-parameters              : register                 {  
+parameters              : simple_expr                 {  
                                                       $$.num = 1; 
                                                       $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
                                                       snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
@@ -478,14 +478,14 @@ optional                :
                         | ARROW target
                         ;
 
-register_list           : register_list ',' register  {
+register_list           : register_list ',' simple_expr  {
                                                          $$.num = 1 + $1.num; 
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+3));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+3,"%s, %s",$1.str,$3.str);
                                                          free($3.str);
                                                          free($1.str);
                                                       }  
-                        | register                    { 
+                        | simple_expr                    { 
                                                          $$.num = 1; 
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
                                                          snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
@@ -507,14 +507,14 @@ classic_control         : control_expr '?'                 {
                                                             }
                         ;
 
-quantum_control_list    : quantum_control_list ',' register  {
+quantum_control_list    : quantum_control_list ',' simple_expr  {
                                                                 $$.num = 1 + $1.num;
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+29));
                                                                 snprintf($$.str,strlen($1.str)+strlen($3.str)+29,"%s|(1<<quantum_register_map(%s))",$1.str,$3.str);
                                                                 free($3.str);
                                                                 free($1.str);
                                                              }
-                        | register                           { 
+                        | simple_expr                           { 
                                                                 $$.num = 1; 
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+28));
                                                                 snprintf($$.str,strlen($1.str)+28,"(1<<quantum_register_map(%s))",$1.str);
@@ -527,7 +527,7 @@ quantum_control         : /* epsilon */                         /* optional */ {
                                                                   $$.str[0] = '0';
                                                                   $$.str[1] = '\0';
                                                                }
-                        | ':' register                         {
+                        | ':' simple_expr                         {
                                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+28));
                                                                   snprintf($$.str,strlen($2.str)+28,"(1<<quantum_register_map(%s))",$2.str);
                                                                   free($2.str);
@@ -609,60 +609,55 @@ otherwise_final         : OTHERWISE                                             
                         | /* epsilon */
                         ;
 
-arithmetic_expr         : arithmetic_expr '+' arithmetic_expr        {
+simple_expr         :      simple_expr '+' simple_expr                    {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
-                        | arithmetic_expr '-' arithmetic_expr        {
+                        | simple_expr '-' simple_expr                {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
-                        | arithmetic_expr '*' arithmetic_expr        {
+                        | simple_expr '*' simple_expr                {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
-                        | arithmetic_expr '/' arithmetic_expr        {
+                        | simple_expr '/' simple_expr                {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s / %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
-                        | arithmetic_expr '%' arithmetic_expr        {
+                        | simple_expr '%' simple_expr                {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s %% %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
-                        | ID                       {
-                                                      if(!isInOutput) {
-                                                         if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration (2)"); free($1.str); return 1;}
-                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
-                                                         snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
-                                                         free($1.str);  
-                                                      }  
-                                                   }
-                        | NUMBER                   {
-                                                      $$.str = (char *)malloc(sizeof(char)*20);
-                                                      snprintf($$.str,20,"%d",$1.num);
-                                                   }
-                        ;
-
-simple_expr             : '(' simple_expr ')'                        {
+                        | ID                                         {
+                                                                        if(!isInOutput) {
+                                                                           if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration (2)"); free($1.str); return 1;}
+                                                                           $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                                           snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
+                                                                           free($1.str);  
+                                                                        }  
+                                                                     }
+                        | NUMBER                                     {
+                                                                        $$.str = (char *)malloc(sizeof(char)*20);
+                                                                        snprintf($$.str,20,"%d",$1.num);
+                                                                     }
+                        |  '(' simple_expr ')'                       {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
                                                                         snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
                                                                         free($1.str);          
                                                                      }
-                        | arithmetic_expr                            {
-                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
-                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
-                                                                        free($1.str);             
-                                                                     }
+                        ;
+
 
 expr                    : expr COMP expr                             {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($2.str)+strlen($3.str)+3));
@@ -711,11 +706,49 @@ expr                    : expr COMP expr                             {
                                                                         snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
                                                                         free($1.str);          
                                                                      }
-                        | arithmetic_expr                            {
-                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
-                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
-                                                                        free($1.str);             
+                        | expr '+' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
                                                                      }
+                        | expr '-' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '*' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '/' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s / %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | expr '%' expr                              {
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s %% %s",$1.str,$3.str);
+                                                                        free($1.str);
+                                                                        free($3.str);           
+                                                                     }
+                        | ID                                         {
+                                                                        if(!isInOutput) {
+                                                                           if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration (2)"); free($1.str); return 1;}
+                                                                           $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                                           snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
+                                                                           free($1.str);  
+                                                                        }  
+                                                                     }
+                        | NUMBER                                     {
+                                                                              $$.str = (char *)malloc(sizeof(char)*20);
+                                                                        snprintf($$.str,20,"%d",$1.num);
+                                                                     }
+                     
                         | TRUE                                       {
                                                                         $$.str = (char *)malloc(sizeof(char)*(2));
                                                                         snprintf($$.str,1,"1");        
