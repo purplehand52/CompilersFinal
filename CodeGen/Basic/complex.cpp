@@ -3,7 +3,9 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
+/* Constructors */
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -13,7 +15,6 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
     return std::move(out).str();
 }
 
-/* Constructors */
 Complex::Complex()
 {
     this->real = 0;
@@ -139,8 +140,10 @@ std::string Complex::to_str()
     return o;
 }
 
+
+
 std::ostream &operator<<(std::ostream &os, Complex const &m) { 
-    if(m.get_imag() >= 0) os << to_string_with_precision(m.get_real(), 2) << " + " << to_string_with_precision(m.get_imag(), 2) << "i";
-    else os << to_string_with_precision(m.get_real(), 2) << " - " << to_string_with_precision(-(m.get_imag()), 2) << "i";
+    if(m.get_imag() >= 0) os << std::fixed << std::setprecision(2) << m.get_real() << " + " << m.get_imag() << "i";
+    else os << std::fixed << std::setprecision(2) << m.get_real() << " - " << -(m.get_imag()) << "i";
     return os;
 }

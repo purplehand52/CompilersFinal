@@ -49,6 +49,21 @@ Matrix::Matrix(unsigned int m)
     }
 }
 
+/* Constructor #2 */
+Matrix::Matrix(unsigned int m, Complex** a)
+{
+    n = m;
+    arr = (Complex**)malloc(n*sizeof(Complex*));
+    for(int i = 0; i < n; i++)
+    {
+        arr[i] = (Complex*)malloc(n*sizeof(Complex));
+        for(int j = 0; j < n; j++)
+        {
+            arr[i][j] = a[i][j];
+        }
+    }
+}
+
 /* Set Functions */
 void Matrix::set_entry(unsigned int i, unsigned int j, Complex c)
 {

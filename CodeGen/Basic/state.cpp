@@ -129,6 +129,7 @@ int StateVec::measure_prob(unsigned int target)
         Complex* temp = arr;
         arr = new_st;
         free(temp);
+        normalize();
     }
     else
     {
@@ -136,7 +137,6 @@ int StateVec::measure_prob(unsigned int target)
         arr = NULL;
     }
     
-    normalize();
     return result;
 }
 

@@ -100,15 +100,6 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                         "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
 
-<<<<<<< Updated upstream
-=======
-                            fprintf(out,"int num_iterations = %d;\n", iterations);
-                            fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
-                            fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
-                            fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
-                            fprintf(out,"Matrix op = Matrix(1<<quantum_registers);\n");
-
->>>>>>> Stashed changes
                             fprintf(out,"Matrix X = Matrix(2);\n"
                                           "Matrix Y = Matrix(2);\n"
                                           "Matrix Z = Matrix(2);\n"
@@ -1504,10 +1495,19 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error 16");
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);
+                                                      if($1.prim){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s + %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else{
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+12));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"addLists(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+
+                                                      }
                                                    }
                         | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*) */                {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if(temp_type == Matrix || temp_type == State || (temp_type <= Complex && temp_type >= 0)){
@@ -1520,10 +1520,18 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error 17");
                                                          return 1;
                                                       } 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);                                                      
+                                                      if($1.prim){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s - %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else{
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+12));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"subLists(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }                                                      
                                                    }
                         | out_rhs '@'  out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                         {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && temp_type == Matrix){
@@ -1546,7 +1554,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          $$.type = temp_type; 
                                                          $$.dim = 0;
                                                       } 
-                                                      else if($1.type<=COMPATIBLE && $3.type==Matrix){
+                                                      else if($1.type==Complex && $3.type==Matrix){
                                                          $$.prim = true; 
                                                          $$.type = Matrix; 
                                                          $$.dim = 0;
@@ -1555,10 +1563,32 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error 19"); 
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s @ %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);
+                                                      if($1.prim && temp_type == Matrix)
+                                                      {
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else if(!$1.prim && temp_type <= Float){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"dotProduct(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
+                                                      else if(!$1.prim && temp_type == Complex)
+                                                      {
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+21));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+21,"dotProductComplex(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else if(!$1.prim && !$3.prim && ($1.type == Complex) && ($3.type == Matrix)){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+19));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+19,"dotProductCross(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
                                                    }
                         | out_rhs '&' out_rhs   /* Works for uint, int, list(uint, int)*/ 
                                                    {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1570,10 +1600,18 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s & %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);
+                                                      if($1.prim){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s & %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else{
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"bitwiseAnd(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
                                                    }
                         | out_rhs '^' out_rhs   /* Works for uint, int, list(uint, int)*/                                                     
                                                    {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1585,10 +1623,18 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s ^ %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);                                                      
+                                                      if($1.prim){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s ^ %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else{
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"bitwiseXor(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }                                                     
                                                    }
                         | out_rhs '|' out_rhs   /* Works for uint, int, list(uint, int) */                                             
                                                    { temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1600,10 +1646,18 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          yyerror("semantic error: incompatible operands"); 
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s | %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);                                                      
+                                                      if($1.prim){
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s | %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      } 
+                                                      else{
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+13));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+13,"bitwiseOr(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
                                                    }
                         ;
 
@@ -1672,27 +1726,33 @@ echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)mall
                                                          // snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
                                                          // free($1.str);
                                                          // free($3.str);
-                                                         if($3.prim){
-                                                            fprintf(out,"cout<<%s;",$3.str);
-                                                         } else {
-                                                            fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                                        "\tcout<<%s[i]<<\" \";"
-                                                                        "}\n"
-                                                            , $3.dim, $3.str);
-                                                         }
+                                                         // if($3.prim){
+                                                         //    fprintf(out,"cout<<%s;",$3.str);
+                                                         // }
+                                                         // else{
+                                                         //    else{
+                                                         //       fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                         //                   "\tcout<<%s[i]<<\" \";"
+                                                         //                   "}\n"
+                                                         //       , $3.dim, $3.str);
+                                                         //    }
+                                                         // }
 
                                                       }
                         | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
                                                          // free($1.str);   
-                                                         if($1.prim){
-                                                            fprintf(out,"cout<<%s;",$1.str);
-                                                         } else {
-                                                            fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                                        "\tcout<<%s[i]<<\" \";"
-                                                                        "}\n"
-                                                            , $1.dim, $1.str);
-                                                         }
+                                                         // if($1.prim){
+                                                         //    fprintf(out,"cout<<%s;",$1.str);
+                                                         // }
+                                                         // else{
+                                                         //    else{
+                                                         //       fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                         //                   "\tcout<<%s[i]<<\" \";"
+                                                         //                   "}\n"
+                                                         //       , $1.dim, $1.str);
+                                                         //    }
+                                                         // }
                                                       }
                         ;
 

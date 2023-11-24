@@ -3,6 +3,8 @@
 
 #include <string>
 #include <stdbool.h>
+#include <string>
+#include <sstream>
 
 class Complex
 {
@@ -37,6 +39,9 @@ class Complex
         /* Displays */
         void show();
         std::string to_str();
+        friend std::ostream &operator<<(std::ostream &os, Complex const &c);
+        // template <typename T>
+        // friend std::string to_string_with_precision(const T, const int n = 6);
 };
 
 #endif

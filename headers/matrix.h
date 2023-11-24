@@ -14,6 +14,7 @@ class Matrix
     public:
         /* Constructions */
         Matrix(unsigned int m);
+        Matrix(unsigned int m, Complex** a);
 
         /* Set Functions */
         void set_entry(unsigned int i, unsigned int j, Complex c);
