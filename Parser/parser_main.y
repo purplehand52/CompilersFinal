@@ -222,6 +222,21 @@ block_defn              : BLOCK block_id params target_params  {  if(!insertInBl
                                                                      yyerror("semantic error: incorrect block definition");
                                                                      return 1;
                                                                   }
+
+                                                                  fprintf(out,"Matrix %s(", $2.str);
+                                                                  
+                                                                  if(head!=NULL){
+                                                                  struct List* temp = head;
+                                                                     while(temp->next!=NULL){
+                                                                        fprintf(out, "int %s, ",temp->id);
+                                                                        temp = temp->next;
+                                                                     }   
+                                                                     fprintf(out, "int %s",temp->id);
+                                                                  }
+
+                                                                  fprintf(out,"){\n");
+
+                                                                  //free($2.str);
                                                                   head = NULL;
                                                                   isInBlock = 1;
                                                                }
@@ -232,11 +247,14 @@ block_defn              : BLOCK block_id params target_params  {  if(!insertInBl
                                                                   }
                                                                   id_list = NULL;
                                                                   isInBlock = 0;
+                                                                  fprintf(out, "return op;\n}\n");
                                                                }
                         ;
 
-params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1;}                  /* parantheses maybe ignored for single ID */
-                        | '(' param_id_list ')' {$$.num = $2.num;}
+params                  :  ID                   {insertInList(&head,$1.str);$$.num = 1; }                  /* parantheses maybe ignored for single ID */
+                        | '(' param_id_list ')' {
+                                                   $$.num = $2.num;                                              
+                                                }
                         ;
 
 param_id_list           : ID ',' param_id_list  {insertInList(&head,$1.str);$$.num = 1 + $3.num;}
@@ -303,7 +321,7 @@ register                : NUMBER  { if($1.num < 0){
 /* separate rules for gate calls and block calls because same syntax means different things for both */
 call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  fprintf(fp,"Pre - defined Gate call statement\n");
-                                                                                 if(!isInBlock){
+                                                                                 if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
@@ -314,7 +332,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($5.str);
                                                                               }
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");
-                                                                                 if(!isInBlock){
+                                                                                 if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
@@ -325,7 +343,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($5.str);                                                                                 free($5.str);
                                                                               }
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");
-                                                                                 if(!isInBlock){
+                                                                                 if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
@@ -333,7 +351,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  free($4.str);    
                                                                               }
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");
-                                                                                 if(!isInBlock){
+                                                                                 if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
@@ -344,30 +362,65 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  if(!isInBlock){
                                                                                     if(!BlockCallSemanticCheck($2.str,$3.num)){
                                                                                        yyerror("semantic error: block not defined");
+                                                                                       free($1.str);
+                                                                                       free($2.str);
+                                                                                       free($3.str);
                                                                                        return 1;
                                                                                     }
+                                                                                    fprintf(out, "if(%s) {\n", $1.str);
+                                                                                    fprintf(out, "op = %s(%s);\n", $2.str, $3.str);
+                                                                                    fprintf(out, "}\n");
+                                                                                    free($1.str);
+                                                                                    free($2.str);
+                                                                                    free($3.str);
                                                                                  }
                                                                               }
                         | block_id parameters optional                        {  fprintf(fp,"Block call statement\n");
                                                                                  if(!isInBlock){
                                                                                     if(!BlockCallSemanticCheck($1.str,$2.num)){
                                                                                        yyerror("semantic error: block not defined");
+                                                                                       free($1.str);
+                                                                                       free($2.str);
                                                                                        return 1;
                                                                                     }
+                                                                                    fprintf(out, "op = %s(%s);\n", $1.str, $2.str);
+                                                                                    free($1.str);
+                                                                                    free($2.str);
                                                                                  }
                                                                               }
                         ;
 
-parameters              : register                 {$$.num = 1; free($1.str);}
-                        | '(' register_list ')'    {$$.num = $2.num;}
+parameters              : register                 {  
+                                                      $$.num = 1; 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                      snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
+                                                      free($1.str);  
+                                                   }
+                        | '(' register_list ')'    {
+                                                      $$.num = $2.num; 
+                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+1));
+                                                      snprintf($$.str,strlen($2.str)+1,"%s",$2.str);
+                                                      free($2.str);
+                                                   }
                         ;
 
 optional                : 
                         | ARROW target
                         ;
 
-register_list           : register_list ',' register  {$$.num = 1 + $1.num; free($3.str);}
-                        | register                    {$$.num = 1; free($1.str);}
+register_list           : register_list ',' register  {
+                                                         $$.num = 1 + $1.num; 
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+3));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+3,"%s, %s",$1.str,$3.str);
+                                                         free($3.str);
+                                                         free($1.str);
+                                                      }  
+                        | register                    { 
+                                                         $$.num = 1; 
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
+                                                         snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
+                                                         free($1.str);
+                                                      }
                         ;
 
 classic_control         : register_expr '?'                 {
@@ -417,7 +470,7 @@ quantum_control         : /* epsilon */                         /* optional */ {
                         ;
 
 target                  : register                           {free($1.str);}   /* blocks allow multiple targets */
-                        | '(' register_list ')' 
+                        | '(' register_list ')'              {free($2.str);}
                         ;
 
 /* for simple expressions for classic control */
