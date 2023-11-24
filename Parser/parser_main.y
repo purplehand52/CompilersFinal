@@ -1593,14 +1593,11 @@ echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)mall
                                                          // free($3.str);
                                                          if($3.prim){
                                                             fprintf(out,"cout<<%s;",$3.str);
-                                                         }
-                                                         else{
-                                                            else{
-                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                                           "\tcout<<%s[i]<<\" \";"
-                                                                           "}\n"
-                                                               , $3.dim, $3.str);
-                                                            }
+                                                         } else {
+                                                            fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                        "\tcout<<%s[i]<<\" \";"
+                                                                        "}\n"
+                                                            , $3.dim, $3.str);
                                                          }
 
                                                       }
@@ -1609,14 +1606,11 @@ echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)mall
                                                          // free($1.str);   
                                                          if($1.prim){
                                                             fprintf(out,"cout<<%s;",$1.str);
-                                                         }
-                                                         else{
-                                                            else{
-                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                                           "\tcout<<%s[i]<<\" \";"
-                                                                           "}\n"
-                                                               , $1.dim, $1.str);
-                                                            }
+                                                         } else {
+                                                            fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                        "\tcout<<%s[i]<<\" \";"
+                                                                        "}\n"
+                                                            , $1.dim, $1.str);
                                                          }
                                                       }
                         ;

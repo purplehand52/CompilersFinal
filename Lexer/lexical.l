@@ -20,6 +20,7 @@ void printSpecial();
 void printReserved();
 void error();
 void handleNewLines();
+void allocateMemory();
 %}
 /* contains frequently used declarations */
 
