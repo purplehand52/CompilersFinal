@@ -84,10 +84,10 @@
 
 prgm                    : {fprintf(out,"#include<iostream>\n"
                                         "#include<vector>\n"
-                                        "#include\"../CodeGen/Basic/complex.h\"\n"
-                                        "#include\"../CodeGen/Basic/matrix.h\"\n"
-                                        "#include\"../CodeGen/Basic/type.h\"\n"
-                                        "#include\"../CodeGen/Basic/state.h\"\n\n"
+                                        "#include\"complex.h\"\n"
+                                        "#include\"matrix.h\"\n"
+                                        "#include\"type.h\"\n"
+                                        "#include\"state.h\"\n\n"
                                         "using namespace std;\n\n");
                           } 
                           init_section 

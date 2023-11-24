@@ -2,7 +2,7 @@
 yacc -d ./Parser/parser_main.y -o ./exec/y.tab.c
 lex ./lexer/lexical.l
 mv lex.yy.c ./exec/lex.yy.c
-gcc ./exec/y.tab.c ./exec/lex.yy.c -ll -w -o ./exec/a.out
+gcc ./exec/y.tab.c ./exec/lex.yy.c -Iheaders/ -ll -w -o ./exec/a.out
 cd ./exec
 
 testpath1="../Tests/UnitTests/"
@@ -16,6 +16,6 @@ else
 fi
 
 cd ../
-g++ ./exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp
+g++ ./exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp -Iheaders/
 ./a.out
 
