@@ -99,7 +99,7 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                             fprintf(out,"int num_iterations = %d;\n", iterations);
                             fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
                             fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
-                            fprintf(out,"int quantum_register_map[%d];\n", quantum_registers);
+                            fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
                             fprintf(out,"Matrix op = Matrix(1<<quantum_registers)\n;");
 
                             fprintf(out,"Matrix X = Matrix(2);\n"
@@ -116,16 +116,22 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                           "}\n\n"
                                     );
 
+                           fprintf(out, "int quantum_register_map(int i){");
+                           fprintf(out, "if( (i>= %d) || (i<0) || (quantum_register_dict[i] == -1))", quantum_registers);           
+                           fprintf(out, "{throw std::runtime_error(\"Semantic Error: Invalid quantum register access\");}");
+                           fprintf(out, "return quantum_register_dict[i];\n}\n");
+
                             struct GateTable* temp = GateSymbolTable;
                             while(temp != NULL){
                                  fprintf(out,"if(!initializeGate(%s,Complex(%f,%f),Complex(%f,%f),Complex(%f,%f),Complex(%f,%f))) return 0;\n",
                                  temp->id,temp->arr[0].real,temp->arr[0].imag,temp->arr[1].real,temp->arr[1].imag,temp->arr[2].real,temp->arr[2].imag,temp->arr[3].real,temp->arr[3].imag);
                                  temp = temp->next;
                             }
+
                           } 
                           init_section
                           {
-                              fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
+                              fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_dict[i] = i;}\n");
                               fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
                               fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
                               fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
@@ -372,7 +378,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                                  fprintf(fp,"Pre - defined Gate call statement\n");
                                                                                  if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
-                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $2.str, $3.str, $5.str);
+                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
                                                                                  }
                                                                                  free($1.str);
@@ -383,7 +389,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                         | classic_control ID quantum_control ARROW register   {fprintf(fp,"user - defined Gate call statement\n");
                                                                                  if(!isInBlock ||isInBlock){
                                                                                     fprintf(out, "if(%s) {\n", $1.str);
-                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $2.str, $3.str, $5.str);
+                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $2.str, $3.str, $5.str);
                                                                                     fprintf(out, "}\n");
                                                                                  }
                                                                                  free($1.str);
@@ -393,7 +399,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                               }
                         | GATE quantum_control ARROW register                 {fprintf(fp,"Pre - defined Gate call statement\n");
                                                                                  if(!isInBlock ||isInBlock){
-                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $1.str, $2.str, $4.str);
+                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
                                                                                  free($2.str);
@@ -401,7 +407,7 @@ call_stmt               : classic_control GATE quantum_control ARROW register {
                                                                               }
                         | ID quantum_control ARROW register                   {fprintf(fp,"User - defined Gate call statement\n");
                                                                                  if(!isInBlock ||isInBlock){
-                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map[%s], quantum_registers) * op;\n", $1.str, $2.str, $4.str);
+                                                                                    fprintf(out, "op = %s.kronecker_control_fill(%s, quantum_register_map(%s), quantum_registers) * op;\n", $1.str, $2.str, $4.str);
                                                                                  }
                                                                                  free($1.str);
                                                                                  free($2.str);
@@ -489,14 +495,14 @@ classic_control         : register_expr '?'                 {
 quantum_control_list    : quantum_control_list ',' register  {
                                                                 $$.num = 1 + $1.num;
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+29));
-                                                                snprintf($$.str,strlen($1.str)+strlen($3.str)+29,"%s|(1<<quantum_register_map[%s])",$1.str,$3.str);
+                                                                snprintf($$.str,strlen($1.str)+strlen($3.str)+29,"%s|(1<<quantum_register_map(%s))",$1.str,$3.str);
                                                                 free($3.str);
                                                                 free($1.str);
                                                              }
                         | register                           { 
                                                                 $$.num = 1; 
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+28));
-                                                                snprintf($$.str,strlen($1.str)+28,"(1<<quantum_register_map[%s])",$1.str);
+                                                                snprintf($$.str,strlen($1.str)+28,"(1<<quantum_register_map(%s))",$1.str);
                                                                 free($1.str);
                                                             }
                         ;
@@ -508,7 +514,7 @@ quantum_control         : /* epsilon */                         /* optional */ {
                                                                }
                         | ':' register                         {
                                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+28));
-                                                                  snprintf($$.str,strlen($2.str)+28,"(1<<quantum_register_map[%s])",$2.str);
+                                                                  snprintf($$.str,strlen($2.str)+28,"(1<<quantum_register_map(%s))",$2.str);
                                                                   free($2.str);
                                                                }
                         | ':' '(' quantum_control_list ')'     {
@@ -557,11 +563,11 @@ measure_stmt            : MEASURE ':' register ARROW register {
                               return 1;
                            }
                            fprintf(out,"q_output = q_output.transform(op);\n");
-                           fprintf(out,"c_output[%s] = q_output.measure_prob(quantum_register_map[%s]);\n", $5.str, $3.str);        
+                           fprintf(out,"c_output[%s] = q_output.measure_prob(quantum_register_map(%s));\n", $5.str, $3.str);        
                            fprintf(out, "quantum_registers--;\n");                                                                  
                            fprintf(out, "op = Matrix(1<<quantum_registers);\n");                                                    /* renewed op matrix */
-                           fprintf(out, "quantum_register_map[%s] = -1;\n", $3.str);
-                           fprintf(out, "for(int i=%s+1; i<%d; i++){quantum_register_map[i]--;}\n", $3.str, quantum_registers);     /* shifting mapping */
+                           fprintf(out, "quantum_register_dict[%s] = -1;\n", $3.str);
+                           fprintf(out, "for(int i=%s+1; i<%d; i++){quantum_register_dict[i]--;}\n", $3.str, quantum_registers);     /* shifting mapping */
                            free($3.str);
                            free($5.str);
                         } /* check if register1 and register2 are in bounds */
@@ -614,13 +620,13 @@ arithmetic_expr         : arithmetic_expr '+' arithmetic_expr        {
                                                                      }
                         | arithmetic_expr '%' arithmetic_expr        {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s % %s",$1.str,$3.str);
+                                                                        snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s %% %s",$1.str,$3.str);
                                                                         free($1.str);
                                                                         free($3.str);           
                                                                      }
                         | ID                       {
                                                       if(!isInOutput) {
-                                                         if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); free($1.str); return 1;}
+                                                         if(!isInBlock && !inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); free($1.str); return 1;}
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
                                                          snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
                                                          free($1.str);  
