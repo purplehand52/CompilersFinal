@@ -163,7 +163,6 @@ bool Matrix::is_unitary() const
 {
     Matrix cpy = *this;
     Matrix ans = (!cpy)*(cpy);
-    ans.show();
     Matrix eye = Matrix(this->n);
     for(int i = 0; i < this->n; i++)
     {
@@ -279,7 +278,6 @@ Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target,
             ans.arr[i][j] = arr[a][b];
         }
     }
-
     return ans;
 }
 

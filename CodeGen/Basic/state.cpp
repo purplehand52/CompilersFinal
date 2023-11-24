@@ -132,7 +132,7 @@ int StateVec::measure_prob(unsigned int target)
     }
     else
     {
-        free(arr);
+        // free(arr);
         arr = NULL;
     }
     
