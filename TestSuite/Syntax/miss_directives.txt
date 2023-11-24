@@ -1,0 +1,23 @@
+$ Illustrates mandatory directives $
+
+\begin_init
+
+    $#registers quantum = 2$
+    $#registers classical = 2$
+    #iters = 100
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+    H -> 0
+    H -> 1
+
+    measure : 0 -> 0
+    measure : 1 -> 1
+\end_main
+
+\begin_output
+    echo(c_output)
+\end_output

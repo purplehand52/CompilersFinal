@@ -1,0 +1,55 @@
+$ Checks dimensions for lists and matrices $
+
+\begin_init
+    
+    #registers quantum = 2
+    #registers classical = 2
+    #iters = 100
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+
+    for i in (0:2)
+    {
+        H -> i
+    }
+
+    X : 0 -> i
+    X : 1 -> i
+
+    measure : 0 -> 0
+
+\out_main
+
+\begin_output
+
+    $ Example : 1 $
+    list[int] x = {1, 2, 3, 4, 5};
+
+    list[int] y = {x[0] + 1, x[0] + 2, x[0] + 3, x[0] + 4, x[0] + 5, x[0]};
+
+    $ Mismatched dimensions (remove one element from y to not get error)$
+    list[int] z = x - y;
+
+    echo(z)
+
+    $ Example : 2 $
+    $ Inflate second matrix/ deflate first matrix to get correct and compatible list of matrices $
+    matrix perm_1 = [   [0, 0, 0, 1], 
+                        [0, 0, 1, 0], 
+                        [0, 1, 0, 0],
+                        [1, 0, 0, 0] ]
+
+    matrix perm_2 = [   [1, 0, 0] 
+                        [0, 0, 1], 
+                        [0, 1, 0]]   
+
+    list[matrix] perm = {perm_1, perm_2};
+
+    echo(perm)
+       
+
+\end_output

@@ -1,0 +1,43 @@
+$ Variables must be declared in the output section first $
+
+\begin_init
+    #registers quantum = 3
+    #registers classical = 3
+    #iters = 100
+    #set quantum states -> {1,0}, {1,0}, {1,0}
+    #set classical states -> 0, 0, 0
+\end_init
+
+
+\begin_main
+    $ Hadamard Transformation $
+    for i in (0:3)
+    {
+        H -> i
+    }
+
+    $ Apply controlled nots $
+    for j in (0:2)
+    {
+        X : j -> (j+1)
+    }
+
+    $ Measure $
+    for k in (0:3)
+    {
+        measure : k -> k
+    }
+\end_main
+
+
+\begin_output
+    $ Must declare first!!! $
+    final_sample = condense(c_output, (1, 2))
+
+    $ Improper list declarations, put [complex] $
+    list a = [{1, 0}, {0, 1}]
+
+    $ Using keywords $
+    int condition = 1
+
+\end_output

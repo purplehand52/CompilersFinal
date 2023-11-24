@@ -1,0 +1,27 @@
+$ Cannot use variables (unless dictated in loops) in the main section $
+
+\begin_init
+    
+    #registers quantum = 2
+    #registers classical = 2
+    #iters = 100
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+    for i in (0:2)
+    {
+        H -> i
+    }
+
+    X : 0 -> i
+    X : 1 -> i
+
+    measure : 0 -> 0
+\out_main
+
+\begin_output
+    echo(c_output)
+\end_output
