@@ -125,14 +125,29 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                               fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
                               fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
                               fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
+                              fprintf(out,"for(int iters=0;iters < num_iterations;iters++){\n");
+                              fprintf(out,"\tfor(int i=0;i<%d;i++{\n"
+                                             "\t\tq_output.arr[i] = q_output_original.arr[i];\n"
+                                          "}\n"
+                                          "for(int i=0;i<%d;i++){\n"
+                                             "\t\tc_output[i] = c_output_original[i];\n",
+                                          "}\n"
+                                          "for(int i=0;i<%d;i++){\n"
+                                             "\t\tquantum_register_dict[i] = i;\n"
+                                          "}\n"
+                                          quantum_registers, classical_registers,quantum_registers
+                                     );
                           }
                           main_section 
+                              {  
+                                 fprintf(out,"}\n");
+                              }
                           output_section 
                           {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
                         ;
 
 // sequence has been enforced for the initializations and definitions in the init section
-init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\n");} mandatory_init set_states block_defn_section gate_defn_section '\\' INIT_END {fprintf(fp,"\nInit section ends\n");}
+init_section            :  '\\' INIT_BEGIN {fprintf(fp,"\nInit section begins\n\n");} mandatory_init set_states block_defn_section gate_defn_section '\\' INIT_END {fprintf(fp,"\nInit section ends\n");$$.str = $5.str;}
                         ;   
 
 main_section            :  '\\'  MAIN_BEGIN {fprintf(fp,"\nMain section begins\n\n");} main_stmt_list '\\' MAIN_END {fprintf(fp,"\nMain section ends\n");}
@@ -163,28 +178,23 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                         ;
 
 // can only one type of states be set?
-set_states              :   set_quantum_states set_classical_states {fprintf(out,$1.str);fprintf(out,$2.str);}
-                        |   set_classical_states set_quantum_states {fprintf(out,$1.str);fprintf(out,$2.str);}
-                        |   set_quantum_states                      {fprintf(out,$1.str);fprintf(out,"int c_output[%d]={ 0 }",
-                                                                     classical_registers);
-                                                                    }
-                        |   set_classical_states                    {fprintf(out,$1.str);fprintf(out,"StateVec q_output = StateVec(%d);\n",
-                                                                     quantum_registers);
-                                                                    }
-                        |   { fprintf(out,"int c_output[%d]={ 0 }",classical_registers);
-                              fprintf(out,"StateVec q_output = StateVec(%d);\n",quantum_registers);
+set_states              :   set_quantum_states set_classical_states { fprintf(out,$1.str);fprintf(out,$2.str);}
+                        |   set_classical_states                    {fprintf(out,$1.str);fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",
+                                                                     quantum_registers);}
+                        |   { fprintf(out,"int c_output[%d]={ 0 }int c_output_original[%d]={ 0 }",classical_registers);
+                              fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",quantum_registers);
                             }
                         ;
 
 set_quantum_states      :   '#' SET QUANTUM STATES ARROW quantum_state_list { fprintf(fp,"Setting initial state of quantum registers\n");
-                                                                              $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)+200));
-                                                                              snprintf($$.str,strlen($6.str)+200,"struct Quantum q[%d] = {%s};\nStateVec q_output = StateVec(%d,q);\n", quantum_registers,$6.str, quantum_registers);
+                                                                              $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)*2+300));
+snprintf($$.str,strlen($6.str)*2+300,"struct Quantum q[%d] = {%s};\nStateVec q_output_original = StateVec(%d,q);\nStateVec q_output = StateVec(%d,q);\n", quantum_registers,$6.str, quantum_registers,quantum_registers);
                                                                             }
                         ;
 
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {   fprintf(fp,"Setting initial state of classical registers\n");
-                                                                                    $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)+100));
-                                                                                    snprintf($$.str,strlen($6.str)+100,"int c_output[%d] = {%s};\n", classical_registers,$6.str);
+                                                                                    $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)*2+200));
+                                                                                    snprintf($$.str,strlen($6.str)*2+200,"int c_output[%d] = {%s};\nint c_output_original[%d] = {%s}", classical_registers,$6.str);
                                                                                 }
                         ;
 
@@ -1717,23 +1727,50 @@ echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statem
                                                       }
                         ;
 
-echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                         // snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
-                                                         // free($1.str);
-                                                         // free($3.str);
-                                                         // if($3.prim){
-                                                         //    fprintf(out,"cout<<%s;",$3.str);
+echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                         if($3.prim){
+                                                            fprintf(out,"cout<<%s;",$3.str);
+                                                         }
+                                                         else{
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $3.dim, $3.str);
+                                                         }
+
+                                                      }
+                        | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                                                         snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         free($1.str);   
+                                                         if($1.prim){
+                                                            fprintf(out,"cout<<%s;",$1.str);
+                                                         }
+                                                         else{
+
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $1.dim, $1.str);
+                                                      }
+                                                      }
+                        | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                                                         // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         // free($1.str);   
+                                                         // if($1.prim){
+                                                         //    fprintf(out,"cout<<%s;",$1.str);
                                                          // }
                                                          // else{
                                                          //    else{
                                                          //       fprintf(out,"for(int i=0;i<%d;i++){\n"
                                                          //                   "\tcout<<%s[i]<<\" \";"
                                                          //                   "}\n"
-                                                         //       , $3.dim, $3.str);
+                                                         //       , $1.dim, $1.str);
                                                          //    }
                                                          // }
-
-                                                      }
+                                                         }
                         | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
                                                          // free($1.str);   
