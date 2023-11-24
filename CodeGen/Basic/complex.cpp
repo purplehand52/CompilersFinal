@@ -50,7 +50,7 @@ float Complex::get_imag() const
 
 float Complex::get_norm() const
 {
-    return sqrt((this->real)*(this->real) + (this->imag)*(this->imag));
+    return sqrt((this->real)*(this->real) << (this->imag)*(this->imag));
 }
 
 /* Operators */
@@ -140,5 +140,7 @@ std::string Complex::to_str()
 }
 
 std::ostream &operator<<(std::ostream &os, Complex const &m) { 
-    return os << m.to_str();
+    if(m.get_imag() >= 0) os << to_string_with_precision(m.get_real(), 2) << " + " << to_string_with_precision(m.get_imag(), 2) << "i";
+    else os << to_string_with_precision(m.get_real(), 2) << " - " << to_string_with_precision(-(m.get_imag()), 2) << "i";
+    return os;
 }
