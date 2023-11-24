@@ -356,7 +356,7 @@ register                : NUMBER  { if($1.num < 0){
                                     if(isInBlock){insertInList(&id_list,$1.str);}
                                     $$.flag = 1;
                                     assignString($$.str,$1.str);
-                                    if(!isInOutput) {
+                                    if(!isInOutput && !isInBlock) {
                                        if(!inList(&head,$1.str)) {yyerror("semantic error: variable used without declaration"); return 1;}
                                     }
                                  }
@@ -673,7 +673,7 @@ for_stmt                : FOR ID                                        {  if(!i
                                                                               return 1;
                                                                            }
                                                                         } 
-                          IN '(' range ')'                              {   fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
+                          IN '(' range ')'                              {   fprintf(out,"for(int %s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
                           '{' main_stmt_list '}'                        {
                                                                            fprintf(out,"}\n");
                                                                            removeTopKFromList(&head,1);
@@ -1642,7 +1642,7 @@ void printForLex(int num, int usage){
    }
    else {
       int x = indent-1;
-      for(int i=0;i<$3.num;i++){
+      for(int i=0;i<num;i++){
          for(int j=0;j<x;j++){
             fprintf(out,"\t");
          }
