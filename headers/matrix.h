@@ -45,7 +45,7 @@ class Matrix
 
         /* Friend Class */
         friend class State;
-        friend std::ostream &operator<<(std::ostream &os, Matrix const &m);
+        friend std::ostream &operator<<(std::ostream &os, Matrix const &m)
 };
 
 #endif
