@@ -163,7 +163,7 @@ bool Matrix::is_unitary() const
 {
     Matrix cpy = *this;
     Matrix ans = (!cpy)*(cpy);
-    ans.show();
+    // ans.show();
     Matrix eye = Matrix(this->n);
     for(int i = 0; i < this->n; i++)
     {
@@ -239,6 +239,7 @@ Matrix Matrix::kronecker_product(Matrix sample) /* Computes [THIS # SAMPLE] */
 /* Kronecker Fill */
 Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for 2*2 matrices */
 {
+    // std::cout << "Place: " << place << " Regs: " << regs << std::endl;
     if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Fill!");
     if(place >= regs) throw std::invalid_argument("Place out of bounds!");
 
@@ -246,7 +247,9 @@ Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for
 
     if(place == 0) ans = Matrix(1 << (regs-1)).kronecker_product(*this); 
     else if(place == regs-1) ans = this->kronecker_product(Matrix(1 << (regs-1)));
-    else ans = Matrix(1 << (regs-place+1)).kronecker_product(this->kronecker_fill(0, place-1));
+    else ans = Matrix(1 << (regs-place-1)).kronecker_product(this->kronecker_fill(place, place+1));
+
+    std::cout << ans << std::endl;
     
     /* Return */
     return ans;
@@ -259,7 +262,7 @@ Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target,
 {
     unsigned int target_bits = 1<<target;
 
-    if(control==0) return kronecker_fill(target, regs);
+    if(control==0) {return this->kronecker_fill(target, regs);}
     if(n != 2) throw std::invalid_argument("Incompatible Matrices for Kronecker-Control-Fill!");
     if((control & target_bits) != 0) throw std::invalid_argument("Target inside Control Registers!");
     if(pow_two(target_bits) == -1) throw std::invalid_argument("Only one target allowed!");
