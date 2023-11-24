@@ -14,8 +14,8 @@
    int yylex();
    void yyerror(char* str);
    char * IntToString(int num);
-   void printForLex(int num);
-   void printForZip(int num);
+   void printForLex(int num, int usage);
+   void printForZip(int num, int usage);
 
    int classical_registers,quantum_registers,iterations,temp_type,indent;
    int * classical_states,classical_index=0,quantum_index=0;
@@ -629,31 +629,43 @@ var_list                : ID ',' var_list   {  if(isInOutput){
                                              }
                         ;
 
-for_stmt                : FOR ID {  if(!inList(&head,$2.str)){
-                                       insertInList(&head,$2.str);
-                                    } 
-                                    else{
-                                       yyerror("semantic error: loop variable redeclaration"); 
-                                       return 1;
-                                    }
-                                 } 
-                          IN '(' range ')' '{' main_stmt_list '}' {removeTopKFromList(&head,1);}
+for_stmt                : FOR ID                                        {  if(!inList(&head,$2.str)){
+                                                                              insertInList(&head,$2.str);
+                                                                           } 
+                                                                           else{
+                                                                              yyerror("semantic error: loop variable redeclaration"); 
+                                                                              return 1;
+                                                                           }
+                                                                        } 
+                          IN '(' range ')'                              {   fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
+                          '{' main_stmt_list '}'                        {
+                                                                           fprintf(out,"}\n");
+                                                                           removeTopKFromList(&head,1);
+                                                                        }
                         ;
 
 for_lex_stmt            : FOR_LEX '(' var_list ')' IN '(' range_list ')' { if($3.num != $7.num){
                                                                               yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                               return 1;
                                                                            }
+                                                                           printForLex($3.num, 1);
                                                                          } 
-                          '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
+                          '{' main_stmt_list '}'                         {
+                                                                           printForLex($3.num, 0);
+                                                                           removeTopKFromList(&head,$3.num);
+                                                                        }
                         ;
 
 for_zip_stmt            : FOR_ZIP '(' var_list ')' IN '(' range_list ')' { if($3.num != $7.num){
                                                                               yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                               return 1;
                                                                            }
+                                                                           printForZip($3.num, 1);
                                                                          } 
-                          '{' main_stmt_list '}' {removeTopKFromList(&head,$3.num);}
+                          '{' main_stmt_list '}' {
+                                                      removeTopKFromList(&head,$3.num); 
+                                                      printForZip($3.num, 0);
+                                                 }
                         ;
 
 while_stmt              : WHILE '(' expr ')' '{' main_stmt_list '}'
@@ -1498,16 +1510,9 @@ out_for_lex_stmt        : FOR_LEX '(' var_list ')'  IN '(' range_list ')' {   if
                                                                                  yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                                  return 1;
                                                                               }
-                                                                              printForLex($3.num);
+                                                                              printForLex($3.num, 2);
                                                                           } 
-                          '{' {outputLevel++;} out_main '}'               {   int x = indent-1;
-                                                                              for(int i=0;i<$3.num;i++){
-                                                                                 for(int j=0;j<x;j++){
-                                                                                    fprintf(out,"\t");
-                                                                                 }
-                                                                                 x--;
-                                                                                 fprintf(out,"}\n");
-                                                                              }
+                          '{' {outputLevel++;} out_main '}'               {   printForLex($3.num, 0);
                                                                               exitOutputSymbolScope(&OutputSymbolTable,outputLevel);
                                                                               outputLevel--;}
                         ;
@@ -1516,10 +1521,12 @@ out_for_zip_stmt        : FOR_ZIP '(' var_list ')'  IN '(' range_list ')' {   if
                                                                                  yyerror("semantic error: mismatch in loop variables and ranges"); 
                                                                                  return 1;
                                                                               }
-                                                                              printForZip($3.num);
+                                                                              printForZip($3.num, 2);
                                                                           } 
                           '{' {outputLevel++;} 
-                          out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
+                          out_main '}'               {exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--; 
+                                                         printForZip($3.num, 0);
+                                                      }
                         ;
 
 out_while_stmt          : WHILE '(' out_rhs ')' '{' {outputLevel++;fprintf(out,"while(%s){\n",$3.str);} out_main '}' {fprintf(out,"}\n");exitOutputSymbolScope(&OutputSymbolTable,outputLevel); outputLevel--;}
@@ -1539,29 +1546,74 @@ out_stmt                : out_control
                         ;
 %%
 
-void printForZip(int num){
-   struct List* temp = head;
-   struct List2* temp2 = range_list;
-
-   for(int i=0;i<num;i++){
-
+void printForZip(int num, int usage){
+   if(usage == 0){
+      fprintf(out, "}\n");
+      return;
    }
-}
 
-void printForLex(int num){
    struct List* temp = head;
    struct List2* temp2 = range_list;
-   int x = outputLevel-1;
+   fprintf(out, "for(");
+   if(usage==1) {fprintf(out, "int ");}
    for(int i=0;i<num;i++){
-      for(int j=0;j<x;j++){
-         fprintf(out,"\t");
-      }
-      x++;
-      fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",temp->id,temp2->start,temp->id,temp2->end,temp->id,temp2->step);
+      fprintf(out, "%s = %s",temp->id,temp2->start);
+      if(i<num-1){fprintf(out, ", ");}
       temp = temp->next;
       temp2 = temp2->next;
    }
-   indent = x;
+   fprintf(out, ";");
+
+   temp = head;
+   temp2= range_list;
+   for(int i=0;i<num;i++){
+      fprintf(out, "%s < %s",temp->id,temp2->end);
+      if(i<num-1){fprintf(out, " && ");}
+      temp = temp->next;
+      temp2 = temp2->next;
+   }
+   fprintf(out, ";");
+
+   temp = head;
+   temp2= range_list;
+   for(int i=0;i<num;i++){
+      fprintf(out, "%s < %s",temp->id,temp2->end);
+      if(i<num-1){fprintf(out, ", ");}
+      temp = temp->next;
+      temp2 = temp2->next;
+   }
+   fprintf(out, "){\n");
+
+}
+
+/* usage is 1 for main, 2 for output and 0 for closing*/
+void printForLex(int num, int usage){
+   if(usage){
+      struct List* temp = head;
+      struct List2* temp2 = range_list;
+      int x = outputLevel-1;
+      for(int i=0;i<num;i++){
+         for(int j=0;j<x;j++){
+            fprintf(out,"\t");
+         }
+         x++;
+         if(usage==1){ fprintf(out,"for(int %s = %s;%s < %s;%s += %s){\n",temp->id,temp2->start,temp->id,temp2->end,temp->id,temp2->step);}
+         else if(usage==2){ fprintf(out,"for(%s = %s;%s < %s;%s += %s){\n",temp->id,temp2->start,temp->id,temp2->end,temp->id,temp2->step);}
+         temp = temp->next;
+         temp2 = temp2->next;
+      }
+      indent = x;
+   }
+   else {
+      int x = indent-1;
+      for(int i=0;i<$3.num;i++){
+         for(int j=0;j<x;j++){
+            fprintf(out,"\t");
+         }
+         x--;
+         fprintf(out,"}\n");
+      }
+   }
 }
 
 char * IntToString(int n){
