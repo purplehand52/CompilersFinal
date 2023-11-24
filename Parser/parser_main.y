@@ -533,7 +533,7 @@ barrier_stmt            : '\\' BARRIER    {
                                           }
                         ;
 
-condition_stmt          : CONDITION '(' {} expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
+condition_stmt          : CONDITION '(' expr ')' '{' main_stmt_list '}' otherwise_list otherwise_final
                         ;
 
 otherwise_list          : otherwise_list OTHERWISE '(' expr ')' '{' main_stmt_list '}'
