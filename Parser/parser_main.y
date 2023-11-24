@@ -87,7 +87,7 @@
 
 %%
 
-prgm                    : {fprintf(out,"#include<iostream>\n"
+prgm                    : { fprintf(out,"#include<iostream>\n"
                                         "#include<vector>\n"
                                         "#include\"complex.h\"\n"
                                         "#include\"matrix.h\"\n"
@@ -95,9 +95,14 @@ prgm                    : {fprintf(out,"#include<iostream>\n"
                                         "#include\"state.h\"\n"
                                         "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
-                          } 
-                          init_section 
-                          {   fprintf(out,"Matrix X = Matrix(2);\n"
+
+                            fprintf(out,"int num_iterations = %d;\n", iterations);
+                            fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
+                            fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
+                            fprintf(out,"int quantum_register_map[%d];\n", quantum_registers);
+                            fprintf(out,"Matrix op = Matrix(1<<quantum_registers)\n;");
+
+                            fprintf(out,"Matrix X = Matrix(2);\n"
                                           "Matrix Y = Matrix(2);\n"
                                           "Matrix Z = Matrix(2);\n"
                                           "Matrix H = Matrix(2);\n"
@@ -109,19 +114,21 @@ prgm                    : {fprintf(out,"#include<iostream>\n"
                                                 "\tif(x.is_unitary()) return 1;\n"
                                                 "\treturn 0;\n"
                                           "}\n\n"
-                                     );
-                              fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
-                              fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
-                              fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
-                              fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
-                              fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
-                              struct GateTable* temp = GateSymbolTable;
-                              while(temp != NULL){
+                                    );
+                            fprintf(out,"\nint main(){\nfor(int i=0; i<quantum_registers; i++) {quantum_register_map[i] = i;}\n");
+                            fprintf(out,"initializeGate(X,Complex(0,0),Complex(1,0),Complex(1,0),Complex(0,0));\n");
+                            fprintf(out,"initializeGate(Y,Complex(0,0),Complex(0,-1),Complex(0,1),Complex(0,0));\n");
+                            fprintf(out,"initializeGate(Z,Complex(1,0),Complex(0,0),Complex(0,0),Complex(-1,0));\n");
+                            fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
+
+                            struct GateTable* temp = GateSymbolTable;
+                            while(temp != NULL){
                                  fprintf(out,"if(!initializeGate(%s,Complex(%f,%f),Complex(%f,%f),Complex(%f,%f),Complex(%f,%f))) return 0;\n",
                                  temp->id,temp->arr[0].real,temp->arr[0].imag,temp->arr[1].real,temp->arr[1].imag,temp->arr[2].real,temp->arr[2].imag,temp->arr[3].real,temp->arr[3].imag);
                                  temp = temp->next;
-                              }
+                            }
                           } 
+                          init_section
                           main_section 
                           output_section 
                           {fprintf(out,"}\n");fprintf(fp,"\nParsing successful!\n");}
@@ -146,11 +153,6 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
                                                                                                                         classical_registers = $10.num;
                                                                                                                         quantum_registers = $5.num;
                                                                                                                         iterations = $14.num;
-                                                                                                                        fprintf(out,"int num_iterations = %d;\n", iterations);
-                                                                                                                        fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
-                                                                                                                        fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
-                                                                                                                        fprintf(out, "int quantum_register_map[%d];\n", quantum_registers);
-                                                                                                                        fprintf(out, "Matrix op = Matrix(1<<quantum_registers)\n;");
                                                                                                                      }
                         ;
 
@@ -1498,15 +1500,37 @@ echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statem
                                                       }
                         ;
 
-echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
-                                                         free($1.str);
-                                                         free($3.str);
+echo_list               : echo_list ',' out_rhs       {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         // snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
+                                                         // free($1.str);
+                                                         // free($3.str);
+                                                         if($3.prim){
+                                                            fprintf(out,"cout<<%s;",$3.str);
+                                                         }
+                                                         else{
+                                                            else{
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $3.dim, $3.str);
+                                                            }
+                                                         }
+
                                                       }
-                        | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
-                                                         snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
-                                                         printf("|%s|\n",$1.str);
-                                                         free($1.str);   
+                        | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                                                         // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
+                                                         // free($1.str);   
+                                                         if($1.prim){
+                                                            fprintf(out,"cout<<%s;",$1.str);
+                                                         }
+                                                         else{
+                                                            else{
+                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                           "\tcout<<%s[i]<<\" \";"
+                                                                           "}\n"
+                                                               , $1.dim, $1.str);
+                                                            }
+                                                         }
                                                       }
                         ;
 
