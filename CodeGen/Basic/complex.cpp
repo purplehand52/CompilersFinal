@@ -138,3 +138,7 @@ std::string Complex::to_str()
 
     return o;
 }
+
+std::ostream &operator<<(std::ostream &os, Complex const &m) { 
+    return os << m.to_str();
+}

@@ -281,3 +281,17 @@ Matrix Matrix::kronecker_control_fill(unsigned int control, unsigned int target,
 
     return ans;
 }
+
+std::ostream &operator<<(std::ostream &os, Matrix const &m) { 
+    os << "--------------------------------------------------------------------------" << std::endl;
+    for(int i = 0; i < m.n; i++)
+    {
+        for(int j = 0; j < m.n; j++)
+        {
+            os << m.arr[i][j].to_str() << "\t";
+        }
+        os << "\n";
+    }
+    os << "--------------------------------------------------------------------------\n" << std::endl;
+    return os;
+}
