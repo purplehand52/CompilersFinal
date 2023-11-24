@@ -131,17 +131,17 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                              "\t\tq_output.arr[i] = q_output_original.arr[i];\n"
                                           "}\n"
                                           "for(int i=0;i<%d;i++){\n"
-                                             "\t\tc_output[i] = c_output_original[i];\n",
+                                             "\t\tc_output[i] = c_output_original[i];\n"
                                           "}\n"
                                           "for(int i=0;i<%d;i++){\n"
                                              "\t\tquantum_register_dict[i] = i;\n"
-                                          "}\n"
+                                          "}\n",
                                           quantum_registers, classical_registers,quantum_registers
                                      );
                           }
                           main_section 
                            {
-                              fprintf(out,"fprintf(result,\"Iteration #%d:\",iters);\n");
+                              fprintf(out,"fprintf(result,\"Iteration #%%d:\",iters);\n");
                               fprintf(out,"fprintf(result,\"Classical Outputs: \");");
                               fprintf(out,"for(int i=0;i<%d-1;i++){\n"
                                              "\t\tfprintf(result,\"%%d, \",c_output[i]);\n"
