@@ -122,6 +122,37 @@ Matrix meanMatrix(const std::vector<Matrix> list) {
     return sumMatrix(list)/float(list.size());
 }
 
+/* Bitwise Operators */
+template <typename T>
+std::vector<T> bitwiseAnd(const std::vector<T> list1, const std::vector<T> list2) {
+    if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
+    
+    std::vector<T> result;
+    for(int i = 0; i < list1.size(); i++) result.push_back(list1[i] & list2[i]);
+
+    return result;
+}
+
+template <typename T>
+std::vector<T> bitwiseOr(const std::vector<T> list1, const std::vector<T> list2) {
+    if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
+    
+    std::vector<T> result;
+    for(int i = 0; i < list1.size(); i++) result.push_back(list1[i] | list2[i]);
+
+    return result;
+}
+
+template <typename T>
+std::vector<T> bitwiseXor(const std::vector<T> list1, const std::vector<T> list2) {
+    if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
+    
+    std::vector<T> result;
+    for(int i = 0; i < list1.size(); i++) result.push_back(list1[i] ^ list2[i]);
+
+    return result;
+}
+
 /* Condenser function */
 /* Number of ones in binary representation of number */
 unsigned int numOnes(unsigned int num) {
