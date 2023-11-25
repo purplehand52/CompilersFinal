@@ -128,7 +128,6 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                               fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
                               fprintf(out,"FILE *result = fopen(\"result.csv\",\"w\");\n");
                               fprintf(out,"for(int iters=0;iters < num_iterations;iters++){\n");
-                              printf("%d", quantum_registers);
                               fprintf(out,"q_output = StateVec(%d, q);\n"
                                           "for(int i=0;i<%d;i++){\n"
                                              "\t\tc_output[i] = c_output_original[i];\n"
@@ -465,7 +464,6 @@ call_stmt               : classic_control GATE quantum_control ARROW simple_expr
                                                                               }
                         | block_id parameters optional                        {  fprintf(fp,"Block call statement\n");
                                                                                  if(!isInBlock){
-                                                                                    printf("%s\n",$1.str);
                                                                                     if(!BlockCallSemanticCheck($1.str,$2.num)){
                                                                                        yyerror("semantic error: block not defined");
                                                                                        return 1;
@@ -836,7 +834,6 @@ for_stmt                : FOR ID                                        {  if(!i
                                                                            }
                                                                         } 
                           IN '(' range ')'                              {   
-                                                                           printf("S%s S%s E%s\n", $6.start, $6.step, $6.end);
                                                                            fprintf(out,"for(int %s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
                           '{' main_stmt_list '}'                        {
                                                                            fprintf(out,"}\n");
@@ -892,7 +889,7 @@ prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"
                         | BOOL      {$$.type = Bool; $$.prim = true;fprintf(out,"bool ");}
                         ;
 
-list_type               : LIST '[' {fprintf(out,"vector<");} prim_type ']' {$$.type = $3.type; $$.prim = false;fprintf(out,">");}
+list_type               : LIST '[' {fprintf(out,"vector<");} prim_type ']' {$$.type = $4.type; $$.prim = false;fprintf(out,">");}
                         ;
 
 /* data_type               : prim_type
@@ -1040,7 +1037,7 @@ vec_list                : vec_list ',' prim_const   {  temp_type = compatibleChe
 /* Calls : Must Define Dimensions */
 calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state, string??) */   
                      {
-                        temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); printf("%d\n", temp_type); 
+                        temp_type = compatibleCheckAdv($5.type, $3.type, $5.prim, $3.prim, $5.dim, $3.dim); 
                         if((!$3.prim) && (temp_type>= 0) && ((temp_type<=COMPATIBLE) || temp_type==Matrix || temp_type==State)){
                            $$.prim = false; 
                            $$.type = temp_type; 
@@ -1093,10 +1090,18 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
-                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
-                        free($3.str);
-                        free($5.str);
+                        if($3.type != Complex){
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
+                           free($3.str);
+                           free($5.str);
+                        } 
+                        else{
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+24));
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+24,"dotProductComplex(%s,%s)",$3.str,$5.str);
+                           free($3.str);
+                           free($5.str);
+                        }
                      }        
                      | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                            
                      {
@@ -1133,7 +1138,6 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                         if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))){
                            $$.prim = false; 
                            $$.type = $3.type;
-                           printf("After condense: %d\n", $3.type); 
                            $$.dim = condenser($3.dim, 1);
                         } 
                         else{
@@ -1171,9 +1175,16 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
-                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
-                        free($3.str);
+                        if($3.type == Complex){
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+24));
+                           snprintf($$.str,strlen($3.str)+24,"sumComplex(%s)",$3.str);
+                           free($3.str);
+                        } 
+                        else{
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                           snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                           free($3.str);
+                        }
                      }
                      | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */                  
                      {
@@ -1186,9 +1197,16 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
-                        snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
-                        free($3.str);
+                        if($3.type == Complex){
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+24));
+                           snprintf($$.str,strlen($3.str)+24,"meanComplex(%s)",$3.str);
+                           free($3.str);
+                        } 
+                        else{
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                           snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
+                           free($3.str);
+                        }
                      }
                         /*| REAL */
                         /*| IMAG */
@@ -1386,7 +1404,6 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       $$.type = $1.type; 
                                                       if($1.type == Matrix) $$.rows = $1.rows; 
                                                       if(!$$.prim) $$.dim = $1.dim; 
-                                                      printf("%d %d\n", $$.prim, $$.type);
                                                    }
                         | '(' out_rhs ')'         {   $$.type = $2.type;
                                                       $$.prim = $2.prim;
@@ -1685,7 +1702,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
 out_expr                : ID '=' out_rhs           {  fprintf(fp,"expression statement\n"); 
                                                       if(isDeclaration){
                                                          $$.type = $3.type; 
-                                                         assignString($$.str,$1.str); 
+                                                         assignString($$.str,$1.str);
                                                          $$.prim = $3.prim; 
                                                          if(!$3.prim) $$.dim = $3.dim; 
                                                          if($3.type == Matrix) $$.rows = $3.rows; 
@@ -1724,8 +1741,7 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
                                                          yyerror("semantic error: variable redeclaration"); 
                                                          return 1;
                                                       } 
-                                                      else if(($2.prim==true) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type))){
-                                                         printf("%d %d %d\n", $2.prim, $2.type, $1.type);
+                        else if(($2.prim==true) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type))){
                                                          yyerror("semantic error: incompatible types"); 
                                                          return 1;
                                                       } 
@@ -1739,69 +1755,41 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
 
 /* Echo Statement */
 echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statement\n");
-                                                         fprintf(out,"cout<<%s<<endl;\n",$3.str);
                                                       }
                         ;
 
-echo_list               : echo_list ',' out_rhs       {  /*$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
-                                                         free($1.str);
-                                                         free($3.str);
+echo_list               : echo_list ',' out_rhs       {  
                                                          if($3.prim){
-                                                            fprintf(out,"cout<<%s;",$3.str);
+                                                            if($$.type == Bool){
+                                                               fprintf(out,"cout<<(%s);",$3.str);
+                                                            }
+                                                            else{
+                                                               fprintf(out,"cout<<%s;",$3.str);
+                                                            }
                                                          }
                                                          else{
                                                                fprintf(out,"for(int i=0;i<%d;i++){\n"
                                                                            "\tcout<<%s[i]<<\" \";"
                                                                            "}\n"
                                                                , $3.dim, $3.str);
-                                                         }*/
-
+                                                         }
                                                       }
-                        | out_rhs                     {  /*$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
-                                                         snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
-                                                         free($1.str);   
+                        | out_rhs                     {    
                                                          if($1.prim){
-                                                            fprintf(out,"cout<<%s;",$1.str);
+                                                            if($$.type == Bool){
+                                                               fprintf(out,"cout<<(%s);",$1.str);
+                                                            }
+                                                            else{
+                                                               fprintf(out,"cout<<%s;",$1.str);
+                                                            }                                                            
                                                          }
                                                          else{
-
-                                                               fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                                           "\tcout<<%s[i]<<\" \";"
-                                                                           "}\n"
-                                                               , $1.dim, $1.str);
-                                                      }*/
-                                                      }
-                        | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
-                                                         // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
-                                                         // free($1.str);   
-                                                         // if($1.prim){
-                                                         //    fprintf(out,"cout<<%s;",$1.str);
-                                                         // }
-                                                         // else{
-                                                         //    else{
-                                                         //       fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                         //                   "\tcout<<%s[i]<<\" \";"
-                                                         //                   "}\n"
-                                                         //       , $1.dim, $1.str);
-                                                         //    }
-                                                         // }
+                                                            fprintf(out,"for(int i=0;i<%d;i++){\n"
+                                                                        "\tcout<<%s[i]<<\" \";"
+                                                                        "}\n", $1.dim, $1.str
+                                                                   );
                                                          }
-                        /* | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
-                                                         // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
-                                                         // free($1.str);   
-                                                         // if($1.prim){
-                                                         //    fprintf(out,"cout<<%s;",$1.str);
-                                                         // }
-                                                         // else{
-                                                         //    else{
-                                                         //       fprintf(out,"for(int i=0;i<%d;i++){\n"
-                                                         //                   "\tcout<<%s[i]<<\" \";"
-                                                         //                   "}\n"
-                                                         //       , $1.dim, $1.str);
-                                                         //    }
-                                                         // }
-                                                      } */
+                                                      }
                         ;
 
 /* Save Statement */
@@ -1963,6 +1951,7 @@ void assignString(char* str1, char* str2){
    for(int i=0;i<strlen(str2);i++){
       str1[i] = str2[i];
    }
+   str1[strlen(str2)] = '\0';
 }
 
 bool firstLetterCapital(char *str) {
@@ -2050,14 +2039,12 @@ int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List*
 
 void printBlockTable(){
    struct BlockTable* temp = BlockSymbolTable;
-   printf("Printing now\n");
    while(temp != NULL){
       printf("%s \n",temp->id);
       printList(&(temp->params));
       printf("%d\n\n",temp->len);
       temp = temp->next;
    }
-   printf("Printed\n");
 }
 
 int insertInGateTable(struct GateTable ** Head,char * data,struct cpx * arr){
@@ -2149,10 +2136,11 @@ void insertInOutputTable(struct OutputSymbolEntry** Head, char* id, int level, i
    struct OutputSymbolEntry* newNode = (struct OutputSymbolEntry*)malloc(sizeof(struct OutputSymbolEntry));
 
    /* ID */
-   newNode->id = (char *)malloc(sizeof(char)*strlen(id));
+   newNode->id = (char *)malloc(sizeof(char)*(strlen(id)+1));
    for(int i=0;i<strlen(id);i++){
       newNode->id[i] = id[i];
    }
+   newNode->id[strlen(id)] = '\0';
 
    /* Type */
    newNode->type = type;
@@ -2200,7 +2188,6 @@ void exitOutputSymbolScope(struct OutputSymbolEntry** Head, int level){
     struct OutputSymbolEntry* prevEntry;
 
     while(symbolEntry != NULL && symbolEntry->level == level){
-        printf("Deletion : %s %d %d %d %d\n", symbolEntry->id, symbolEntry->level, symbolEntry->primitive, symbolEntry->dim, symbolEntry->matrix_dim);
         prevEntry = symbolEntry->prev;
         free(symbolEntry->id);
         free(symbolEntry);

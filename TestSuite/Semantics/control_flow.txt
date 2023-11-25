@@ -27,34 +27,55 @@
 \begin_output
     $string hello = "Good\nbye"$
     
-    $echo("p(000) vs p(100):") $
+    echo("p(000) vs p(100):") 
 
     int difference = c_output[4] * c_output[3]                        
 
     $ test conditional statement $
     condition(difference > 0){
-        echo("More")
+        echo("More\n")
     }
     otherwise(difference < 0){
-        echo("Less")
+        echo("Less\n")
     }
     otherwise {
-        echo("Equal")
+        echo("Equal\n")
     }
 
     $ simple stuff $
     int a = 1
     uint b = 10
     uint c = a*b
-    echo(c*c*c)
+    echo(c*c*c,"\n")
 
     $ slightly complex stuff $
     float d = 10.76
     float e = 54.56
+
+    float rtt = d + e
+    echo(rtt,"\n")
     
     $ Complex $
     complex f = (1, 2)
+    echo(f,"\n")
 
-    
+    list [uint] temp = [1,2,3,4,5]
+    list [uint] res = add(temp,c_output) 
+
+    list[uint] res2 = condense(c_output,1)
+    echo(res2,"\n") 
+
+    list[complex] l1 = [(1,2),(2,0)]
+    list[complex] l2 = [(1,0),(0,1)] 
+    list[complex] l3 = add(l1,l2) 
+    echo(l3,"\n")
+
+    uint Sum = sum(temp)
+    echo(Sum,"\n")
+
+    complex cpx_dot = dot(l1,l2)
+    echo(cpx_dot,"\n")
+
+    echo(5>4)
 
 \end_output

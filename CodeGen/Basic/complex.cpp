@@ -143,7 +143,7 @@ std::string Complex::to_str()
 
 
 std::ostream &operator<<(std::ostream &os, Complex const &m) { 
-    if(m.get_imag() >= 0) os << std::fixed << std::setprecision(2) << m.get_real() << " + " << m.get_imag() << "i";
-    else os << std::fixed << std::setprecision(2) << m.get_real() << " - " << -(m.get_imag()) << "i";
+    if(m.get_imag() >= 0) os << std::fixed << std::setprecision(2) << "(" <<  m.get_real() << " + " << m.get_imag() << "i" << ")";
+    else os << std::fixed << std::setprecision(2) << "(" << m.get_real() << " - " << -(m.get_imag()) << "i" << ")";
     return os;
 }

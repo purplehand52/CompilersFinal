@@ -9,7 +9,7 @@
 /* Add/Sub Functions */
 /* Add and Sub two lists of unsigned integers, integers, floats, complex numbers and matrices */
 template <typename T>
-std::vector<T> addLists(const std::vector<T> list1, std::vector<T> list2) {
+std::vector<T> add(std::vector<T> list1, std::vector<T> list2) {
     if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
     
     std::vector<T> result;
@@ -19,7 +19,7 @@ std::vector<T> addLists(const std::vector<T> list1, std::vector<T> list2) {
 }
 
 template <typename T>
-std::vector<T> subLists(const std::vector<T> list1, std::vector<T> list2) {
+std::vector<T> sub(std::vector<T> list1, std::vector<T> list2) {
     if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
     
     std::vector<T> result;
@@ -31,7 +31,7 @@ std::vector<T> subLists(const std::vector<T> list1, std::vector<T> list2) {
 /* Dot Product */
 /* Dot product of two lists of unsigned integers, integers and floats */
 template <typename T>
-float dotProduct(const std::vector<T> list1, const std::vector<T> list2) {
+float dot(std::vector<T> list1,std::vector<T> list2) {
     if(list1.size() != list2.size()) throw std::runtime_error("Error: Lists sizes do not match");
     
     float result = 0;
@@ -76,13 +76,13 @@ T sum(const std::vector<T> list) {
 
 /* Mean (till floats) */
 template <typename T>
-float mean(const std::vector<T> list) {
+float avg(const std::vector<T> list) {
     return sum(list)/float(list.size());
 }
 
 /* Variance (till floats) */
 template <typename T>
-float variance(const std::vector<T> list) {
+float var(const std::vector<T> list) {
     if(list.size() == 0) return 0.0;
     float avg = mean(list);
 
@@ -94,7 +94,7 @@ float variance(const std::vector<T> list) {
 
 /* Standard Deviation (till floats) */
 template <typename T>
-float stdDev(const std::vector<T> list) {
+float std_dev(const std::vector<T> list) {
     return sqrt(variance(list));
 }
 
