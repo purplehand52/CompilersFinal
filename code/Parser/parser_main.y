@@ -146,16 +146,17 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                           "c_master[i] += c_output[i];\n"
                                           "}\n"
                                      );
-                              fprintf(out,"fprintf(result,\"Iteration #%%d:\",iters);\n");
+                              fprintf(out,"fprintf(result,\"Iteration #%%d:\\n\",iters+1);\n");
                               fprintf(out,"fprintf(result,\"Classical Outputs: \");");
                               fprintf(out,"for(int i=0;i<%d-1;i++){\n"
                                              "\t\tfprintf(result,\"%%d, \",c_output[i]);\n"
                                           "}\n",classical_registers);
                               fprintf(out,"fprintf(result,\"%%d\\n\",c_output[%d-1]);\n",classical_registers);
-                              fprintf(out,"fprintf(result,\"Quantum Outputs: \");");
+                              fprintf(out,"fprintf(result,\"Quantum Outputs: \"\);");
                               fprintf(out,"for(int i=0;i< (1 << quantum_registers) ;i++){\n"
                                              "\t\tfprintf(result,\"(%%f, %%f), \",q_output.get_value(i).get_real(),q_output.get_value(i).get_imag());\n"
-                                          "}\n");
+                                          "}\n"
+                                          "fprintf(result,\"\\n\\n\");");
                               //fprintf(out,"fprintf(result,\"(%%f, %%f)\",q_output.get_value(%d-1).get_real(),q_output.get_value(%d-1).get_imag());",quantum_registers,quantum_registers);
                               
                               fprintf(out,"}\n");
@@ -201,6 +202,8 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
 set_states              :   set_quantum_states set_classical_states { fprintf(out,$1.str);fprintf(out,$2.str);}
                         |   set_classical_states                    {fprintf(out,$1.str);fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",
                                                                      quantum_registers);}
+                        |   set_classical_states set_quantum_states { fprintf(out,$1.str);fprintf(out,$2.str);}
+                        |   set_quantum_states                      {fprintf(out,"int c_output[%d]={ 0 };\nint c_output_original[%d]={ 0 };\nvector<unsigned int> c_master(%d, 0);\n",classical_registers,classical_registers);}
                         |   { fprintf(out,"int c_output[%d]={ 0 };\nint c_output_original[%d]={ 0 };\nvector<unsigned int> c_master(%d, 0);\n",classical_registers,classical_registers);
                               fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",quantum_registers,quantum_registers);
                             }
