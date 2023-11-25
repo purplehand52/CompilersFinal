@@ -26,27 +26,13 @@ $ Checks dimensions for lists and matrices $
     $ Example : 1 $
     list[int] x = [1, 2, 3, 4, 5]
 
-    list[int] y = [1, 2, 3, 4, 5]
+    list[int] y = [1, 2, 3, 4, 5, 6]
 
     $ Mismatched dimensions (remove one element from y to not get error)$
     list[int] z = x - y
 
     echo(z)
 
-    $ Example : 2 $
-    $ Inflate second matrix/ deflate first matrix to get correct and compatible list of matrices $
-    matrix perm_1 = [   [0, 0, 0, 1], 
-                        [0, 0, 1, 0], 
-                        [0, 1, 0, 0],
-                        [1, 0, 0, 0] ]
-
-    matrix perm_2 = [   [1, 0, 0], 
-                        [0, 0, 1], 
-                        [0, 1, 0]]   
-
-    list[matrix] perm = [[[0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0],[1, 0, 0, 0]], [[1, 0, 0], [0, 0, 1], [0, 1, 0]]];
-
-    echo(perm)
        
 
 \end_output

@@ -15,6 +15,7 @@ struct st
     int* cond_list; /* For arguments of condense */
     int out_flag; /* flag for output 0 -> id, 1 -> cout, 2 -> qout */
     char *start,*end,*step;
+    int veconst;
 
     int level;
     bool prim;

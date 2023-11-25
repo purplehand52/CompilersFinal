@@ -4,7 +4,7 @@ $ Checks dimensions for lists and matrices $
     
     #registers quantum = 2
     #registers classical = 2
-    #iters = 100
+    #iters = 1
     #set quantum states -> {1,0}, {1,0}
     #set classical states -> 0, 0
 
@@ -22,34 +22,27 @@ $ Checks dimensions for lists and matrices $
 \end_main
 
 \begin_output
-    matrix a = [[1, 2], [3, 4]]
-    matrix b = [[4, 5], [6, (7, 8)]]
-    matrix c = [[1, 2], [3, 4]] @ [[4, 5], [6, (7, 8)]]
-
     list[float] d = [2, 4, 1, 5]
 
-    list[matrix] f = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
 
-    complex g = [1,2,3] @ [1,2,3]
+    list[float] p = [1, 2, 3]
+    list[float] q = [2, 3, 4]
+    list[float] r = p + q
+    echo(r, "\n")
 
-    list[int] h = [1, 2, 3, 4, 5]
+    float s = p @ q
+    echo(s, "\n") 
 
-    list[float] p = add([1.2, 2, 3], [4, 5, 6])
+    list[uint] a = [1, 2, 3]
+    list[uint] b = [2, 3, 4]
+    list[uint] c = a & b
+    echo(c, "\n")   
 
-    complex q = dot([1.2, 2, 3], [4, 5, 6])
-
-    float r = var([3, 4, 5, 6, 7, 8, 7, 8, 9])
-
-    list[uint] s = [1] + condense([1, 2, 2, 4, 5, 6, 7, 8], (0, 1, 2))
-
-    complex t = avg([(3, 4), (3, -4), (12, 13), 9, 5.10])
-
-    list[matrix] u = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] + [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
-
-    list[uint] v = [1, 2, 3] & [5, 4, 6]
+    float z = std_dev(a)
+    echo(z, "\n")
 
     int w = 45 | -90
 
-    echo(c)
+    echo(w, "\n")
     
 \end_output

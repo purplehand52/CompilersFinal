@@ -5,6 +5,8 @@
 #include <numeric>
 #include "complex.h"
 #include "matrix.h"
+#include <math.h>
+
 
 /* Add/Sub Functions */
 /* Add and Sub two lists of unsigned integers, integers, floats, complex numbers and matrices */
@@ -84,10 +86,10 @@ float avg(const std::vector<T> list) {
 template <typename T>
 float var(const std::vector<T> list) {
     if(list.size() == 0) return 0.0;
-    float avg = mean(list);
+    float avg_ = avg(list);
 
     float variance = 0;
-    for(const auto x : list) variance += ((x - avg)*(x - avg))/float(list.size());
+    for(const auto x : list) variance += ((x - avg_)*(x - avg_))/float(list.size());
 
     return variance;
 }
@@ -95,7 +97,7 @@ float var(const std::vector<T> list) {
 /* Standard Deviation (till floats) */
 template <typename T>
 float std_dev(const std::vector<T> list) {
-    return sqrt(variance(list));
+    return sqrt(var(list));
 }
 
 /* Sum (complex, matrices) */
@@ -207,6 +209,14 @@ std::vector<unsigned int> condense(const std::vector<unsigned int> list, unsigne
         unsigned int index = extractBits(i,comp_place);
         result[index] += list[i];
     }
+
+    return result;
+}
+
+/* repeat string */
+std::string repeatString(std::string str, int n) {
+    std::string result = "";
+    for(int i = 0; i < n; i++) result += str;
 
     return result;
 }
