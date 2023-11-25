@@ -263,7 +263,7 @@ Matrix Matrix::kronecker_fill(unsigned int place, unsigned int regs) /* Only for
     else ans = Matrix(1 << (regs-place-1)).kronecker_product(this->kronecker_fill(place, place+1));
     
     /* Return */
-    std::cout << ans << std::endl;
+    // std::cout << ans << std::endl;
     return ans;
 }
 

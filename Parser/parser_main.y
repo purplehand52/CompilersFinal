@@ -93,6 +93,7 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                         "#include\"matrix.h\"\n"
                                         "#include\"type.h\"\n"
                                         "#include\"state.h\"\n"
+                                        "#include\"list_func.h\"\n"
                                         "#include<math.h>\n\n"
                                         "using namespace std;\n\n");
 
@@ -127,20 +128,25 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                               fprintf(out,"initializeGate(H,Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(1/sqrt(2),0),Complex(-1/sqrt(2),0));\n");
                               fprintf(out,"FILE *result = fopen(\"result.csv\",\"w\");\n");
                               fprintf(out,"for(int iters=0;iters < num_iterations;iters++){\n");
-                              fprintf(out,"\tfor(int i=0;i<%d;i++{\n"
-                                             "\t\tq_output.arr[i] = q_output_original.arr[i];\n"
-                                          "}\n"
+                              printf("%d", quantum_registers);
+                              fprintf(out,"q_output = StateVec(%d, q);\n"
                                           "for(int i=0;i<%d;i++){\n"
                                              "\t\tc_output[i] = c_output_original[i];\n"
                                           "}\n"
                                           "for(int i=0;i<%d;i++){\n"
                                              "\t\tquantum_register_dict[i] = i;\n"
-                                          "}\n",
+                                          "}\n"
+                                          "quantum_registers = quantum_registers_original;\n"
+                                          "op = Matrix(1 << quantum_registers);\n",
                                           quantum_registers, classical_registers,quantum_registers
                                      );
                           }
                           main_section 
                            {
+                              fprintf(out,"for(int i=0;i<classical_registers;i++){\n"
+                                          "c_master[i] += c_output[i];\n"
+                                          "}\n"
+                                     );
                               fprintf(out,"fprintf(result,\"Iteration #%%d:\",iters);\n");
                               fprintf(out,"fprintf(result,\"Classical Outputs: \");");
                               fprintf(out,"for(int i=0;i<%d-1;i++){\n"
@@ -148,10 +154,10 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                           "}\n",classical_registers);
                               fprintf(out,"fprintf(result,\"%%d\\n\",c_output[%d-1]);\n",classical_registers);
                               fprintf(out,"fprintf(result,\"Quantum Outputs: \");");
-                              fprintf(out,"for(int i=0;i<%d-1;i++){\n}"
-                                             "\t\tfprintf(result,\"(%%d, %%d), \",q_output.get_value(i).real,q_output.get_value(i).imag);\n"
-                                          "}\n",quantum_registers);
-                              fprintf(out,"fprintf(result,\"(%%f, %%f)\",q_output.get_value(%d-1).real,q_output.get_value(%d-1).imag);",quantum_registers,quantum_registers);
+                              fprintf(out,"for(int i=0;i< (1 << quantum_registers) ;i++){\n"
+                                             "\t\tfprintf(result,\"(%%f, %%f), \",q_output.get_value(i).get_real(),q_output.get_value(i).get_imag());\n"
+                                          "}\n");
+                              //fprintf(out,"fprintf(result,\"(%%f, %%f)\",q_output.get_value(%d-1).get_real(),q_output.get_value(%d-1).get_imag());",quantum_registers,quantum_registers);
                               
                               fprintf(out,"}\n");
                               fprintf(out,"fclose(result);\n");
@@ -182,6 +188,7 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
 
                                                                                                                         fprintf(out,"int num_iterations = %d;\n", iterations);
                                                                                                                         fprintf(out,"int quantum_registers = %d;\n", quantum_registers);
+                                                                                                                        fprintf(out,"int quantum_registers_original = %d;\n", quantum_registers);
                                                                                                                         fprintf(out,"int classical_registers = %d;\n\n", classical_registers);
                                                                                                                         fprintf(out,"int quantum_register_dict[%d];\n", quantum_registers);
                                                                                                                         fprintf(out,"Matrix op = Matrix(1<<quantum_registers)\n;");
@@ -195,7 +202,7 @@ mandatory_init          :  '#' REGISTERS QUANTUM '=' NUMBER '#' REGISTERS CLASSI
 set_states              :   set_quantum_states set_classical_states { fprintf(out,$1.str);fprintf(out,$2.str);}
                         |   set_classical_states                    {fprintf(out,$1.str);fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",
                                                                      quantum_registers);}
-                        |   { fprintf(out,"int c_output[%d]={ 0 }int c_output_original[%d]={ 0 }",classical_registers,classical_registers);
+                        |   { fprintf(out,"int c_output[%d]={ 0 };\nint c_output_original[%d]={ 0 };\nvector<unsigned int> c_master(%d, 0);\n",classical_registers,classical_registers);
                               fprintf(out,"StateVec q_output = StateVec(%d);\nStateVec q_output_original = StateVec(%d);\n",quantum_registers,quantum_registers);
                             }
                         ;
@@ -208,7 +215,7 @@ snprintf($$.str,strlen($6.str)*2+300,"struct Quantum q[%d] = {%s};\nStateVec q_o
 
 set_classical_states    :   '#' SET CLASSICAL STATES ARROW classical_state_list {   fprintf(fp,"Setting initial state of classical registers\n");
                                                                                     $$.str = (char *)malloc(sizeof(char)*(strlen($6.str)*2+200));
-                                                                                    snprintf($$.str,strlen($6.str)*2+200,"int c_output[%d] = {%s};\nint c_output_original[%d] = {%s}", classical_registers,$6.str);
+                                                                                    snprintf($$.str,strlen($6.str)*2+200,"int c_output[%d] = {%s};\nint c_output_original[%d] = {%s};\nvector<unsigned int> c_master(%d, 0);\n", classical_registers,$6.str, classical_registers,$6.str,classical_registers);
                                                                                 }
                         ;
 
@@ -350,7 +357,7 @@ block_id                : ID     {  if(!firstLetterCapital($1.str)){
                                        yyerror("lexical error: block identifiers start with uppercase letter");
                                        return 1;
                                     } 
-                                    assignString($$.str,$1.str);
+                                    $$.str = $1.str;
                                  }  /* check first letter capital here */
                         ;
 
@@ -458,10 +465,9 @@ call_stmt               : classic_control GATE quantum_control ARROW simple_expr
                                                                               }
                         | block_id parameters optional                        {  fprintf(fp,"Block call statement\n");
                                                                                  if(!isInBlock){
+                                                                                    printf("%s\n",$1.str);
                                                                                     if(!BlockCallSemanticCheck($1.str,$2.num)){
                                                                                        yyerror("semantic error: block not defined");
-                                                                                       free($1.str);
-                                                                                       free($2.str);
                                                                                        return 1;
                                                                                     }
                                                                                     fprintf(out, "op = %s(%s);\n", $1.str, $2.str);
@@ -471,17 +477,9 @@ call_stmt               : classic_control GATE quantum_control ARROW simple_expr
                                                                               }
                         ;
 
-parameters              : simple_expr                 {  
-                                                      $$.num = 1; 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
-                                                      snprintf($$.str,strlen($1.str)+1,"%s",$1.str);
-                                                      free($1.str);  
-                                                   }
-                        | '(' register_list ')'    {
+parameters              : '(' register_list ')'            {
                                                       $$.num = $2.num; 
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+1));
-                                                      snprintf($$.str,strlen($2.str)+1,"%s",$2.str);
-                                                      free($2.str);
+                                                      $$.str = $2.str;
                                                    }
                         ;
 
@@ -495,7 +493,7 @@ register_list           : register_list ',' simple_expr  {
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+3,"%s, %s",$1.str,$3.str);
                                                          free($3.str);
                                                          free($1.str);
-                                                      }  
+                                                         }  
                         | simple_expr                    { 
                                                          $$.num = 1; 
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+1));
@@ -518,14 +516,14 @@ classic_control         : control_expr '?'                 {
                                                             }
                         ;
 
-quantum_control_list    : quantum_control_list ',' simple_expr  {
+quantum_control_list    : quantum_control_list ',' register  {
                                                                 $$.num = 1 + $1.num;
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+29));
                                                                 snprintf($$.str,strlen($1.str)+strlen($3.str)+29,"%s|(1<<quantum_register_map(%s))",$1.str,$3.str);
                                                                 free($3.str);
                                                                 free($1.str);
                                                              }
-                        | simple_expr                           { 
+                        | register                          { 
                                                                 $$.num = 1; 
                                                                 $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+28));
                                                                 snprintf($$.str,strlen($1.str)+28,"(1<<quantum_register_map(%s))",$1.str);
@@ -662,11 +660,11 @@ simple_expr         :      simple_expr '+' simple_expr                    {
                                                                         $$.str = (char *)malloc(sizeof(char)*20);
                                                                         snprintf($$.str,20,"%d",$1.num);
                                                                      }
-                        |  '(' simple_expr ')'                       {
+                        /* |  '(' simple_expr ')'                       {
                                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
                                                                         snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
                                                                         free($1.str);          
-                                                                     }
+                                                                     } */
                         ;
 
 
@@ -775,8 +773,8 @@ value                   : NUMBER             {$$.str = IntToString($1.num);}
                         | ID                 {$$.str = $1.str;}
                         ;
 
-range                   : value ':' value    {$$.start = IntToString($1.num); $$.end = IntToString($3.num); $$.step = IntToString(1);}
-                        | value ':' value ':' value   {$$.start = IntToString($1.num); $$.end = IntToString($3.num); $$.step = IntToString($5.num);}
+range                   : value ':' value    {$$.start = $1.str; $$.end = $3.str; $$.step = IntToString(1);}
+                        | value ':' value ':' value   {$$.start = $1.str; $$.end = $3.str; $$.step = $5.str;}
                         ;
 
 range_list              : range ',' range_list     {  $$.num = 1 + $3.num;
@@ -837,7 +835,9 @@ for_stmt                : FOR ID                                        {  if(!i
                                                                               return 1;
                                                                            }
                                                                         } 
-                          IN '(' range ')'                              {   fprintf(out,"for(int %s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
+                          IN '(' range ')'                              {   
+                                                                           printf("S%s S%s E%s\n", $6.start, $6.step, $6.end);
+                                                                           fprintf(out,"for(int %s = %s;%s < %s;%s += %s){\n",$2.str,$6.start,$2.str,$6.end,$2.str,$6.step);  }
                           '{' main_stmt_list '}'                        {
                                                                            fprintf(out,"}\n");
                                                                            removeTopKFromList(&head,1);
@@ -879,7 +879,7 @@ while_stmt              : WHILE '(' expr ')'                          {fprintf(o
 
 /* Datatypes */
 out_id                  : ID   {$$.out_flag = 0; $$.str = $1.str;}
-                        | COUT {$$.out_flag = 1; $$.type = Int; $$.prim = false; $$.dim = (1 << classical_registers); $$.rows = 0;$$.str = $1.str;}
+                        | COUT {$$.out_flag = 1; $$.type = Uint; $$.prim = false; $$.dim = (classical_registers); $$.rows = 0; $$.str = (char *)malloc(sizeof(char)*(9));strcpy($$.str,"c_master");}
                         ;
 
 prim_type               : INT       {$$.type = Int; $$.prim = true;fprintf(out,"int ");}
@@ -1129,18 +1129,19 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                         free($3.str);
                      }
                      | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */                      
-                     {
+                     { 
                         if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))){
                            $$.prim = false; 
-                           $$.type = $3.type; 
+                           $$.type = $3.type;
+                           printf("After condense: %d\n", $3.type); 
                            $$.dim = condenser($3.dim, 1);
                         } 
                         else{
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+20));
-                        snprintf($$.str,strlen($1.str)+strlen($3.str)+20,"%s(%s,%d)",$1.str,$3.str,$5.num);
+                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+23));
+                        snprintf($$.str,strlen($1.str)+strlen($3.str)+23,"%s(%s,1<<%d)",$1.str,$3.str,$5.num);
                         free($3.str);
                      }
                      | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */              
@@ -1245,8 +1246,8 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       }
                                                    } 
                                                    else if($$.out_flag == 1){
-                                                      $$.type = Int; $$.prim = false; 
-                                                      $$.dim = (1 << classical_registers); 
+                                                      $$.type = Uint; $$.prim = false; 
+                                                      $$.dim = (classical_registers); 
                                                       $$.rows = 0;
                                                    } 
                                                    else{
@@ -1724,6 +1725,7 @@ decl                    : prim_type out_expr       {  fprintf(fp,"Primitive data
                                                          return 1;
                                                       } 
                                                       else if(($2.prim==true) || (($1.type < COMPATIBLE) && ($1.type < $2.type)) || (($1.type >= COMPATIBLE) && ($1.type != $2.type))){
+                                                         printf("%d %d %d\n", $2.prim, $2.type, $1.type);
                                                          yyerror("semantic error: incompatible types"); 
                                                          return 1;
                                                       } 
@@ -1741,7 +1743,7 @@ echo_stmt               : ECHO '(' echo_list ')'      {  fprintf(fp,"Echo statem
                                                       }
                         ;
 
-echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+echo_list               : echo_list ',' out_rhs       {  /*$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s<<%s",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
@@ -1753,10 +1755,10 @@ echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc
                                                                            "\tcout<<%s[i]<<\" \";"
                                                                            "}\n"
                                                                , $3.dim, $3.str);
-                                                         }
+                                                         }*/
 
                                                       }
-                        | out_rhs                     {  $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                        | out_rhs                     {  /*$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
                                                          free($1.str);   
                                                          if($1.prim){
@@ -1768,7 +1770,7 @@ echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc
                                                                            "\tcout<<%s[i]<<\" \";"
                                                                            "}\n"
                                                                , $1.dim, $1.str);
-                                                      }
+                                                      }*/
                                                       }
                         | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
@@ -1785,7 +1787,7 @@ echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc
                                                          //    }
                                                          // }
                                                          }
-                        | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
+                        /* | out_rhs                     {  //$$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+2));
                                                          // snprintf($$.str,strlen($1.str)+2,"%s",$1.str);
                                                          // free($1.str);   
                                                          // if($1.prim){
@@ -1799,7 +1801,7 @@ echo_list               : echo_list ',' out_rhs       {  $$.str = (char *)malloc
                                                          //       , $1.dim, $1.str);
                                                          //    }
                                                          // }
-                                                      }
+                                                      } */
                         ;
 
 /* Save Statement */
@@ -2029,10 +2031,11 @@ int InBlock(struct BlockTable** Head,char * data,int len){
 int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List* params){
    if(InBlock(Head,data,len)) return 0;
    struct BlockTable* newNode = (struct BlockTable*)malloc(sizeof(struct BlockTable));
-   newNode->id = (char *)malloc(sizeof(char)*strlen(data));
+   newNode->id = (char *)malloc(sizeof(char)*strlen(data)+1);
    for(int i=0;i<strlen(data);i++){
       newNode->id[i] = data[i];
    }
+   newNode->id[strlen(data)] = '\0';
    newNode->params = params;
    newNode->len = len;
    if(*Head == NULL){
@@ -2047,12 +2050,14 @@ int insertInBlockTable(struct BlockTable** Head,char * data,int len,struct List*
 
 void printBlockTable(){
    struct BlockTable* temp = BlockSymbolTable;
+   printf("Printing now\n");
    while(temp != NULL){
       printf("%s \n",temp->id);
       printList(&(temp->params));
       printf("%d\n\n",temp->len);
       temp = temp->next;
    }
+   printf("Printed\n");
 }
 
 int insertInGateTable(struct GateTable ** Head,char * data,struct cpx * arr){

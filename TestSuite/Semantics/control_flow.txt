@@ -1,0 +1,60 @@
+\begin_init
+    #registers quantum = 5
+    #registers classical = 5
+    #iters = 4
+    #set quantum states -> {1,0}, {1,0}, {1,0}, {1,0}, {1,0}
+    #set classical states -> 0, 0, 0, 0, 0
+
+    block Had (i)
+    [
+        for a in (0:i)
+        {
+            H -> a
+        }
+    ]
+\end_init
+
+\begin_main
+    $ test special-for loops $
+    Had (5)
+    Had (3)
+
+    measure : 0 -> 0
+    measure : 4 -> 4
+
+\end_main
+
+\begin_output
+    $string hello = "Good\nbye"$
+    
+    $echo("p(000) vs p(100):") $
+
+    int difference = c_output[4] * c_output[3]                        
+
+    $ test conditional statement $
+    condition(difference > 0){
+        echo("More")
+    }
+    otherwise(difference < 0){
+        echo("Less")
+    }
+    otherwise {
+        echo("Equal")
+    }
+
+    $ simple stuff $
+    int a = 1
+    uint b = 10
+    uint c = a*b
+    echo(c*c*c)
+
+    $ slightly complex stuff $
+    float d = 10.76
+    float e = 54.56
+    
+    $ Complex $
+    complex f = (1, 2)
+
+    
+
+\end_output

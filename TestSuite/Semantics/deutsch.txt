@@ -10,12 +10,12 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     $ Initialization $
     #registers quantum = 2
     #registers classical = 2
-    #iters = 1000
-
+    #iters = 10
     #set quantum states -> {1,0}, {0,1}
-
+    #set classical states -> 0, 0
+    
     $ Block Definition $
-    block U_f (x, y)
+    block UF (x, y)
     [
         $ Reverse first register $
         X -> x 
@@ -28,7 +28,7 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     ]
 
     $ Hadamard Transform $
-    block had_transform (x, y)
+    block Had_transform (x, y)
     [
         H -> x 
         H -> y 
@@ -40,10 +40,10 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
 \begin_main
 
     $ Part 1 $
-    had_transform (0, 1)
+    Had_transform (0, 1)
 
     $ Part 2 $
-    U_f (0, 1)
+    UF (0, 1)
 
     $ Part 3 $
     H -> 0
@@ -61,21 +61,22 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     \save "exp_result.csv"
 
     $ Classical output to be condensed $
-    list[uint] univ_f = condense(c_output, 1)
+    uint a = c_output[0] + c_output[2]
+    uint b =  c_output[1] + c_output[3]
 
     $ Report univ_f $
-    float conf = 0.9
-    condition(univ_f[0] > conf*1000)
+    float conf = 0.90
+    $ condition(alpha > conf*1000)
     {
         echo("The unknown function is a constant function.")
     }
-    otherwise(univ_f[1] > conf*1000)
+    otherwise(beta > conf*1000)
     {
         echo("The unknown function is not a constant function.")
     }
     otherwise
     {
         echo("The experiment has not reached conclusive results.")
-    }
+    } $
 
 \end_output

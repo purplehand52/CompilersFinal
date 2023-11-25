@@ -3,7 +3,7 @@
 cc=gcc
 cc_=g++
 
-.SILENT: create_folders complex matrix state out Parser parse lexer clean
+#.SILENT: create_folders complex matrix state out Parser parse lexer clean
 
 all: create_folders out complex matrix state
 	$(cc_) exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp -Iheaders/ -o ./exec/a.out
@@ -18,7 +18,7 @@ matrix: ./headers/matrix.h ./CodeGen/Basic/matrix.cpp
 state: ./headers/state.h ./CodeGen/Basic/state.cpp
 
 out: Parser
-	./exec/parser ./Tests/UnitTests/$(SRC)
+	./exec/parser ./TestSuite/Semantics/$(SRC)
 	mv out.cpp ./exec/out.cpp
 	mv output.parsed ./exec/output.parsed
 	mv tokens.txt ./exec/tokens.txt
