@@ -1,0 +1,36 @@
+\begin_init
+    #registers quantum = 2
+    #registers classical = 2
+    #iters = 20
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+    for i in (0:2)
+    {
+        H -> i
+    }
+    for i in (0:2)
+    {
+        measure : i -> i
+    }
+\end_main
+
+\begin_output
+
+    echo("Classical output 20 iters: ", c_output, "\n\n")
+    echo("For lex demo\n")
+    int i = 0
+    int j = 0
+    for_lex (i,j) in (0:5:2, 1:6:3){
+        echo(i,j,"\n")
+    }
+    echo("For zip demo\n")
+    int a = 0
+    int b = 0
+    for_zip (a,b) in (0:5:2, 1:6:3){
+        echo(a,b,"\n")
+    }
+\end_output
