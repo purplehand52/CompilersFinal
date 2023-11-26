@@ -53,12 +53,7 @@
 \end_main
 
 \begin_output
-    matrix a = [[1, 2], [3, 4]]
-    matrix b = [[4, 5], [6, (7, 8)]]
-    matrix c = a @ b
 
     uint t = c_output[0] * c_output[1] * c_output[2]
-
-    state f = q_output[1]
     
 \end_output
