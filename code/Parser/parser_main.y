@@ -1054,7 +1054,7 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                         if($3.veconst == 0 && $5.veconst == 0)
                         {
                            $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
-                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"addLists(%s,%s)",$1.str,$3.str,$5.str);
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"add(%s,%s)",$3.str,$5.str);
                            free($3.str);
                            free($5.str);
                         }
@@ -1079,7 +1079,7 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                         if($3.veconst == 0 && $5.veconst == 0)
                         {
                            $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
-                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"subLists(%s,%s)",$1.str,$3.str,$5.str);
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"sub(%s,%s)",$3.str,$5.str);
                            free($3.str);
                            free($5.str);
                         }
@@ -1264,30 +1264,7 @@ yyerror("semantic error : initialize first, cannot directly pass as argument");
                      }
                         /*| REAL */
                         /*| IMAG */
-                        ;
-
-
-uint_list               : uint_list ',' out_rhs  { if($1.type <= Int){
-                                                      $$.cond_count = $1.cond_count + 1;
-                                                   } 
-                                                   else{
-                                                      yyerror("semantic error: only integer elements permitted"); 
-                                                      return 1;
-                                                   }
-                                                   $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+2));
-                                                   snprintf($$.str,strlen($1.str)+strlen($3.str)+2,"%s,%s",$1.str,$3.str);
-                                                   free($1.str);
-                                                   free($3.str);
-                                                 }
-                        | out_rhs                { if($1.type <= Int){
-                                                      $$.cond_count = 1;
-                                                   } 
-                                                   else{
-                                                      yyerror("semantic error: only integer elements permitted"); 
-                                                      return 1;
-                                                   }
-                                                   $$.str = $1.str;
-                                                 }
+                        
                         ;
 
 /* Expressions :*/
