@@ -7,10 +7,10 @@
     #set quantum states -> {1,0}, {1,0}, {1,0}
 
     $ Bad variables inside complex scope $
-    block BellGen3 (i) [
+    block BellGen (i) [
         for a in (1:i)
         {
-            H -> b
+            H -> a
         }
         X : i -> i+1
     ]
