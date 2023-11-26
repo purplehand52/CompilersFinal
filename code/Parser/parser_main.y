@@ -152,7 +152,7 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                                              "\t\tfprintf(result,\"%%d, \",c_output[i]);\n"
                                           "}\n",classical_registers);
                               fprintf(out,"if(quantum_registers != 0) {\n");
-                              fprintf(out,"fprintf(result,\"Quantum Outputs: \"\);");
+                              fprintf(out,"fprintf(result,\"Quantum Outputs: \");");
                               fprintf(out,"for(int i=0;i< (1 << quantum_registers) ;i++){\n"
                                              "\t\tfprintf(result,\"(%%f, %%f), \",q_output.get_value(i).get_real(),q_output.get_value(i).get_imag());\n"
                                           "}\n"
