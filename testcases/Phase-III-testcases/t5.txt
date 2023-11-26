@@ -1,10 +1,10 @@
 \begin_init
-    #registers quantum = 3
-    #registers classical = 3
+    #registers quantum = 4
+    #registers classical = 4
     #iters = 1000
 
-    #set classical states -> 0,0,0
-    #set quantum states -> {1,0}, {1,0}, {1,0}
+    #set classical states -> 0,0,0,0
+    #set quantum states -> {1,0}, {1,0}, {1,0},{1,0}
 
     block BellGen (i, j) -> j [
         $ Start with Hadamard $
@@ -23,7 +23,7 @@
 \end_init
 
 \begin_main
-    for_zip (i,j) in (0:3,5:10:2){
+    for_zip (i,j) in (0:3,0:3){
         condition (i == j/2){
         X -> i        $ block call with control->target $
         }
@@ -34,22 +34,16 @@
         Z -> i
         }
     }    
-    H -> 4
+    H -> 3
     \barrier
-    (1,4, !3) ? Y : (4,5,6) -> 2
+    (1,2, !3) ? Y : (0,1) -> 2
     measure: 1->0
-    BellGen2 (2,3,4)
+    BellGen2 (2,3,0)
 \end_main
 
 \begin_output $
-    matrix a = [[1, 2], [3, 4]]
-    matrix b = [[4, 5], [6, (7, 8)]]
-    matrix c = [[1, 2], [3, 4]] @ [[4, 5], [6, (7, 8)]]
 
-    list[float] d = [2, 4, 1, 5]
-    state e = {5, (6, 4)}
-
-    list[matrix] f = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+    list[float] d = [2, 4z, 1, 5]
 
     complex g = [1,2,3] @ [1,2,3]
 
@@ -64,8 +58,6 @@
     list[uint] s = [1] + condense([1, 2, 2, 4, 5, 6, 7, 8], (0, 1, 2))
 
     complex t = avg([(3, 4), (3, -4), (12, 13), 9, 5.10])
-
-    list[matrix] u = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] + [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
 
     list[uint] v = [1, 2, 3] & [5, 4, 6]
 

@@ -1,12 +1,12 @@
 # this is a comment
-PHASE="IV"
+PHASE="III"
 cc=gcc
 cc_=g++
 
 .SILENT: create_folders complex matrix state out Parser parse lexe clean all
 
 all: create_folders out complex matrix state
-	$(cc_) -std=c++17 exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp -Iheaders/ -o ./exec/a.out
+	$(cc_) -std=c++17 -w exec/out.cpp ./CodeGen/Basic/complex.cpp ./CodeGen/Basic/matrix.cpp ./CodeGen/Basic/state.cpp -Iheaders/ -o ./exec/a.out
 	exec/a.out
 	mv result.csv ./exec/result.csv
 
