@@ -36,9 +36,6 @@
 \end_main
 
 \begin_output
-    
-    $ Save Value $
-    \save "output.csv"
 
     $ Print the quantum register $
     echo("Final Transferred State: ", q_output[2])

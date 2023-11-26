@@ -36,9 +36,6 @@
 \end_main
 
 \begin_output
-    
-    $ Save Value $
-    \save "output.csv"
 
     $ Print the frequency list of classical registers $
     $echo("Classical Register List: ", c_output)$

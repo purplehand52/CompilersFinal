@@ -10,7 +10,7 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
     $ Initialization $
     #registers quantum = 2
     #registers classical = 2
-    #iters = 10
+    #iters = 100
     #set quantum states -> {1,0}, {0,1}
     #set classical states -> 0, 0
     
@@ -57,26 +57,24 @@ $ Thus the gate Uf could be represented by an inverted X gate. $
 
 \begin_output
 
-    $ Save Output $
-    \save "exp_result.csv"
-
     $ Classical output to be condensed $
-    uint a = c_output[0] + c_output[2]
-    uint b =  c_output[1] + c_output[3]
+    uint a = c_output[0]
+    uint b =  c_output[1]
+    echo(c_output, "\n")
 
     $ Report univ_f $
     float conf = 0.90
-    $ condition(alpha > conf*1000)
+    condition(a > conf*100)
     {
         echo("The unknown function is a constant function.")
     }
-    otherwise(beta > conf*1000)
+    otherwise(a < conf*100)
     {
         echo("The unknown function is not a constant function.")
     }
     otherwise
     {
         echo("The experiment has not reached conclusive results.")
-    } $
+    }
 
 \end_output

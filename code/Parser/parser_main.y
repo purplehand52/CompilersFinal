@@ -1874,7 +1874,7 @@ echo_list               : echo_list ',' out_rhs       {
                         ;
 
 /* Save Statement */
-save_stmt               : '\\' SAVE STRING            {fprintf(fp,"Save statement\n");}
+save_stmt               : '\\' SAVE STRING            {  fprintf(fp,"Save statement\n");}
                         ;
 
 /* Control Statement */
