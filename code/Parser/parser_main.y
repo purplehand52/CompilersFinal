@@ -151,12 +151,13 @@ prgm                    : { fprintf(out,"#include<iostream>\n"
                               fprintf(out,"for(int i=0;i<%d-1;i++){\n"
                                              "\t\tfprintf(result,\"%%d, \",c_output[i]);\n"
                                           "}\n",classical_registers);
-                              fprintf(out,"fprintf(result,\"%%d\\n\",c_output[%d-1]);\n",classical_registers);
+                              fprintf(out,"if(quantum_registers != 0) {\n");
                               fprintf(out,"fprintf(result,\"Quantum Outputs: \"\);");
                               fprintf(out,"for(int i=0;i< (1 << quantum_registers) ;i++){\n"
                                              "\t\tfprintf(result,\"(%%f, %%f), \",q_output.get_value(i).get_real(),q_output.get_value(i).get_imag());\n"
                                           "}\n"
                                           "fprintf(result,\"\\n\\n\");");
+                              fprintf(out,"} else continue;");
                               //fprintf(out,"fprintf(result,\"(%%f, %%f)\",q_output.get_value(%d-1).get_real(),q_output.get_value(%d-1).get_imag());",quantum_registers,quantum_registers);
                               
                               fprintf(out,"}\n");
@@ -2351,6 +2352,6 @@ int main(int argc,char* argv[])
 }
 
 void yyerror(char* err){
-   printf("At line %d: %s\n", line, err);
-   fprintf(fp,"At line %d: %s\n",line, err);
+   printf("Near line %d: %s\n", line, err);
+   fprintf(fp,"Near line %d: %s\n",line, err);
 }
