@@ -1,10 +1,10 @@
 \begin_init
-    #registers quantum = 3
-    #registers classical = 3
+    #registers quantum = 4
+    #registers classical = 4
     #iters = 1000
 
-    #set classical states -> 0,0,0
-    #set quantum states -> {1,0}, {1,0}, {1,0}
+    #set classical states -> 0,0,0,0
+    #set quantum states -> {1,0}, {1,0}, {1,0},{1,0}
 
     block BellGen (i, j) -> j [
         $ Start with Hadamard $
@@ -20,39 +20,28 @@
         X : i -> j
     ]
 
-    gate myGate = [[1,2],[(3,4),(4,7)],[6,7]]
-    gate myGate2 =[[1,2],[(3,1),(4,7)],[6,7]]
+
 \end_init
 
 \begin_main
-    BellGen : 1 -> 4
-    H -> 4
-    3 ? X : (4,5,6) -> 4
+    BellGen (1, 2)
+    H -> 0
+    1 ? X : (0,1,2) -> 3
 
-    0 ? BellGen2 (2,3,4) -> (4,3)
+    0 ? BellGen2 (1,2,3) -> (2,3)
+
+
+    for_zip (i,j) in (0:2,2:4){
+        H: i->j
+    }
 
     measure : 0 -> 1
 
-    for i in (4:5:3){
-        condition(((x+y >= z) || (u == true)) && (z <= 3)){
-            measure : 1 -> 2
-        }
-        otherwise(y ^ z != z | x){
-            measure : 2 -> 0
-        }
-        otherwise{
-            H -> 4
-        }
-    }
-
-    for_lex (x,y,z) in (1:2:1,2:3:1,1:1){
-        BellGen2 (2,3,4) -> (4,3)
-        X : (1,2,23) -> 1
-    }
 
 \end_main
 
 \begin_output
+    $
     matrix a = [[1, 2], [3, 4]]
     matrix b = [[4, 5], [6, (7, 8)]]
     matrix c = a @ b
@@ -60,5 +49,6 @@
     uint t = c_output[0] * c_output[1] * c_output[2]
 
     state f = q_output[1]
+    $
     
 \end_output

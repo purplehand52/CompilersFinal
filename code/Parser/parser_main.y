@@ -1874,7 +1874,7 @@ echo_list               : echo_list ',' out_rhs       {
                         ;
 
 /* Save Statement */
-save_stmt               : '\\' SAVE STRING            {  fprintf(fp,"Save statement\n");}
+save_stmt               : '\\' SAVE STRING            {fprintf(fp,"Save statement\n");}
                         ;
 
 /* Control Statement */
@@ -1976,7 +1976,7 @@ void printForZip(int num, int usage){
    temp = head;
    temp2= range_list;
    for(int i=0;i<num;i++){
-      fprintf(out, "%s += %s",temp->id,temp2->end);
+      fprintf(out, "%s += %s",temp->id,temp2->step);
       if(i<num-1){fprintf(out, ", ");}
       temp = temp->next;
       temp2 = temp2->next;
