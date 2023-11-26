@@ -1,10 +1,13 @@
+$ may take around 30 sec to complete execution $
+
 \begin_init
     #registers quantum = 6
     #registers classical = 6
     #iters = 1000
 
-    #set classical states -> 0,0,0
-    #set quantum states -> {1,0}, {1,0}, {1,0}
+    #set classical states -> 0,0,0, 0,0,0
+    #set quantum states -> {1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {1,0}
+
 
     block BellGen (i, j) -> j [
         $ Start with Hadamard $
@@ -28,14 +31,12 @@
     3 ? X : (4,5,6) -> 4
 
     0 ? BellGen2 (2,3,4) -> (4,3)
-
-    measure : 0 -> 1
     
     for i in (4:5:3){
-        condition( ((i+1) > 2) && (i <= 3)){
+        condition( i <= 3){
             measure : 1 -> 2
         }
-        otherwise( (i - 4) != 0 ){
+        otherwise( (i%2) == 0 ){
             measure : 2 -> 0
         }
         otherwise{
@@ -48,6 +49,7 @@
         X : (1,2,23) -> 1
     }
     
+    measure : 0 -> 1
 
 \end_main
 

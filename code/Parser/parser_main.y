@@ -713,8 +713,8 @@ expr                    : expr COMP expr                             {
                                                                         free($3.str);           
                                                                      }
                         | '(' expr ')'                               {
-                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+3));
-                                                                        snprintf($$.str,strlen($1.str)+3,"(%s)",$1.str);
+                                                                        $$.str = (char *)malloc(sizeof(char)*(strlen($2.str)+3));
+                                                                        snprintf($$.str,strlen($2.str)+3,"(%s)",$2.str);
                                                                         free($1.str);          
                                                                      }
                         | expr '+' expr                              {
