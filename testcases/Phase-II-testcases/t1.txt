@@ -21,10 +21,6 @@
 
     \barrier
 
-    $ Init Transformations $
-    X : 0 -> 1
-    H -> 0
-
     $ Measurements $
     measure: 0 -> 0
     measure: 1 -> 1
@@ -32,6 +28,8 @@
     $ Classical Controlled Ops $
     1 ? X -> 2
     0 ? Z -> 2
+
+    \barrier
 
 \end_main
 
