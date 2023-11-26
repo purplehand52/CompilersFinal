@@ -991,6 +991,7 @@ prim_const              : bool_const      {  $$.type = Bool;
 
 vec_const               : '[' vec_list ']'      {  $$.dim = $2.dim; 
                                                    $$.type = $2.type; 
+                                                   $$.veconst = 1;
                                                    if($$.type == Matrix){
                                                       $$.rows = $2.rows;
                                                    } 
@@ -1050,10 +1051,18 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands");
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
-                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
-                        free($3.str);
-                        free($5.str);
+                        if($3.veconst == 0 && $5.veconst == 0)
+                        {
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"addLists(%s,%s)",$1.str,$3.str,$5.str);
+                           free($3.str);
+                           free($5.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
+                        }
                      }
                      | SUB '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex, matrix, state) */             
                      {
@@ -1067,10 +1076,18 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
-                        snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
-                        free($3.str);
-                        free($5.str);
+                        if($3.veconst == 0 && $5.veconst == 0)
+                        {
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
+                           snprintf($$.str,strlen($5.str)+strlen($3.str)+8+4,"subLists(%s,%s)",$1.str,$3.str,$5.str);
+                           free($3.str);
+                           free($5.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
+                        }
                      }      
                      | DOT '(' out_rhs ',' out_rhs ')'   /* List (uint, int, float, complex), List(Comp*Mat), State*State*/
                      {
@@ -1093,17 +1110,22 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        if($3.type != Complex){
+                        if($3.type != Complex && (($3.veconst == 0 && $5.veconst == 0))){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+strlen($1.str)+4));
                            snprintf($$.str,strlen($5.str)+strlen($3.str)+strlen($1.str)+4,"%s(%s,%s)",$1.str,$3.str,$5.str);
                            free($3.str);
                            free($5.str);
                         } 
-                        else{
+                        else if($3.veconst == 0 && $5.veconst == 0){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($5.str)+strlen($3.str)+24));
                            snprintf($$.str,strlen($5.str)+strlen($3.str)+24,"dotProductComplex(%s,%s)",$3.str,$5.str);
                            free($3.str);
                            free($5.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
                         }
                      }        
                      | STD_DEV '(' out_rhs ')'           /* List (uint, int) */                                            
@@ -1117,9 +1139,17 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
+                        if(($3.veconst == 0))
+                        {
                         $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
                         snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
                         free($3.str);
+                        }
+                        else
+                        {
+yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
+                        }
                      }   
                      | VAR '(' out_rhs ')'               /* List (uint, int) */                                            
                      {
@@ -1132,9 +1162,11 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands");
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
+                        if(($3.veconst == 0))
+                        {                     $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
                         snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
                         free($3.str);
+                     }
                      }
                      | CONDENSE '(' out_rhs ',' NUMBER ')'     /* List (uint, int)  with reduction */                      
                      { 
@@ -1147,11 +1179,20 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+23));
+                        if(($3.veconst == 0))
+                        {
+                           $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+23));
                         snprintf($$.str,strlen($1.str)+strlen($3.str)+23,"%s(%s,1<<%d)",$1.str,$3.str,$5.num);
                         free($3.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
+                        }
+                        
                      }
-                     | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction */              
+                     /* | CONDENSE '(' out_rhs ',' '(' uint_list ')' ')'   /* List (uint, int) with reduction             
                      {
                         if((!$3.prim) && (($3.type==Uint) || ($3.type==Int))){
                            $$.prim = false; 
@@ -1166,7 +1207,7 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                         snprintf($$.str,strlen($1.str)+strlen($3.str)+20,"%s(%s,(%s))",$1.str,$3.str,$6.str);
                         free($3.str);
                         free($6.str);
-                     }
+                     } */
                      | SUM '(' out_rhs ')'               /* List (uint, int, float, complex, matrix, string??) */          
                      {
                         if((!$3.prim) && (($3.type<=COMPATIBLE) || $3.type==Matrix)){
@@ -1178,15 +1219,20 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        if($3.type == Complex){
+                        if($3.type == Complex && ($3.veconst == 0)){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+24));
                            snprintf($$.str,strlen($3.str)+24,"sumComplex(%s)",$3.str);
                            free($3.str);
                         } 
-                        else{
+                        else if ($3.veconst == 0){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
                            snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
                            free($3.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
                         }
                      }
                      | AVG '(' out_rhs ')'               /* List (uint, int, float, complex, matrix) */                  
@@ -1200,15 +1246,20 @@ calls                : ADD '(' out_rhs ',' out_rhs ')'   /* List (uint, int, flo
                            yyerror("semantic error: incompatible operands"); 
                            return 1;
                         }
-                        if($3.type == Complex){
+                        if($3.type == Complex && ($3.veconst == 0)){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+24));
                            snprintf($$.str,strlen($3.str)+24,"meanComplex(%s)",$3.str);
                            free($3.str);
                         } 
-                        else{
+                        else if(($3.veconst == 0)){
                            $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+3));
                            snprintf($$.str,strlen($3.str)+strlen($1.str)+3,"%s(%s)",$1.str,$3.str);
                            free($3.str);
+                        }
+                        else
+                        {
+                           yyerror("semantic error : initialize first, cannot directly pass as argument");
+                           return 1;
                         }
                      }
                         /*| REAL */
@@ -1481,27 +1532,46 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       free($1.str);
                                                       free($3.str); 
                                                    }
-                        | out_rhs '*'  out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
-                                                      if($1.prim && (temp_type <= Complex && temp_type >= 0)){
+                        | out_rhs '*'  out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim);
+                                                      int f = 0;
+                                                      if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {
                                                          $$.prim = true; 
-                                                         $$.type = temp_type;
-                                                      } 
+                                                         $$.type = String;
+                                                         f = 1;
+                                                      }
                                                       else if($1.prim && $3.prim && $1.type<=Complex && $3.type==Matrix){
                                                          $$.prim = true; 
                                                          $$.type = Matrix;
                                                       } 
-                                                      else if (($1.prim && $3.prim) && (($1.type == String && $3.type == Uint) || ($3.type == String && $1.type == Uint))) {
+                                                      else if($1.prim && (temp_type <= Complex && temp_type >= 0)){
                                                          $$.prim = true; 
-                                                         $$.type = String;
+                                                         $$.type = temp_type;
                                                       } 
                                                       else{
                                                          yyerror("semantic error 14"); 
                                                          return 1;
                                                       }
-                                                      $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
-                                                      snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
-                                                      free($1.str);
-                                                      free($3.str);
+                                                      if(f == 0)
+                                                      {
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+4));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+4,"%s * %s",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
+                                                      else if($1.type == String && $3.type == Uint)
+                                                      {
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+16));
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+16,"repeatString(%s,%s)",$1.str,$3.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
+                                                      else if($3.type == String && $1.type == Uint)
+                                                      {
+                                                         $$.str = (char *)malloc(sizeof(char)*(strlen($3.str)+strlen($1.str)+16));
+                                                         snprintf($$.str,strlen($3.str)+strlen($1.str)+16,"repeatString(%s,%s)",$3.str,$1.str);
+                                                         free($1.str);
+                                                         free($3.str);
+                                                      }
                                                    }
                         | out_rhs '/' out_rhs      {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
                                                       if($1.prim && (temp_type <= Complex && temp_type >= 0)){
@@ -1541,12 +1611,16 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else{
+                                                      else if($1.veconst == 0 && $3.veconst == 0){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+12));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"addLists(%s,%s)",$1.str,$3.str);
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"add(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
-
+                                                      }
+                                                      else 
+                                                      {
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
                                                       }
                                                    }
                         | out_rhs '-' out_rhs   /* Works for uint, int, float, complex, matrix, *state*, list (uint, int, float, complex, matrix, *state*) */                {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1566,11 +1640,17 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else{
+                                                      else if($1.veconst == 0 && $3.veconst == 0){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+12));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"subLists(%s,%s)",$1.str,$3.str);
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+12,"sub(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
+                                                      }
+                                                      else
+                                                      {
+                                                         /* Cannot initialize */
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
                                                       }                                                      
                                                    }
                         | out_rhs '@'  out_rhs   /* Works for matrix, *state*, list (uint, int, float, complex); list(complex)*list(matrix)*/                         {  temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1591,7 +1671,7 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                       } 
                                                       else if(!$1.prim && (temp_type <= COMPATIBLE) && (temp_type >= 0)){
                                                          $$.prim = true; 
-                                                         $$.type = temp_type; 
+                                                         $$.type = Float; 
                                                          $$.dim = 0;
                                                       } 
                                                       else if($1.type==Complex && $3.type==Matrix){
@@ -1610,24 +1690,29 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else if(!$1.prim && temp_type <= Float){
+                                                      else if((!$1.prim && temp_type <= Float) && ($1.veconst == 0 && $3.veconst == 0)){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
-                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"dotProduct(%s,%s)",$1.str,$3.str);
+                                                         snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"dot(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
                                                       }
-                                                      else if(!$1.prim && temp_type == Complex)
+                                                      else if(!$1.prim && temp_type == Complex  && ($1.veconst == 0 && $3.veconst == 0))
                                                       {
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+21));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+21,"dotProductComplex(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else if(!$1.prim && !$3.prim && ($1.type == Complex) && ($3.type == Matrix)){
+                                                      else if(!$1.prim && !$3.prim && ($1.type == Complex) && ($3.type == Matrix)  && ($1.veconst == 0 && $3.veconst == 0)){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+19));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+19,"dotProductCross(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
+                                                      }
+                                                      else
+                                                      {
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
                                                       }
                                                    }
                         | out_rhs '&' out_rhs   /* Works for uint, int, list(uint, int)*/ 
@@ -1646,11 +1731,16 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else{
+                                                      else if($1.veconst == 0 && $3.veconst == 0){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"bitwiseAnd(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
+                                                      }
+                                                      else
+                                                      {
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
                                                       }
                                                    }
                         | out_rhs '^' out_rhs   /* Works for uint, int, list(uint, int)*/                                                     
@@ -1669,12 +1759,17 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else{
+                                                      else if($1.veconst == 0 && $3.veconst == 0){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+14));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+14,"bitwiseXor(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
-                                                      }                                                     
+                                                      }   
+                                                      else
+                                                      {
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
+                                                      }                                                  
                                                    }
                         | out_rhs '|' out_rhs   /* Works for uint, int, list(uint, int) */                                             
                                                    { temp_type = compatibleCheckAdv($1.type, $3.type, $1.prim, $3.prim, $1.dim, $3.dim); 
@@ -1692,11 +1787,16 @@ out_rhs                 : prim_const            { $$.prim = true; $$.type = $1.t
                                                          free($1.str);
                                                          free($3.str);
                                                       } 
-                                                      else{
+                                                      else if ($1.veconst == 0 && $3.veconst == 0){
                                                          $$.str = (char *)malloc(sizeof(char)*(strlen($1.str)+strlen($3.str)+13));
                                                          snprintf($$.str,strlen($1.str)+strlen($3.str)+13,"bitwiseOr(%s,%s)",$1.str,$3.str);
                                                          free($1.str);
                                                          free($3.str);
+                                                      }
+                                                      else
+                                                      {
+                                                         yyerror("semantic error : initialize first, cannot directly pass as argument");
+                                                         return 1;
                                                       }
                                                    }
                         ;

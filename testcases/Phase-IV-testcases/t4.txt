@@ -1,0 +1,48 @@
+$ Checks dimensions for lists and matrices $
+
+\begin_init
+    
+    #registers quantum = 2
+    #registers classical = 2
+    #iters = 1
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+
+    for i in (0:2)
+    {
+        H -> i
+    }
+
+    measure : 0 -> 0
+
+\end_main
+
+\begin_output
+    list[float] d = [2, 4, 1, 5]
+
+
+    list[float] p = [1, 2, 3]
+    list[float] q = [2, 3, 4]
+    list[float] r = p + q
+    echo(r, "\n")
+
+    float s = p @ q
+    echo(s, "\n") 
+
+    list[uint] a = [1, 2, 3]
+    list[uint] b = [2, 3, 4]
+    list[uint] c = a & b
+    echo(c, "\n")   
+
+    float z = std_dev(a)
+    echo(z, "\n")
+
+    int w = 45 | -90
+
+    echo(w, "\n")
+    
+\end_output

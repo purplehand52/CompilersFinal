@@ -1,5 +1,5 @@
 # this is a comment
-
+PHASE="IV"
 cc=gcc
 cc_=g++
 
@@ -19,7 +19,7 @@ matrix: ./headers/matrix.h ./CodeGen/Basic/matrix.cpp
 state: ./headers/state.h ./CodeGen/Basic/state.cpp
 
 out: Parser
-	./exec/parser ../testcases/Phase-III-testcases/$(SRC)
+	./exec/parser ../testcases/Phase-$(PHASE)-testcases/$(SRC)
 	mv out.cpp ./exec/out.cpp
 	mv output.parsed ./exec/output.parsed
 	mv tokens.txt ./exec/tokens.txt

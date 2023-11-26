@@ -1,0 +1,37 @@
+$ Checks dimensions for lists and matrices $
+
+\begin_init
+    
+    #registers quantum = 2
+    #registers classical = 2
+    #iters = 100
+    #set quantum states -> {1,0}, {1,0}
+    #set classical states -> 0, 0
+
+\end_init
+
+\begin_main
+
+    for i in (0:2)
+    {
+        H -> i
+    }
+
+    measure : 0 -> 0
+
+\end_main
+
+\begin_output
+    $ Incompatible string * string $
+    string a = "hello"
+    string b = "goodbye"
+
+    string c = a * b
+
+    $ Incompatible assignment $
+    complex t = (1, 1)
+    complex u = (2, -2)
+    float v = t * u
+
+    
+\end_output

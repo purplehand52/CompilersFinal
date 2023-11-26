@@ -1,0 +1,34 @@
+\begin_init
+    #registers quantum = 3
+    #registers classical = 3
+    #iters = 1000
+
+    #set classical states -> 0,0,0
+    #set quantum states -> {1,0}, {1,0}, {1,0}
+
+    $ Bad variables inside simple scope $
+    block BellGen2 (i, j) [
+        H -> i
+        X : i -> k
+    ]
+
+\end_init
+
+\begin_main
+
+    BellGen : 0 -> 1
+    H -> 1
+    0 ? X : (1, 2) -> 0
+
+    measure : 0 -> 1
+
+\end_main
+
+\begin_output
+
+    int a = 10
+    int b = 20
+    int c = a*b + (a-b)
+    int d = c*(-5)
+    
+\end_output
